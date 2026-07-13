@@ -8,7 +8,6 @@
 <meta name="theme-color" content="#111111">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   :root{
     --primary:#A3E635;
@@ -315,10 +314,6 @@
   .schedule-item .desc{font-size:13px;}
 
   /* Map */
-  #mapview{height:calc(100vh - 200px);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);}
-  .leaflet-popup-content{font-family:'Poppins',sans-serif;font-size:13px;}
-  .popup-link{color:var(--primary-dark);font-weight:700;font-size:12px;display:inline-block;margin-top:4px;}
-
   .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13.5px;}
 
   /* Scroll reveal */
@@ -386,7 +381,6 @@
   </nav>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
 <script>
@@ -395,8 +389,6 @@
    Supabase (ver loadData() al final del archivo) en vez de venir de un
    data.js estático. PLACES/EVENTS/NOVEDADES todavía son contenido
    editorial fijo (no lo carga cada comercio), igual que en el sitio viejo. */
-const CENTER = [-33.2333, -66.265];
-
 const PLACES = [
   {
     "id": "paseo-del-lago",
@@ -794,13 +786,12 @@ function hideTopbar(){
 function setBottomnav(active){
   const items = [
     {key:'home', path:'/', ic:'🏠', label:'Inicio'},
-    {key:'mapa', path:'/mapa', ic:'🗺️', label:'Mapa'},
     {key:'agenda', path:'/agenda', ic:'🎉', label:'Agenda'},
     {key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'},
   ];
   document.getElementById('bottomnav').innerHTML = items.map(i=>
     `<a class="${active===i.key?'active':''}" onclick="navigate('${i.path}')"><span class="ic">${i.ic}</span>${i.label}</a>`
-  ).join('') + `<a href="login.html"><span class="ic">🏪</span>Comercios</a>`;
+  ).join('');
 }
 
 function render(){
@@ -809,7 +800,6 @@ function render(){
   if(parts.length===0){ return renderHome(); }
   if(parts[0]==='categoria') return renderCategoria(parts[1]);
   if(parts[0]==='buscar') return renderBuscar();
-  if(parts[0]==='mapa') return renderMapa();
   if(parts[0]==='agenda' && parts[1]==='anteriores') return renderAgendaAnteriores();
   if(parts[0]==='agenda') return renderAgenda();
   if(parts[0]==='evento') return renderEventoDetail(parts[1]);
@@ -1513,51 +1503,6 @@ function renderNovedades(){
     </div>
   `;
   initScrollReveal();
-}
-
-/* ---- MAPA ---- */
-let mapInstance = null;
-function renderMapa(){
-  setTopbar({title:'Mapa interactivo', sub:'Visit Potrero', back:true});
-  setBottomnav('mapa');
-  document.getElementById('view').innerHTML = `<div id="mapview"></div>`;
-  setTimeout(initMap, 0);
-}
-function initMap(){
-  const el = document.getElementById('mapview');
-  if(!el || typeof L === 'undefined') return;
-  if(mapInstance){ mapInstance.remove(); mapInstance = null; }
-  mapInstance = L.map('mapview').setView(CENTER, 14);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(mapInstance);
-
-  BUSINESSES.forEach(b=>{
-    if(typeof b.lat !== 'number' || typeof b.lng !== 'number') return;
-    const c = cat(b.category);
-    const icon = L.divIcon({
-      className:'',
-      html:`<div style="background:#111;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #A3E635;">
-              <span style="transform:rotate(45deg);font-size:14px;">${c.emoji}</span>
-            </div>`,
-      iconSize:[30,30], iconAnchor:[15,30]
-    });
-    L.marker([b.lat, b.lng], {icon}).addTo(mapInstance)
-      .bindPopup(`<b>${b.name}</b><br>${c.label}<br><span class="popup-link" onclick="navigate('/comercio/${b.id}')">Ver ficha →</span>`);
-  });
-
-  PLACES.forEach(p=>{
-    const icon = L.divIcon({
-      className:'',
-      html:`<div style="background:#111;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #A3E635;">
-              <span style="transform:rotate(45deg);font-size:14px;">${p.emoji}</span>
-            </div>`,
-      iconSize:[30,30], iconAnchor:[15,30]
-    });
-    L.marker([p.lat, p.lng], {icon}).addTo(mapInstance)
-      .bindPopup(`<b>${p.name}</b><br>${p.type}<br><span class="popup-link" onclick="navigate('/lugares/${p.id}')">Ver más →</span>`);
-  });
 }
 
 /* ============ INICIO ============ */

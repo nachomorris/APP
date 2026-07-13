@@ -264,6 +264,20 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .tab.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
 
+/* --- Buscador con autocompletado (ej: elegir ficha organizadora) --- */
+.autocomplete-wrap { position: relative; }
+.autocomplete-results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); max-height: 220px; overflow-y: auto; z-index: 30;
+}
+.autocomplete-item {
+  padding: 11px 14px; font-size: 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover, .autocomplete-item.active { background: var(--bg); }
+.autocomplete-empty { padding: 11px 14px; font-size: 13px; color: var(--muted); }
+
 /* --- Segmented top-level tabs (fichas / eventos) --- */
 .section-tabs { display: flex; gap: 10px; margin-bottom: 18px; }
 .section-tabs button {

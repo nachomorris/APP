@@ -15,6 +15,8 @@ const eventsListView = document.getElementById('eventsListView');
 const eventFormView = document.getElementById('eventFormView');
 const eventForm = document.getElementById('eventForm');
 const evBusinessSelect = document.getElementById('ev_business_id');
+const evBusinessSearch = document.getElementById('ev_business_search');
+const evBusinessResults = document.getElementById('ev_business_results');
 const evCategorySelect = document.getElementById('ev_category_id');
 const evRecurrenceType = document.getElementById('ev_recurrence_type');
 const evIsFree = document.getElementById('ev_is_free');
@@ -89,8 +91,6 @@ async function loadMyBusinessesForEvents() {
     return;
   }
   myBusinessesForEvents = data || [];
-  evBusinessSelect.innerHTML = '<option value="">Seleccioná tu ficha</option>' +
-    myBusinessesForEvents.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
 
   if (myBusinessesForEvents.length === 0) {
     document.getElementById('newEventBtn').disabled = true;
@@ -99,6 +99,48 @@ async function loadMyBusinessesForEvents() {
     document.getElementById('newEventBtn').disabled = false;
   }
 }
+
+// ---------- Buscador de ficha organizadora (autocompletado) ----------
+function setBusinessSelection(id) {
+  evBusinessSelect.value = id || '';
+  const biz = myBusinessesForEvents.find((b) => b.id === id);
+  evBusinessSearch.value = biz ? biz.name : '';
+  hideBusinessResults();
+}
+
+function renderBusinessResults(query) {
+  const q = (query || '').trim().toLowerCase();
+  const matches = q
+    ? myBusinessesForEvents.filter((b) => b.name.toLowerCase().includes(q))
+    : myBusinessesForEvents;
+
+  if (matches.length === 0) {
+    evBusinessResults.innerHTML = '<div class="autocomplete-empty">No encontramos ninguna ficha tuya con ese nombre.</div>';
+  } else {
+    evBusinessResults.innerHTML = matches.map((b) => `<div class="autocomplete-item" data-biz="${b.id}">${escapeHtml(b.name)}</div>`).join('');
+    evBusinessResults.querySelectorAll('[data-biz]').forEach((el) => {
+      el.addEventListener('click', () => setBusinessSelection(el.getAttribute('data-biz')));
+    });
+  }
+  evBusinessResults.classList.remove('hidden');
+}
+function hideBusinessResults() {
+  evBusinessResults.classList.add('hidden');
+}
+
+evBusinessSearch.addEventListener('focus', () => renderBusinessResults(evBusinessSearch.value));
+evBusinessSearch.addEventListener('input', () => {
+  evBusinessSelect.value = ''; // obliga a elegir de la lista para confirmar la selección
+  renderBusinessResults(evBusinessSearch.value);
+});
+evBusinessSearch.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideBusinessResults();
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#ev_business_search') && !e.target.closest('#ev_business_results')) {
+    hideBusinessResults();
+  }
+});
 
 // ---------- Listado ----------
 function eventStatusLabel(status) {
@@ -299,8 +341,9 @@ function resetEventForm() {
   document.getElementById('ev_recurrence_custom_wrap').classList.add('hidden');
   document.getElementById('addScheduleRowBtn').disabled = false;
   eventReviewNote.classList.add('hidden');
+  setBusinessSelection('');
   if (myBusinessesForEvents.length === 1) {
-    evBusinessSelect.value = myBusinessesForEvents[0].id;
+    setBusinessSelection(myBusinessesForEvents[0].id);
   }
 }
 
@@ -321,7 +364,7 @@ async function openEventForm(eventId) {
   }
 
   document.getElementById('event_id').value = e.id;
-  evBusinessSelect.value = e.business_id || '';
+  setBusinessSelection(e.business_id || '');
   document.getElementById('ev_title').value = e.title || '';
   document.getElementById('ev_short_description').value = e.short_description || '';
   document.getElementById('ev_description').value = e.description || '';
@@ -515,7 +558,7 @@ async function duplicateEvent(id) {
   if (!e) return;
   resetEventForm();
   eventFormTitle.textContent = 'Duplicar evento';
-  evBusinessSelect.value = e.business_id || '';
+  setBusinessSelection(e.business_id || '');
   document.getElementById('ev_title').value = 'Copia de ' + (e.title || '');
   document.getElementById('ev_short_description').value = e.short_description || '';
   document.getElementById('ev_description').value = e.description || '';

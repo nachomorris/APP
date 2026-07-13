@@ -203,10 +203,12 @@
       <form id="eventForm">
         <input type="hidden" id="event_id">
 
-        <label for="ev_business_id">Organiza *</label>
-        <select id="ev_business_id" required>
-          <option value="">Seleccioná tu ficha</option>
-        </select>
+        <label for="ev_business_search">Organiza *</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="ev_business_search" placeholder="Buscá tu ficha por nombre..." autocomplete="off">
+          <input type="hidden" id="ev_business_id">
+          <div id="ev_business_results" class="autocomplete-results hidden"></div>
+        </div>
         <p class="field-hint">El evento aparece asociado a esta ficha comercial o institucional.</p>
 
         <label for="ev_title">Título del evento *</label>
