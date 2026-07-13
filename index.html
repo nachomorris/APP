@@ -274,10 +274,12 @@
   .agenda-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer;}
   .agenda-card .cover{height:140px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:38px;color:#fff;background:var(--ink);}
   .agenda-card .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .agenda-card .cover .cat-tag{position:absolute;top:10px;left:10px;background:rgba(17,17,17,.72);color:var(--primary);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .agenda-card .cover .date-badge{position:absolute;top:10px;left:10px;background:#fff;color:var(--ink);border-radius:12px;padding:6px 11px;text-align:center;line-height:1.05;box-shadow:0 3px 8px rgba(0,0,0,.28);}
+  .agenda-card .cover .date-badge .day{display:block;font-size:19px;font-weight:800;}
+  .agenda-card .cover .date-badge .mon{display:block;font-size:10px;font-weight:800;text-transform:uppercase;color:var(--primary-dark);letter-spacing:.03em;}
   .agenda-card .cover .free-tag{position:absolute;top:10px;right:10px;background:var(--primary);color:var(--ink);font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px;}
   .agenda-card .body{padding:14px 16px 16px;}
-  .agenda-card .when{font-size:11.5px;font-weight:700;color:var(--primary-dark);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px;}
+  .agenda-card .when{font-size:13.5px;font-weight:800;color:var(--ink);margin-bottom:6px;}
   .agenda-card h3{font-size:16px;font-weight:800;margin:0 0 6px;}
   .agenda-card .meta-row{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:3px;}
   .agenda-card .desc{font-size:12.5px;color:var(--muted);line-height:1.4;margin:8px 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
@@ -1193,15 +1195,18 @@ function eventStartMoment(e){
   return d;
 }
 function isEventFinished(e){ return eventEndMoment(e).getTime() < Date.now(); }
-function isEventToday(e){ return e.startDate === todayYMD() || (e.startDate <= todayYMD() && e.endDate >= todayYMD()); }
-function isEventThisWeekend(e){
-  const now = new Date();
-  const dow = now.getDay(); // 0 dom ... 6 sáb
-  const toFriday = (5 - dow + 7) % 7;
-  const friday = new Date(now); friday.setHours(0,0,0,0); friday.setDate(now.getDate() + toFriday);
-  const sunday = new Date(friday); sunday.setDate(friday.getDate() + 2); sunday.setHours(23,59,59,999);
+function isEventThisWeek(e){
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const weekEnd = new Date(todayStart); weekEnd.setDate(weekEnd.getDate()+7); weekEnd.setHours(23,59,59,999);
   const s = eventStartMoment(e), en = eventEndMoment(e);
-  return en >= friday && s <= sunday;
+  return en >= todayStart && s <= weekEnd;
+}
+function isEventThisMonth(e){
+  const now = new Date();
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0); monthEnd.setHours(23,59,59,999);
+  const s = eventStartMoment(e), en = eventEndMoment(e);
+  return en >= todayStart && s <= monthEnd;
 }
 function activeUpcomingEvents(){
   return EVENTS.filter(e=>!isEventFinished(e)).sort((a,b)=>{
@@ -1225,19 +1230,20 @@ function waLink(phone){
   return 'https://wa.me/' + phone.replace(/[^0-9]/g,'');
 }
 
-let agendaState = { q:'', quick:'all', cat:'all', onlyFree:false };
+let agendaState = { q:'', quick:'todos' };
 
 function agendaCard(e, i){
   const c = eventCat(e.category);
   const org = organizerName(e);
+  const d = parseYMD(e.startDate);
   return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/evento/${e.id}')">
     <div class="cover" style="background:${c.color || '#111'}">
       ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy">` : (c.icon||'🎉')}
-      <span class="cat-tag">${c.icon||''} ${c.label}</span>
+      <div class="date-badge"><span class="day">${d.getDate()}</span><span class="mon">${MESES_ES[d.getMonth()].slice(0,3)}</span></div>
       ${e.isFree ? `<span class="free-tag">Gratis</span>` : ''}
     </div>
     <div class="body">
-      <div class="when">${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
+      <div class="when">🗓️ ${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
       <h3>${e.title}</h3>
       ${e.address ? `<div class="meta-row">📍 ${e.address}</div>` : ''}
       ${e.desc || e.shortDesc ? `<div class="desc">${e.shortDesc || e.desc}</div>` : ''}
@@ -1263,10 +1269,8 @@ function featuredCard(e){
 }
 
 function matchesAgendaFilters(e){
-  if(agendaState.cat !== 'all' && e.category !== agendaState.cat) return false;
-  if(agendaState.onlyFree && !e.isFree) return false;
-  if(agendaState.quick === 'hoy' && !isEventToday(e)) return false;
-  if(agendaState.quick === 'finde' && !isEventThisWeekend(e)) return false;
+  if(agendaState.quick === 'semana' && !isEventThisWeek(e)) return false;
+  if(agendaState.quick === 'mes' && !isEventThisMonth(e)) return false;
   const q = agendaState.q.trim();
   if(q){
     const org = organizerName(e);
@@ -1283,18 +1287,16 @@ function renderAgenda(){
   const featured = activeUpcomingEvents().filter(e=>e.isFeatured).sort((a,b)=>a.featuredOrder-b.featuredOrder);
 
   view.innerHTML = `
-    <div class="section agenda-intro" style="margin-top:0;">
-      <h1>Agenda de eventos</h1>
-      <p>Descubrí qué hacer en Potrero de los Funes: fiestas, ferias, música en vivo y mucho más.</p>
+    <div class="home-panel">
+      <div class="panel-topbar">
+        <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
+      </div>
+      <div class="searchbar" style="margin-bottom:16px;">
+        <span>🔎</span>
+        <input id="agendaSearch" placeholder="Buscar evento, lugar u organizador..." value="${agendaState.q}">
+      </div>
+      <div class="filter-row" id="agendaQuickRow"></div>
     </div>
-
-    <div class="searchbar">
-      <span>🔎</span>
-      <input id="agendaSearch" placeholder="Buscar por nombre, lugar u organizador..." value="${agendaState.q}">
-    </div>
-
-    <div class="filter-row" id="agendaQuickRow"></div>
-    <div class="filter-row wrap" id="agendaCatRow" style="margin-bottom:20px;"></div>
 
     ${featured.length ? `
     <div class="section" style="margin-top:0;">
@@ -1312,27 +1314,20 @@ function renderAgenda(){
   `;
 
   document.getElementById('agendaQuickRow').innerHTML = [
-    {k:'all', l:'Próximos'}, {k:'hoy', l:'Hoy'}, {k:'finde', l:'Este finde'}
-  ].map(f=>`<button class="filter-pill ${agendaState.quick===f.k?'active':''}" onclick="setAgendaQuick('${f.k}')">${f.l}</button>`).join('')
-   + `<button class="filter-pill free ${agendaState.onlyFree?'active':''}" onclick="toggleAgendaFree()">💚 Gratuitos</button>`;
-
-  document.getElementById('agendaCatRow').innerHTML = ['all', ...EVENT_CATEGORIES.map(c=>c.id)].map(id=>{
-    const label = id==='all' ? 'Todas las categorías' : eventCat(id).icon + ' ' + eventCat(id).label;
-    return `<button class="filter-pill ${agendaState.cat===id?'active':''}" onclick="setAgendaCat('${id}')">${label}</button>`;
-  }).join('');
+    {k:'semana', l:'Esta semana'}, {k:'mes', l:'Este mes'}, {k:'todos', l:'Todos'}
+  ].map(f=>`<button class="filter-pill ${agendaState.quick===f.k?'active':''}" onclick="setAgendaQuick('${f.k}')">${f.l}</button>`).join('');
 
   document.getElementById('agendaSearch').addEventListener('input', e=>{
     agendaState.q = e.target.value;
     renderAgendaList();
   });
 
+  setupHomePanelFade();
   renderAgendaList();
   initScrollReveal();
 }
 
 function setAgendaQuick(k){ agendaState.quick = k; renderAgenda(); }
-function toggleAgendaFree(){ agendaState.onlyFree = !agendaState.onlyFree; renderAgenda(); }
-function setAgendaCat(id){ agendaState.cat = id; renderAgenda(); }
 
 function renderAgendaList(){
   const items = activeUpcomingEvents().filter(matchesAgendaFilters);

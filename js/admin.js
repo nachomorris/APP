@@ -1,5 +1,7 @@
 let currentFilter = 'pending';
+let allCategories = [];
 let allSubcategories = [];
+let currentBusinessesList = [];
 
 const alertBox = document.getElementById('alert');
 const listEl = document.getElementById('list');
@@ -10,6 +12,12 @@ const businessForm = document.getElementById('businessForm');
 const categorySelect = document.getElementById('category_id');
 const subcategorySelect = document.getElementById('subcategory_id');
 const saveBtn = document.getElementById('saveBtn');
+const ownerSearch = document.getElementById('owner_search');
+const ownerIdInput = document.getElementById('owner_id');
+const ownerResults = document.getElementById('owner_results');
+const searchBusinessesAdmin = document.getElementById('searchBusinessesAdmin');
+const filterCategoryAdmin = document.getElementById('filterCategoryAdmin');
+const filterSubcategoryAdmin = document.getElementById('filterSubcategoryAdmin');
 
 function showAlert(message, type) {
   alertBox.textContent = message;
@@ -95,13 +103,57 @@ async function loadList() {
     return;
   }
 
-  if (!data || data.length === 0) {
-    listEl.innerHTML = '<p class="empty-state">No hay fichas en esta categoría.</p>';
+  currentBusinessesList = data || [];
+  renderFilteredBusinessList();
+}
+
+function renderFilteredBusinessList() {
+  const term = searchBusinessesAdmin.value.trim().toLowerCase();
+  const catFilter = filterCategoryAdmin.value;
+  const subFilter = filterSubcategoryAdmin.value;
+
+  const filtered = currentBusinessesList.filter((b) => {
+    if (catFilter && b.category_id !== catFilter) return false;
+    if (subFilter && b.subcategory_id !== subFilter) return false;
+    if (term) {
+      const haystack = ((b.name || '') + ' ' + (b.address || '')).toLowerCase();
+      if (!haystack.includes(term)) return false;
+    }
+    return true;
+  });
+
+  if (currentBusinessesList.length === 0) {
+    listEl.innerHTML = '<p class="empty-state">No hay fichas en esta pestaña.</p>';
+    return;
+  }
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<p class="empty-state">No encontramos fichas con ese filtro.</p>';
     return;
   }
 
   listEl.innerHTML = '';
-  data.forEach((b) => renderCard(b));
+  filtered.forEach((b) => renderCard(b));
+}
+
+searchBusinessesAdmin.addEventListener('input', renderFilteredBusinessList);
+filterCategoryAdmin.addEventListener('change', () => {
+  populateAdminSubcategoryFilter(filterCategoryAdmin.value);
+  renderFilteredBusinessList();
+});
+filterSubcategoryAdmin.addEventListener('change', renderFilteredBusinessList);
+
+function populateAdminCategoryFilter() {
+  const current = filterCategoryAdmin.value;
+  filterCategoryAdmin.innerHTML = '<option value="">Todas las categorías</option>' +
+    allCategories.map((c) => `<option value="${c.id}">${escapeHtml(c.label)}</option>`).join('');
+  filterCategoryAdmin.value = current;
+}
+function populateAdminSubcategoryFilter(categoryId) {
+  const current = filterSubcategoryAdmin.value;
+  const opts = allSubcategories.filter((s) => !categoryId || s.category_id === categoryId);
+  filterSubcategoryAdmin.innerHTML = '<option value="">Todas las subcategorías</option>' +
+    opts.map((s) => `<option value="${s.id}">${escapeHtml(s.label)}</option>`).join('');
+  filterSubcategoryAdmin.value = opts.some((s) => s.id === current) ? current : '';
 }
 
 function renderCard(b) {
@@ -201,8 +253,10 @@ async function loadCategories() {
     return;
   }
 
+  allCategories = categories || [];
+
   categorySelect.innerHTML = '<option value="">Seleccioná una categoría</option>';
-  (categories || []).forEach((c) => {
+  allCategories.forEach((c) => {
     const opt = document.createElement('option');
     opt.value = c.id;
     opt.textContent = c.label;
@@ -220,6 +274,8 @@ async function loadCategories() {
   }
 
   allSubcategories = subcats || [];
+  populateAdminCategoryFilter();
+  populateAdminSubcategoryFilter('');
 }
 
 function refreshSubcategoryOptions(categoryId, selectedSubcatId) {
@@ -239,6 +295,75 @@ categorySelect.addEventListener('change', () => {
   refreshSubcategoryOptions(categorySelect.value, null);
 });
 
+// ---------- Buscador de dueño (para reasignar la ficha a otro usuario) ----------
+function ownerLabel(profile) {
+  if (!profile) return '';
+  const name = profile.full_name || '(sin nombre)';
+  return profile.phone ? `${name} · ${profile.phone}` : name;
+}
+
+function setOwnerSelection(id, label) {
+  ownerIdInput.value = id || '';
+  ownerSearch.value = label || '';
+  hideOwnerResults();
+}
+
+function renderOwnerResults(items) {
+  if (!items.length) {
+    ownerResults.innerHTML = '<div class="autocomplete-empty">No encontramos usuarios con ese nombre o teléfono.</div>';
+  } else {
+    ownerResults.innerHTML = items.map((p) => `<div class="autocomplete-item" data-owner="${p.id}" data-label="${escapeHtml(ownerLabel(p))}">${escapeHtml(ownerLabel(p))}</div>`).join('');
+    ownerResults.querySelectorAll('[data-owner]').forEach((el) => {
+      el.addEventListener('click', () => setOwnerSelection(el.getAttribute('data-owner'), el.getAttribute('data-label')));
+    });
+  }
+  ownerResults.classList.remove('hidden');
+}
+function hideOwnerResults() {
+  ownerResults.classList.add('hidden');
+}
+
+let ownerSearchTimeout = null;
+async function searchOwners(query) {
+  const q = query.trim();
+  if (q.length < 2) {
+    ownerResults.innerHTML = '<div class="autocomplete-empty">Escribí al menos 2 letras para buscar.</div>';
+    ownerResults.classList.remove('hidden');
+    return;
+  }
+  const { data, error } = await supabaseClient
+    .from('profiles')
+    .select('id, full_name, phone')
+    .or(`full_name.ilike.%${q}%,phone.ilike.%${q}%`)
+    .order('full_name', { ascending: true })
+    .limit(15);
+
+  if (error) {
+    ownerResults.innerHTML = `<div class="autocomplete-empty">Error buscando usuarios: ${escapeHtml(error.message)}</div>`;
+    ownerResults.classList.remove('hidden');
+    return;
+  }
+  renderOwnerResults(data || []);
+}
+
+ownerSearch.addEventListener('input', () => {
+  ownerIdInput.value = ''; // obliga a confirmar eligiendo de la lista
+  clearTimeout(ownerSearchTimeout);
+  const q = ownerSearch.value;
+  ownerSearchTimeout = setTimeout(() => searchOwners(q), 250);
+});
+ownerSearch.addEventListener('focus', () => {
+  if (ownerSearch.value.trim().length >= 2) searchOwners(ownerSearch.value);
+});
+ownerSearch.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideOwnerResults();
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#owner_search') && !e.target.closest('#owner_results')) {
+    hideOwnerResults();
+  }
+});
+
 // ---------- Formulario de edición (cualquier ficha, no solo las propias) ----------
 function showListView() {
   formView.classList.add('hidden');
@@ -256,6 +381,7 @@ document.getElementById('cancelBtn').addEventListener('click', showListView);
 function openEditForm(b) {
   businessForm.reset();
   document.getElementById('business_id').value = b.id;
+  setOwnerSelection(b.owner_id || '', ownerLabel(b.profiles));
   document.getElementById('name').value = b.name || '';
   document.getElementById('description').value = b.description || '';
   document.getElementById('address').value = b.address || '';
@@ -280,7 +406,14 @@ businessForm.addEventListener('submit', async (e) => {
   clearAlert();
 
   const id = document.getElementById('business_id').value;
+
+  if (!ownerIdInput.value) {
+    showAlert('Elegí un dueño para la ficha (buscalo por nombre o teléfono).', 'error');
+    return;
+  }
+
   const payload = {
+    owner_id: ownerIdInput.value,
     name: document.getElementById('name').value.trim(),
     category_id: categorySelect.value,
     subcategory_id: subcategorySelect.value || null,

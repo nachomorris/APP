@@ -57,6 +57,17 @@
       <button class="tab" data-status="all">Todas</button>
     </div>
 
+    <input type="text" id="searchBusinessesAdmin" placeholder="Buscar por nombre o dirección..." style="margin-bottom:10px;">
+
+    <div class="row-2" style="margin-bottom:14px;">
+      <select id="filterCategoryAdmin">
+        <option value="">Todas las categorías</option>
+      </select>
+      <select id="filterSubcategoryAdmin">
+        <option value="">Todas las subcategorías</option>
+      </select>
+    </div>
+
     <div id="list">
       <p class="empty-state">Cargando...</p>
     </div>
@@ -68,6 +79,14 @@
 
       <form id="businessForm">
         <input type="hidden" id="business_id">
+
+        <label for="owner_search">Dueño (usuario registrado) *</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="owner_search" placeholder="Buscá por nombre o teléfono..." autocomplete="off">
+          <input type="hidden" id="owner_id">
+          <div id="owner_results" class="autocomplete-results hidden"></div>
+        </div>
+        <p class="field-hint">Cambialo solo si la ficha pasó a otra persona o estaba asociada a una cuenta provisoria.</p>
 
         <label for="name">Nombre del comercio *</label>
         <input type="text" id="name" required>
