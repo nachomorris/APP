@@ -24,6 +24,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  .hidden{display:none!important;}
   body{
     font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     background:var(--bg);
@@ -240,6 +241,13 @@
   /* Detail page */
   .detail-hero{height:180px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:56px;color:var(--primary);background:var(--ink);margin-bottom:16px;overflow:hidden;position:relative;}
   .detail-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .detail-hero.zoomable{cursor:zoom-in;}
+  .detail-hero .zoom-hint{position:absolute;bottom:10px;right:10px;background:rgba(17,17,17,.72);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;}
+
+  /* Lightbox: ver el flyer del evento en grande */
+  .img-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
+  .img-lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);object-fit:contain;}
+  .img-lightbox-close{position:absolute;top:18px;right:18px;color:#fff;font-size:22px;font-weight:700;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;}
   .detail-title{font-size:21px;font-weight:800;margin:0 0 4px;}
   .detail-cat{font-size:13px;color:var(--primary-dark);font-weight:700;margin-bottom:10px;}
   .detail-badges{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
@@ -1450,8 +1458,9 @@ function renderEventoDetail(id){
   const orgLink = orgBiz ? `navigate('/comercio/${orgBiz.legacy_id || orgBiz.id}')` : '';
 
   document.getElementById('view').innerHTML = `
-    <div class="detail-hero" style="background:${c.color||'#111'}">
+    <div class="detail-hero${e.cover ? ' zoomable' : ''}" style="background:${c.color||'#111'}"${e.cover ? ` onclick="openImageLightbox('${e.cover.replace(/'/g,"\\'")}', '${(e.title||'').replace(/'/g,"\\'")}')"` : ''}>
       ${e.cover ? `<img src="${e.cover}" alt="${e.title}">` : (c.icon||'🎉')}
+      ${e.cover ? `<span class="zoom-hint">🔍 Ver flyer</span>` : ''}
     </div>
     <div class="detail-title">${e.title}</div>
     <div class="detail-cat">${c.icon||''} ${c.label}</div>
@@ -1494,7 +1503,25 @@ function renderEventoDetail(id){
       <a class="map" style="flex:1;" href="${eventIcsHref(e)}" download="${(e.title||'evento').replace(/[^a-z0-9]+/gi,'-')}.ics">📅 Agendar</a>
     </div>
     ${e.requiresRegistration && e.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${e.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
+
+    ${e.cover ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
+      <span class="img-lightbox-close" onclick="closeImageLightbox()">✕</span>
+      <img id="imgLightboxImg" src="${e.cover}" alt="${e.title}" onclick="event.stopPropagation()">
+    </div>` : ''}
   `;
+}
+
+function openImageLightbox(src, alt){
+  const lb = document.getElementById('imgLightbox');
+  const img = document.getElementById('imgLightboxImg');
+  if(!lb || !img) return;
+  img.src = src;
+  img.alt = alt || '';
+  lb.classList.remove('hidden');
+}
+function closeImageLightbox(){
+  const lb = document.getElementById('imgLightbox');
+  if(lb) lb.classList.add('hidden');
 }
 
 function renderNovedades(){
