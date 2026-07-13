@@ -1405,16 +1405,28 @@ function eventIcsHref(e){
   return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
 }
 
-function shareEvent(id){
+async function shareEvent(id){
   const e = EVENTS.find(x=>x.id===id);
   if(!e) return;
   const url = location.origin + location.pathname + '#/evento/' + id;
+  const shareData = { title: e.title, text: e.shortDesc || e.title, url };
+
   if(navigator.share){
-    navigator.share({ title: e.title, text: e.shortDesc || e.title, url }).catch(()=>{});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(url).then(()=>alert('Enlace copiado: ' + url));
-  } else {
-    prompt('Copiá el enlace del evento:', url);
+    try {
+      await navigator.share(shareData);
+      return; // el usuario eligió una app para compartir (o la cerró): listo
+    } catch(err){
+      if(err && err.name === 'AbortError') return; // cerró el panel de compartir, no hacemos nada más
+      // si el share nativo falla por otro motivo, seguimos abajo y copiamos el link
+    }
+  }
+
+  try {
+    if(!navigator.clipboard) throw new Error('Clipboard no disponible');
+    await navigator.clipboard.writeText(url);
+    alert('Enlace copiado: ' + url);
+  } catch(err){
+    window.prompt('Copiá el enlace del evento:', url);
   }
 }
 
