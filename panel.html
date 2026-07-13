@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi panel — Visit Potrero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .preview-label {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  .preview-card {
+    display: flex; align-items: stretch; background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); min-height: 120px;
+  }
+  .preview-thumb {
+    width: 120px; flex: none; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #fff; background: var(--ink);
+  }
+  .preview-info { flex: 1; min-width: 0; padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; }
+  .preview-badges { display: flex; gap: 6px; margin-bottom: 3px; flex-wrap: wrap; }
+  .preview-name { font-size: 14px; font-weight: 700; margin: 0 0 2px; color: var(--ink); }
+  .preview-cat { font-size: 11.5px; color: var(--primary-dark); font-weight: 600; }
+  .preview-addr { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span></div>
+  <div style="display:flex; gap:14px; align-items:center;">
+    <a href="admin.html" id="adminLink" class="btn-icon hidden" style="text-decoration:none;">Panel de admin</a>
+    <button class="btn-icon" id="logoutBtn">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="alert" class="alert"></div>
+
+  <div class="section-tabs">
+    <button id="mainTabFichas" class="active">🏪 Mis fichas</button>
+    <button id="mainTabEventos">🎉 Mis eventos</button>
+  </div>
+
+  <!-- ===== SECCIÓN FICHAS ===== -->
+  <div id="fichasSection">
+
+  <!-- ===== Vista: listado de fichas ===== -->
+  <div id="listView">
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h2 style="margin:0;">Mis fichas</h2>
+        <button class="btn btn-primary btn-small" id="newBusinessBtn">+ Nueva ficha</button>
+      </div>
+
+      <input type="text" id="searchFichas" placeholder="Buscar por nombre o dirección..." style="margin-bottom:10px;">
+
+      <div class="row-2" style="margin-bottom:14px;">
+        <select id="filterCategory">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select id="filterSubcategory">
+          <option value="">Todas las subcategorías</option>
+        </select>
+      </div>
+
+      <div id="businessList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Vista: formulario crear/editar ===== -->
+  <div id="formView" class="hidden">
+    <div class="card">
+      <h2 id="formTitle">Nueva ficha</h2>
+
+      <form id="businessForm">
+        <input type="hidden" id="business_id">
+
+        <label for="name">Nombre del comercio *</label>
+        <input type="text" id="name" required>
+
+        <label for="category_id">Categoría *</label>
+        <select id="category_id" required>
+          <option value="">Seleccioná una categoría</option>
+        </select>
+
+        <label for="subcategory_id">Subcategoría</label>
+        <select id="subcategory_id">
+          <option value="">(opcional)</option>
+        </select>
+
+        <label for="description">Descripción</label>
+        <textarea id="description" placeholder="Contale a los visitantes de qué se trata tu comercio..."></textarea>
+
+        <label for="address">Dirección</label>
+        <input type="text" id="address" placeholder="Calle y número, Potrero de los Funes">
+
+        <label for="hours">Horarios</label>
+        <input type="text" id="hours" placeholder="Ej: Lun a vie 9 a 18, sáb 9 a 13">
+
+        <div class="row-2">
+          <div>
+            <label for="phone">Teléfono</label>
+            <input type="tel" id="phone">
+          </div>
+          <div>
+            <label for="whatsapp">WhatsApp</label>
+            <input type="tel" id="whatsapp">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label for="instagram">Instagram</label>
+            <input type="text" id="instagram" placeholder="@tu_comercio">
+          </div>
+          <div>
+            <label for="website">Sitio web</label>
+            <input type="text" id="website" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label for="lat">Latitud</label>
+            <input type="text" id="lat" placeholder="-33.2333">
+          </div>
+          <div>
+            <label for="lng">Longitud</label>
+            <input type="text" id="lng" placeholder="-66.2650">
+          </div>
+        </div>
+        <p class="field-hint">Buscá tu comercio en Google Maps, hacé clic derecho sobre el pin y copiá las dos coordenadas de ahí. Así aparece bien ubicado en el mapa.</p>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
+          <input type="checkbox" id="open_now" style="width:auto;" checked>
+          <span style="font-weight:600; color:var(--muted); font-size:14px;">Actualmente abierto</span>
+        </label>
+
+        <p class="field-hint" style="margin-top:16px;">Las fotos se agregan en un paso siguiente.</p>
+
+        <button type="submit" class="btn btn-primary" id="saveBtn">Guardar ficha</button>
+        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="preview-label">Así se va a ver en el catálogo</div>
+      <div class="preview-card">
+        <div class="preview-info">
+          <div class="preview-badges" id="previewBadges"></div>
+          <div class="preview-name" id="previewName">Nombre del comercio</div>
+          <div class="preview-cat" id="previewCat">Categoría</div>
+          <div class="preview-addr" id="previewAddr">📍 Dirección</div>
+        </div>
+        <div class="preview-thumb" id="previewThumb">🏪</div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <!-- ===== FIN SECCIÓN FICHAS ===== -->
+
+  <!-- ===== SECCIÓN EVENTOS ===== -->
+  <div id="eventosSection" class="hidden">
+
+  <!-- ===== Vista: listado de eventos ===== -->
+  <div id="eventsListView">
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h2 style="margin:0;">Mis eventos</h2>
+        <button class="btn btn-primary btn-small" id="newEventBtn">+ Nuevo evento</button>
+      </div>
+
+      <p class="subtitle" style="margin-bottom:14px;">Cargá los eventos de tu comercio o institución para que aparezcan en la Agenda de eventos de Visit Potrero. Quedan pendientes de revisión hasta que el municipio los aprueba.</p>
+
+      <div class="tabs" id="eventFilterTabs">
+        <button class="tab active" data-evfilter="upcoming">Próximos</button>
+        <button class="tab" data-evfilter="draft">Borradores</button>
+        <button class="tab" data-evfilter="review">En revisión / cambios</button>
+        <button class="tab" data-evfilter="finished">Finalizados</button>
+        <button class="tab" data-evfilter="all">Todos</button>
+      </div>
+
+      <div id="eventsList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Vista: formulario crear/editar evento ===== -->
+  <div id="eventFormView" class="hidden">
+    <div class="card">
+      <h2 id="eventFormTitle">Nuevo evento</h2>
+      <div id="eventReviewNote" class="note-box hidden"></div>
+
+      <form id="eventForm">
+        <input type="hidden" id="event_id">
+
+        <label for="ev_business_id">Organiza *</label>
+        <select id="ev_business_id" required>
+          <option value="">Seleccioná tu ficha</option>
+        </select>
+        <p class="field-hint">El evento aparece asociado a esta ficha comercial o institucional.</p>
+
+        <label for="ev_title">Título del evento *</label>
+        <input type="text" id="ev_title" required>
+
+        <label for="ev_short_description">Descripción corta</label>
+        <input type="text" id="ev_short_description" placeholder="Una línea para la tarjeta del evento" maxlength="140">
+
+        <label for="ev_description">Descripción completa</label>
+        <textarea id="ev_description" placeholder="Contá de qué se trata el evento..."></textarea>
+
+        <label for="ev_category_id">Categoría *</label>
+        <select id="ev_category_id" required>
+          <option value="">Seleccioná una categoría</option>
+        </select>
+
+        <label for="ev_cover_image">Imagen de portada (URL)</label>
+        <input type="text" id="ev_cover_image" placeholder="https://...">
+
+        <label for="ev_gallery">Galería de imágenes (opcional)</label>
+        <input type="text" id="ev_gallery" placeholder="URLs separadas por coma">
+
+        <div class="row-2">
+          <div>
+            <label for="ev_start_date">Fecha de inicio *</label>
+            <input type="date" id="ev_start_date" required>
+          </div>
+          <div>
+            <label for="ev_end_date">Fecha de finalización *</label>
+            <input type="date" id="ev_end_date" required>
+          </div>
+        </div>
+        <p class="field-hint">Si el evento dura un solo día, cargá la misma fecha en ambos campos.</p>
+
+        <div class="row-2">
+          <div>
+            <label for="ev_start_time">Horario de inicio</label>
+            <input type="time" id="ev_start_time">
+          </div>
+          <div>
+            <label for="ev_end_time">Horario de finalización</label>
+            <input type="time" id="ev_end_time">
+          </div>
+        </div>
+
+        <label for="ev_address">Dirección</label>
+        <input type="text" id="ev_address" placeholder="Calle y número, Potrero de los Funes">
+
+        <div class="row-2">
+          <div>
+            <label for="ev_lat">Latitud</label>
+            <input type="text" id="ev_lat" placeholder="-33.2333">
+          </div>
+          <div>
+            <label for="ev_lng">Longitud</label>
+            <input type="text" id="ev_lng" placeholder="-66.2650">
+          </div>
+        </div>
+
+        <label for="ev_contact_name">Nombre de contacto</label>
+        <input type="text" id="ev_contact_name">
+
+        <div class="row-2">
+          <div>
+            <label for="ev_phone">Teléfono</label>
+            <input type="tel" id="ev_phone">
+          </div>
+          <div>
+            <label for="ev_whatsapp">WhatsApp</label>
+            <input type="tel" id="ev_whatsapp">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label for="ev_instagram">Instagram</label>
+            <input type="text" id="ev_instagram" placeholder="@tu_comercio">
+          </div>
+          <div>
+            <label for="ev_website">Sitio web</label>
+            <input type="text" id="ev_website" placeholder="https://...">
+          </div>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
+          <input type="checkbox" id="ev_is_free" style="width:auto;">
+          <span style="font-weight:600; color:var(--muted); font-size:14px;">Entrada gratuita</span>
+        </label>
+
+        <div id="ev_price_wrap">
+          <label for="ev_price">Precio de la entrada</label>
+          <input type="number" id="ev_price" min="0" step="1" placeholder="0">
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+          <input type="checkbox" id="ev_requires_registration" style="width:auto;">
+          <span style="font-weight:600; color:var(--muted); font-size:14px;">Requiere inscripción</span>
+        </label>
+
+        <div id="ev_registration_wrap" class="hidden">
+          <label for="ev_registration_url">Enlace de inscripción / compra de entradas</label>
+          <input type="text" id="ev_registration_url" placeholder="https://...">
+        </div>
+
+        <label for="ev_capacity">Capacidad limitada (opcional)</label>
+        <input type="number" id="ev_capacity" min="1" placeholder="Ej: 100">
+
+        <label for="ev_tags">Etiquetas o palabras clave</label>
+        <input type="text" id="ev_tags" placeholder="música, aire libre, familia (separadas por coma)">
+
+        <label for="ev_recurrence_type">Repetición</label>
+        <select id="ev_recurrence_type">
+          <option value="none">No se repite</option>
+          <option value="weekly_fri">Todos los viernes</option>
+          <option value="weekly_sat">Todos los sábados</option>
+          <option value="weekend">Todos los fines de semana (vie/sáb)</option>
+          <option value="weekly">Una vez por semana (mismo día que la fecha de inicio)</option>
+          <option value="custom">Fechas específicas</option>
+        </select>
+
+        <div id="ev_recurrence_until_wrap" class="hidden">
+          <label for="ev_recurrence_until">Repetir hasta</label>
+          <input type="date" id="ev_recurrence_until">
+          <p class="field-hint">Se crea una ficha de evento por cada fecha, hasta un máximo de 26 repeticiones.</p>
+        </div>
+
+        <div id="ev_recurrence_custom_wrap" class="hidden">
+          <label for="ev_recurrence_dates">Fechas puntuales</label>
+          <textarea id="ev_recurrence_dates" placeholder="Una fecha por línea, formato AAAA-MM-DD"></textarea>
+        </div>
+
+        <label style="margin-top:24px;">Cronograma interno (opcional, para eventos de varios días)</label>
+        <p class="field-hint" style="margin-top:0;">Agregá una fila por cada actividad con fecha, horario y descripción propia.</p>
+        <div id="scheduleRows"></div>
+        <button type="button" class="btn btn-secondary btn-small" id="addScheduleRowBtn">+ Agregar actividad</button>
+
+        <button type="submit" class="btn btn-primary" id="saveEventBtn" data-target-status="pending">Enviar a revisión</button>
+        <button type="button" class="btn btn-secondary" id="saveEventDraftBtn">Guardar como borrador</button>
+        <button type="button" class="btn btn-secondary" id="cancelEventBtn">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  </div>
+  <!-- ===== FIN SECCIÓN EVENTOS ===== -->
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/panel.js"></script>
+<script src="js/panel-events.js"></script>
+
+</body>
+</html>

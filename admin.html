@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de admin — Visit Potrero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .container { max-width: 640px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--card); color: var(--muted); font-size: 13px; font-weight: 700;
+    cursor: pointer; box-shadow: var(--shadow);
+  }
+  .tab.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
+  .admin-card { margin-bottom: 14px; }
+  .admin-card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .admin-card .name { font-weight: 800; font-size: 17px; margin-bottom: 2px; }
+  .admin-card .cat { font-size: 13px; color: var(--primary-dark); font-weight: 600; margin-bottom: 10px; }
+  .admin-card dl { margin: 10px 0 0; font-size: 14px; }
+  .admin-card dt { color: var(--muted); font-size: 12px; margin-top: 8px; text-transform: uppercase; letter-spacing: .02em; }
+  .admin-card dd { margin: 2px 0 0; }
+  .admin-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span> <span style="font-size:12px; color:rgba(255,255,255,.6); font-weight:400;">· admin</span></div>
+  <div style="display:flex; gap:14px; align-items:center;">
+    <a href="importar.html" class="btn-icon" style="text-decoration:none;">Importar catálogo</a>
+    <a href="panel.html" class="btn-icon" style="text-decoration:none;">Mi panel</a>
+    <button class="btn-icon" id="logoutBtn">Cerrar sesión</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="alert" class="alert"></div>
+
+  <div class="section-tabs">
+    <button id="mainTabBusinesses" class="active">🏪 Comercios</button>
+    <button id="mainTabEvents">🎉 Eventos</button>
+  </div>
+
+  <div id="businessesSection">
+
+  <div id="listView">
+    <div class="tabs">
+      <button class="tab active" data-status="pending">Pendientes</button>
+      <button class="tab" data-status="published">Publicadas</button>
+      <button class="tab" data-status="rejected">Rechazadas</button>
+      <button class="tab" data-status="all">Todas</button>
+    </div>
+
+    <div id="list">
+      <p class="empty-state">Cargando...</p>
+    </div>
+  </div>
+
+  <div id="formView" class="hidden">
+    <div class="card">
+      <h2>Editar ficha</h2>
+
+      <form id="businessForm">
+        <input type="hidden" id="business_id">
+
+        <label for="name">Nombre del comercio *</label>
+        <input type="text" id="name" required>
+
+        <label for="category_id">Categoría *</label>
+        <select id="category_id" required>
+          <option value="">Seleccioná una categoría</option>
+        </select>
+
+        <label for="subcategory_id">Subcategoría</label>
+        <select id="subcategory_id">
+          <option value="">(opcional)</option>
+        </select>
+
+        <label for="description">Descripción</label>
+        <textarea id="description"></textarea>
+
+        <label for="address">Dirección</label>
+        <input type="text" id="address">
+
+        <label for="hours">Horarios</label>
+        <input type="text" id="hours">
+
+        <div class="row-2">
+          <div>
+            <label for="phone">Teléfono</label>
+            <input type="tel" id="phone">
+          </div>
+          <div>
+            <label for="whatsapp">WhatsApp</label>
+            <input type="tel" id="whatsapp">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label for="instagram">Instagram</label>
+            <input type="text" id="instagram">
+          </div>
+          <div>
+            <label for="website">Sitio web</label>
+            <input type="text" id="website">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label for="email">Email</label>
+            <input type="email" id="email">
+          </div>
+          <div>
+            <label for="facebook">Facebook</label>
+            <input type="text" id="facebook">
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label for="lat">Latitud</label>
+            <input type="text" id="lat">
+          </div>
+          <div>
+            <label for="lng">Longitud</label>
+            <input type="text" id="lng">
+          </div>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
+          <input type="checkbox" id="open_now" style="width:auto;" checked>
+          <span style="font-weight:600; color:var(--muted); font-size:14px;">Actualmente abierto</span>
+        </label>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+          <input type="checkbox" id="featured" style="width:auto;">
+          <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacado</span>
+        </label>
+
+        <button type="submit" class="btn btn-primary" id="saveBtn">Guardar cambios</button>
+        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  </div>
+  <!-- fin businessesSection -->
+
+  <!-- ===== SECCIÓN EVENTOS (admin) ===== -->
+  <div id="eventsAdminSection" class="hidden">
+
+    <div id="eventsAdminListView">
+      <div class="tabs" id="evAdminStatusTabs">
+        <button class="tab active" data-evstatus="pending">Pendientes</button>
+        <button class="tab" data-evstatus="needs_changes">Con cambios pedidos</button>
+        <button class="tab" data-evstatus="published">Publicados</button>
+        <button class="tab" data-evstatus="featured">Destacados</button>
+        <button class="tab" data-evstatus="finished">Finalizados</button>
+        <button class="tab" data-evstatus="hidden">Ocultos</button>
+        <button class="tab" data-evstatus="rejected">Rechazados</button>
+        <button class="tab" data-evstatus="all">Todos</button>
+      </div>
+
+      <div class="row-2" style="margin-bottom:10px;">
+        <select id="evAdminCategoryFilter">
+          <option value="">Todas las categorías</option>
+        </select>
+        <input type="text" id="evAdminOrgSearch" placeholder="Buscar por organizador o título...">
+      </div>
+      <input type="date" id="evAdminDateFilter" style="margin-bottom:14px;">
+
+      <button class="btn btn-primary btn-small" id="newOfficialEventBtn" style="margin-bottom:14px;">+ Crear evento oficial</button>
+
+      <div id="evAdminList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+
+    <div id="eventsAdminFormView" class="hidden">
+      <div class="card">
+        <h2 id="evAdminFormTitle">Editar evento</h2>
+
+        <form id="evAdminForm">
+          <input type="hidden" id="evad_id">
+
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="evad_is_official" style="width:auto;">
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Evento oficial (municipal, sin ficha organizadora)</span>
+          </label>
+
+          <label for="evad_business_id">Ficha organizadora</label>
+          <select id="evad_business_id">
+            <option value="">(sin ficha / evento oficial)</option>
+          </select>
+
+          <label for="evad_title">Título del evento *</label>
+          <input type="text" id="evad_title" required>
+
+          <label for="evad_short_description">Descripción corta</label>
+          <input type="text" id="evad_short_description" maxlength="140">
+
+          <label for="evad_description">Descripción completa</label>
+          <textarea id="evad_description"></textarea>
+
+          <label for="evad_category_id">Categoría *</label>
+          <select id="evad_category_id" required>
+            <option value="">Seleccioná una categoría</option>
+          </select>
+
+          <label for="evad_cover_image">Imagen de portada (URL)</label>
+          <input type="text" id="evad_cover_image">
+
+          <label for="evad_gallery">Galería (URLs separadas por coma)</label>
+          <input type="text" id="evad_gallery">
+
+          <div class="row-2">
+            <div>
+              <label for="evad_start_date">Fecha de inicio *</label>
+              <input type="date" id="evad_start_date" required>
+            </div>
+            <div>
+              <label for="evad_end_date">Fecha de finalización *</label>
+              <input type="date" id="evad_end_date" required>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div>
+              <label for="evad_start_time">Horario de inicio</label>
+              <input type="time" id="evad_start_time">
+            </div>
+            <div>
+              <label for="evad_end_time">Horario de finalización</label>
+              <input type="time" id="evad_end_time">
+            </div>
+          </div>
+
+          <label for="evad_address">Dirección</label>
+          <input type="text" id="evad_address">
+
+          <div class="row-2">
+            <div>
+              <label for="evad_lat">Latitud</label>
+              <input type="text" id="evad_lat">
+            </div>
+            <div>
+              <label for="evad_lng">Longitud</label>
+              <input type="text" id="evad_lng">
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div>
+              <label for="evad_phone">Teléfono</label>
+              <input type="tel" id="evad_phone">
+            </div>
+            <div>
+              <label for="evad_whatsapp">WhatsApp</label>
+              <input type="tel" id="evad_whatsapp">
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div>
+              <label for="evad_instagram">Instagram</label>
+              <input type="text" id="evad_instagram">
+            </div>
+            <div>
+              <label for="evad_website">Sitio web</label>
+              <input type="text" id="evad_website">
+            </div>
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
+            <input type="checkbox" id="evad_is_free" style="width:auto;">
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Entrada gratuita</span>
+          </label>
+          <div id="evad_price_wrap">
+            <label for="evad_price">Precio</label>
+            <input type="number" id="evad_price" min="0">
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+            <input type="checkbox" id="evad_requires_registration" style="width:auto;">
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Requiere inscripción</span>
+          </label>
+          <div id="evad_registration_wrap" class="hidden">
+            <label for="evad_registration_url">Enlace de inscripción</label>
+            <input type="text" id="evad_registration_url">
+          </div>
+
+          <label for="evad_capacity">Capacidad (opcional)</label>
+          <input type="number" id="evad_capacity" min="1">
+
+          <label for="evad_tags">Etiquetas</label>
+          <input type="text" id="evad_tags" placeholder="separadas por coma">
+
+          <label for="evad_recurrence_type">Repetición</label>
+          <select id="evad_recurrence_type">
+            <option value="none">No se repite</option>
+            <option value="weekly_fri">Todos los viernes</option>
+            <option value="weekly_sat">Todos los sábados</option>
+            <option value="weekend">Todos los fines de semana</option>
+            <option value="weekly">Una vez por semana</option>
+            <option value="custom">Fechas específicas</option>
+          </select>
+          <div id="evad_recurrence_until_wrap" class="hidden">
+            <label for="evad_recurrence_until">Repetir hasta</label>
+            <input type="date" id="evad_recurrence_until">
+          </div>
+          <div id="evad_recurrence_custom_wrap" class="hidden">
+            <label for="evad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
+            <textarea id="evad_recurrence_dates"></textarea>
+          </div>
+
+          <hr style="border:none; border-top:1px solid var(--border); margin:22px 0;">
+
+          <label for="evad_status">Estado</label>
+          <select id="evad_status">
+            <option value="draft">Borrador</option>
+            <option value="pending">Pendiente de revisión</option>
+            <option value="approved">Aprobado</option>
+            <option value="published">Publicado</option>
+            <option value="needs_changes">Requiere modificaciones</option>
+            <option value="rejected">Rechazado</option>
+            <option value="finished">Finalizado</option>
+            <option value="hidden">Oculto</option>
+          </select>
+
+          <label for="evad_review_note">Observación para el organizador (visible para él)</label>
+          <textarea id="evad_review_note" placeholder="Ej: falta la foto de portada, corregí el horario..."></textarea>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+            <input type="checkbox" id="evad_is_featured" style="width:auto;">
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacado (aparece en el carrusel superior de la Agenda)</span>
+          </label>
+          <div id="evad_featured_order_wrap">
+            <label for="evad_featured_order">Orden entre destacados (menor = primero)</label>
+            <input type="number" id="evad_featured_order" value="0">
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="evAdminSaveBtn">Guardar evento</button>
+          <button type="button" class="btn btn-secondary" id="evAdminCancelBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin eventsAdminSection -->
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/admin-events.js"></script>
+
+</body>
+</html>

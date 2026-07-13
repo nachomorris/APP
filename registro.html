@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registrate — Visit Potrero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span></div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h1>Creá tu cuenta</h1>
+    <p class="subtitle">Registrá tu comercio y cargá tu propia ficha. Una vez que la revisemos, se publica en Visit Potrero.</p>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="registroForm">
+      <label for="full_name">Nombre y apellido</label>
+      <input type="text" id="full_name" required autocomplete="name">
+
+      <label for="phone">Teléfono (WhatsApp)</label>
+      <input type="tel" id="phone" placeholder="266 4123456" required autocomplete="tel">
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required autocomplete="email">
+
+      <div class="row-2">
+        <div>
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" required minlength="6" autocomplete="new-password">
+        </div>
+        <div>
+          <label for="password2">Repetir contraseña</label>
+          <input type="password" id="password2" required minlength="6" autocomplete="new-password">
+        </div>
+      </div>
+      <p class="field-hint">Mínimo 6 caracteres.</p>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">Crear cuenta</button>
+    </form>
+
+    <div class="form-footer">
+      ¿Ya tenés cuenta? <a href="login.html">Iniciar sesión</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+const form = document.getElementById('registroForm');
+const alertBox = document.getElementById('alert');
+const submitBtn = document.getElementById('submitBtn');
+
+function showAlert(message, type) {
+  alertBox.textContent = message;
+  alertBox.className = 'alert show alert-' + type;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  alertBox.className = 'alert';
+
+  const full_name = document.getElementById('full_name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+
+  if (password !== password2) {
+    showAlert('Las contraseñas no coinciden.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Creando cuenta...';
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name, phone }
+    }
+  });
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Crear cuenta';
+
+  if (error) {
+    showAlert(error.message, 'error');
+    return;
+  }
+
+  if (data.session) {
+    // Confirmación de email desactivada: ya queda logueado.
+    window.location.href = 'panel.html';
+  } else {
+    // Confirmación de email activada: falta que confirme por correo.
+    showAlert('¡Listo! Te enviamos un email para confirmar tu cuenta. Una vez confirmado, iniciá sesión.', 'success');
+    form.reset();
+  }
+});
+</script>
+
+</body>
+</html>

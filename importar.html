@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importar catálogo — Visit Potrero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span> <span style="font-size:12px; color:rgba(255,255,255,.6); font-weight:400;">· admin</span></div>
+  <a href="admin.html" class="btn-icon" style="text-decoration:none;">Volver</a>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h1>Importar catálogo viejo</h1>
+    <p class="subtitle">Vuelca las categorías, subcategorías y comercios de tu data.js anterior a esta base. Se puede correr más de una vez sin duplicar (usa el id original como clave).</p>
+
+    <div id="alert" class="alert"></div>
+
+    <div id="summary" class="card" style="background:var(--bg);">
+      <p class="empty-state">Cargando datos a importar...</p>
+    </div>
+
+    <button class="btn btn-primary" id="importBtn" disabled>Importar ahora</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="import/import-data.js"></script>
+<script src="js/importar.js"></script>
+
+</body>
+</html>

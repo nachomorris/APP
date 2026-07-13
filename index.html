@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Visit Potrero — Guía de Potrero de los Funes</title>
+<meta name="description" content="Guía de experiencias, alojamientos, restaurantes y comercios de Potrero de los Funes, San Luis, Argentina.">
+<meta name="theme-color" content="#111111">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root{
+    --primary:#A3E635;
+    --primary-dark:#65A30D;
+    --primary-light:#ECFCCB;
+    --accent:#A3E635;
+    --ink:#111111;
+    --muted:#6b7280;
+    --bg:#F7F8F3;
+    --card:#ffffff;
+    --border:#ECECEC;
+    --radius:18px;
+    --shadow:0 4px 18px rgba(17,17,17,.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding-bottom:96px;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  button{font-family:inherit;}
+
+  /* App shell */
+  .app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+
+  header.topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--ink);
+    color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px;
+    border-radius:0 0 22px 22px;
+    box-shadow:0 4px 16px rgba(0,0,0,.18);
+  }
+  header.topbar .logo{
+    width:34px;height:34px;border-radius:50%;background:var(--primary);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;
+  }
+  header.topbar .title{font-weight:800;font-size:16px;line-height:1.1;}
+  header.topbar .sub{font-size:11px;opacity:.75;font-weight:500;}
+  header.topbar .back{
+    background:var(--primary);border:none;color:var(--ink);width:32px;height:32px;border-radius:50%;
+    font-size:16px;font-weight:800;cursor:pointer;flex:none;
+  }
+  header.topbar.hidden{display:none;}
+
+  main{padding:16px 16px 8px;}
+
+  /* Home top panel (marca + buscador + categorías, todo integrado) */
+  .home-panel{
+    background:var(--primary);color:var(--ink);
+    border-radius:0 0 28px 28px;
+    margin:-16px -16px 24px;padding:0 16px 18px;
+    position:sticky;top:0;z-index:20;
+    box-shadow:0 4px 16px rgba(0,0,0,.1);
+    transition:background-color .3s ease, padding .28s ease;
+    will-change:background-color;
+  }
+  .home-panel.scrolled{
+    background:rgba(163,230,53,.7);
+  }
+  .home-panel.scrolled.panel-active{
+    background:var(--primary);
+  }
+  .panel-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .panel-topbar .brand{
+    display:flex;align-items:center;background:#fff;
+    padding:8px 14px;border-radius:0 0 16px 16px;
+    box-shadow:0 6px 14px rgba(0,0,0,.22), 0 2px 4px rgba(0,0,0,.14);
+  }
+  .panel-topbar .brand .logo-img{
+    height:46px;width:auto;display:block;
+  }
+  .panel-topbar .menu-btn{
+    width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.12);
+    display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--ink);
+    border:none;cursor:pointer;flex:none;
+  }
+
+  .section{margin:52px 0 26px;}
+  .section:first-of-type{margin-top:0;}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+  .section-head h2{font-size:17px;margin:0;font-weight:700;}
+  .section-head .see-all{font-size:12.5px;color:var(--primary-dark);font-weight:600;}
+  .section-desc{font-size:12.5px;color:var(--muted);margin:-8px 0 12px;}
+
+  /* Categories row (single row, swipeable) */
+  .cat-grid{
+    display:flex;gap:16px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+    padding:2px 2px 4px;touch-action:pan-x;
+    transition:padding .28s ease;
+    -ms-overflow-style:none;scrollbar-width:none;
+  }
+  .home-panel.collapsed .cat-grid{padding-top:0;padding-bottom:0;}
+  .home-panel.collapsed{padding-bottom:12px;}
+  .cat-grid::-webkit-scrollbar{display:none;}
+  .cat-chip{
+    flex:0 0 auto;text-align:center;cursor:pointer;background:transparent;border:none;padding:0;
+    scroll-snap-align:start;
+  }
+  .cat-chip .emoji{
+    width:52px;height:52px;border-radius:50%;background:var(--ink);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px;
+    box-shadow:0 3px 8px rgba(0,0,0,.15);overflow:hidden;
+    transition:width .25s ease, height .25s ease, margin .25s ease, opacity .2s ease, font-size .25s ease, box-shadow .25s ease;
+  }
+  .home-panel.collapsed .cat-chip .emoji{
+    width:0;height:0;margin:0;opacity:0;font-size:0;box-shadow:none;
+  }
+  .cat-chip .label{display:block;font-size:10.5px;font-weight:600;color:var(--ink);white-space:nowrap;}
+  .cat-chip.active .emoji{outline:2px solid var(--ink);}
+
+  /* Flechitas de scroll de categorías (sutiles, como en el menú de Pehuen) */
+  .cat-grid-wrap{position:relative;}
+  .edge-fade{
+    position:absolute;top:0;bottom:0;width:28px;pointer-events:none;
+    transition:opacity .2s ease;z-index:1;
+  }
+  .edge-fade.left{left:0;background:linear-gradient(to right, var(--bg) 30%, rgba(247,248,243,0));}
+  .edge-fade.right{right:0;background:linear-gradient(to left, var(--bg) 30%, rgba(247,248,243,0));}
+  .edge-fade.on-panel.left{background:linear-gradient(to right, var(--primary) 40%, rgba(163,230,53,0));}
+  .edge-fade.on-panel.right{background:linear-gradient(to left, var(--primary) 40%, rgba(163,230,53,0));}
+  .edge-fade.is-hidden{opacity:0;}
+
+  /* Envoltorio de los sliders horizontales (Descuentos / Lugares): degradado fijo, solo del lado derecho */
+  .hscroll-wrap{position:relative;}
+  .hscroll-wrap .edge-fade{width:16px;}
+  .hscroll-wrap .edge-fade.right{background:linear-gradient(to left, var(--bg), rgba(247,248,243,0));}
+  .scroll-chevron{
+    position:absolute;top:26px;transform:translateY(-50%);
+    width:20px;height:30px;
+    display:flex;align-items:center;justify-content:center;
+    background:none;border:none;box-shadow:none;cursor:pointer;padding:0;
+    transition:opacity .2s ease, visibility .2s ease;
+    z-index:2;
+  }
+  /* Flecha dibujada con CSS (no depende de fuentes/emoji, se ve igual en todos lados) */
+  .scroll-chevron::before{
+    content:'';display:block;width:4px;height:4px;
+    border-top:1.5px solid rgba(51,51,51,.75);
+    border-right:1.5px solid rgba(51,51,51,.75);
+  }
+  .scroll-chevron.left::before{transform:rotate(-135deg);margin-left:5px;}
+  .scroll-chevron.right::before{transform:rotate(45deg);margin-right:5px;}
+  .scroll-chevron.left{left:-2px;}
+  .scroll-chevron.right{right:-2px;}
+  .scroll-chevron.is-hidden{opacity:0;visibility:hidden;pointer-events:none;}
+
+  /* Map CTA */
+  .map-cta{
+    display:flex;align-items:center;gap:14px;background:var(--ink);color:#fff;border-radius:20px;
+    padding:16px;box-shadow:var(--shadow);cursor:pointer;
+  }
+  .map-cta .emoji{font-size:30px;}
+  .map-cta .t1{font-size:11px;color:var(--primary);font-weight:700;letter-spacing:.03em;}
+  .map-cta .t2{font-size:15px;font-weight:700;margin:2px 0;}
+  .map-cta .t3{font-size:12px;color:#cbd5e1;}
+
+  /* Horizontal scroller */
+  .hscroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;touch-action:pan-x;-webkit-overflow-scrolling:touch;}
+  .hscroll::-webkit-scrollbar{display:none;}
+  .place-card{
+    flex:0 0 auto;width:200px;background:var(--card);border-radius:18px;overflow:hidden;
+    box-shadow:var(--shadow);scroll-snap-align:start;border:1px solid var(--border);
+  }
+  .place-card .img{height:110px;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--primary);background:var(--ink);}
+  .place-card .body{padding:10px 12px 14px;}
+  .place-card .tag{font-size:10px;color:var(--primary-dark);font-weight:700;text-transform:uppercase;letter-spacing:.02em;}
+  .place-card .name{font-size:13.5px;font-weight:700;margin:3px 0 4px;}
+  .place-card .desc{font-size:11.5px;color:var(--muted);line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+
+  /* Promo cards (idénticas a "Descuentos imperdibles" de PLIN: foto arriba, texto abajo) */
+  .promo-card{
+    flex:0 0 68%;border-radius:18px;overflow:hidden;background:var(--ink);color:#fff;
+    display:flex;flex-direction:column;scroll-snap-align:start;cursor:pointer;
+  }
+  .promo-card .promo-img{
+    height:150px;display:flex;align-items:center;justify-content:center;font-size:44px;
+    position:relative;overflow:hidden;
+  }
+  .promo-card .promo-img img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  }
+  .promo-card .promo-caption{padding:10px 12px 12px;}
+  .promo-card .promo-name{font-size:11px;opacity:.8;margin-bottom:3px;}
+  .promo-card .promo-highlight{font-size:16px;font-weight:600;margin-bottom:2px;}
+  .promo-card .promo-sub{font-size:11px;opacity:.9;}
+
+  /* Business list */
+  .biz-list{display:flex;flex-direction:column;gap:10px;}
+  .biz-card{
+    display:flex;align-items:stretch;background:var(--card);border:1px solid var(--border);border-radius:18px;
+    overflow:hidden;box-shadow:var(--shadow);cursor:pointer;min-height:154px;
+  }
+  .biz-card .thumb{
+    width:158px;flex:none;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;
+  }
+  .biz-card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  /* Placeholder de logo (alojamientos sin foto propia todavía): se ve completo,
+     sin recortarse como pasaría con "cover" en una imagen apaisada. */
+  .thumb-logo img.logo-fit{object-fit:contain;padding:16px;}
+  .biz-card .info{flex:1;min-width:0;padding:14px 14px 14px 16px;display:flex;flex-direction:column;justify-content:center;}
+  .biz-card .badges{display:flex;gap:6px;align-items:center;margin-bottom:2px;flex-wrap:wrap;}
+  .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;gap:3px;}
+  .badge.top{background:var(--ink);color:var(--primary);}
+  .badge.featured{background:var(--primary);color:var(--ink);}
+  .badge.open{background:var(--primary-light);color:var(--primary-dark);}
+  .badge.closed{background:#f3f4f6;color:#6b7280;}
+  .biz-card .name{font-size:14px;font-weight:700;margin:0 0 2px;}
+  .biz-card .cat{font-size:11.5px;color:var(--primary-dark);font-weight:600;}
+  .biz-card .addr{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+  /* Search bar */
+  .searchbar{
+    display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:10px 14px;box-shadow:var(--shadow);margin-bottom:14px;
+  }
+  .searchbar input{border:none;outline:none;font-size:14px;flex:1;background:transparent;font-family:inherit;}
+  .filter-row{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;touch-action:pan-x;}
+  .filter-pill{
+    flex:none;border:1px solid var(--border);background:var(--card);border-radius:20px;padding:7px 14px;
+    font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);white-space:nowrap;
+  }
+  .filter-pill.active{background:var(--ink);border-color:var(--ink);color:var(--primary);}
+
+  /* Detail page */
+  .detail-hero{height:180px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:56px;color:var(--primary);background:var(--ink);margin-bottom:16px;overflow:hidden;position:relative;}
+  .detail-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .detail-title{font-size:21px;font-weight:800;margin:0 0 4px;}
+  .detail-cat{font-size:13px;color:var(--primary-dark);font-weight:700;margin-bottom:10px;}
+  .detail-badges{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .detail-block{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow);}
+  .detail-block h3{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:0 0 6px;}
+  .detail-block p{margin:0;font-size:14px;line-height:1.5;}
+  .detail-row{display:flex;align-items:center;gap:10px;font-size:13.5px;padding:6px 0;}
+  .detail-row .ic{width:26px;text-align:center;font-size:15px;}
+  .cta-btns{display:flex;gap:10px;margin-top:6px;}
+  .cta-btns a{flex:1;text-align:center;padding:12px;border-radius:14px;font-weight:700;font-size:13px;}
+  .cta-btns .wsp{background:#25D366;color:#fff;}
+  .cta-btns .map{background:var(--ink);color:var(--primary);}
+
+  /* Events / novedades */
+  .event-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:10px;}
+  .event-card .date{font-size:11px;font-weight:700;color:var(--primary-dark);text-transform:uppercase;}
+  .event-card h3{font-size:14.5px;margin:4px 0 4px;}
+  .event-card p{font-size:12.5px;color:var(--muted);margin:0;line-height:1.4;}
+
+  /* ===== Agenda de eventos ===== */
+  .agenda-intro{margin:0 0 16px;}
+  .agenda-intro h1{margin-bottom:4px;}
+  .agenda-intro p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.4;}
+
+  .filter-row.wrap{flex-wrap:wrap;overflow:visible;}
+  .filter-pill.free{border-color:var(--primary-dark);}
+  .filter-pill.free.active{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+
+  .agenda-group-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:22px 0 10px;}
+  .agenda-group-title:first-of-type{margin-top:4px;}
+
+  .agenda-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer;}
+  .agenda-card .cover{height:140px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:38px;color:#fff;background:var(--ink);}
+  .agenda-card .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .agenda-card .cover .cat-tag{position:absolute;top:10px;left:10px;background:rgba(17,17,17,.72);color:var(--primary);font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .agenda-card .cover .free-tag{position:absolute;top:10px;right:10px;background:var(--primary);color:var(--ink);font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px;}
+  .agenda-card .body{padding:14px 16px 16px;}
+  .agenda-card .when{font-size:11.5px;font-weight:700;color:var(--primary-dark);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px;}
+  .agenda-card h3{font-size:16px;font-weight:800;margin:0 0 6px;}
+  .agenda-card .meta-row{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:3px;}
+  .agenda-card .desc{font-size:12.5px;color:var(--muted);line-height:1.4;margin:8px 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .agenda-card .org{font-size:11.5px;color:var(--ink);font-weight:600;margin-bottom:10px;}
+  .agenda-card .org span{color:var(--muted);font-weight:500;}
+  .agenda-card .more-btn{display:inline-block;background:var(--ink);color:var(--primary);font-size:12.5px;font-weight:700;padding:9px 16px;border-radius:12px;}
+
+  .featured-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;touch-action:pan-x;-webkit-overflow-scrolling:touch;}
+  .featured-scroll::-webkit-scrollbar{display:none;}
+  .featured-card{flex:0 0 78%;border-radius:20px;overflow:hidden;background:var(--ink);color:#fff;scroll-snap-align:start;cursor:pointer;box-shadow:var(--shadow);}
+  .featured-card .cover{height:150px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:40px;}
+  .featured-card .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .featured-card .cover .star{position:absolute;top:10px;left:10px;background:var(--primary);color:var(--ink);font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px;}
+  .featured-card .cap{padding:12px 14px 14px;}
+  .featured-card .when{font-size:10.5px;color:var(--primary);font-weight:700;text-transform:uppercase;margin-bottom:3px;}
+  .featured-card h3{font-size:15px;margin:0 0 3px;}
+  .featured-card .sub{font-size:11.5px;opacity:.85;}
+
+  .fab-cargar{position:fixed;left:0;right:0;bottom:88px;display:flex;justify-content:center;z-index:25;pointer-events:none;}
+  .fab-cargar a{pointer-events:auto;display:flex;align-items:center;gap:8px;background:var(--primary);color:var(--ink);font-weight:800;font-size:13.5px;padding:13px 22px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.28);}
+
+  .agenda-search-empty{margin-top:6px;}
+  .agenda-archive-link{text-align:center;margin:24px 0 8px;font-size:13px;color:var(--muted);}
+  .agenda-archive-link a{color:var(--primary-dark);font-weight:700;}
+
+  /* Detalle de evento */
+  .event-badges{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .event-badges .free{background:var(--primary-light);color:var(--primary-dark);}
+  .event-badges .price{background:#f3f4f6;color:var(--ink);}
+  .schedule-item{padding:8px 0;border-bottom:1px solid var(--border);}
+  .schedule-item:last-child{border-bottom:none;}
+  .schedule-item .d{font-size:11px;font-weight:700;color:var(--primary-dark);text-transform:uppercase;}
+  .schedule-item .t{font-size:12px;color:var(--muted);margin:2px 0;}
+  .schedule-item .desc{font-size:13px;}
+
+  /* Map */
+  #mapview{height:calc(100vh - 200px);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);}
+  .leaflet-popup-content{font-family:'Poppins',sans-serif;font-size:13px;}
+  .popup-link{color:var(--primary-dark);font-weight:700;font-size:12px;display:inline-block;margin-top:4px;}
+
+  .empty-state{text-align:center;padding:40px 20px;color:var(--muted);font-size:13.5px;}
+
+  /* Scroll reveal */
+  .reveal{
+    opacity:0;transform:translateY(26px);
+    transition:opacity .6s cubic-bezier(.22,.68,.35,1), transform .6s cubic-bezier(.22,.68,.35,1);
+    will-change:opacity,transform;
+  }
+  .reveal.revealed{opacity:1;transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1;transform:none;transition:none;}
+  }
+
+  /* Bottom nav */
+  nav.bottomnav{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;
+    display:flex;justify-content:center;
+    padding:0 16px 16px;
+    pointer-events:none;
+  }
+  nav.bottomnav .inner{
+    display:flex;gap:4px;border-radius:22px;max-width:100%;
+    padding:8px 8px;pointer-events:auto;overflow-x:auto;
+    background:rgba(17,17,17,.5);
+    -webkit-backdrop-filter:blur(20px) saturate(180%);
+    backdrop-filter:blur(20px) saturate(180%);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 10px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.12);
+    -ms-overflow-style:none;scrollbar-width:none;
+  }
+  nav.bottomnav .inner::-webkit-scrollbar{display:none;}
+  nav.bottomnav a{
+    flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 10px 2px;
+    font-size:10px;color:#fff;opacity:.62;font-weight:600;cursor:pointer;white-space:nowrap;
+    text-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  nav.bottomnav a.active{opacity:1;}
+  nav.bottomnav a .ic{
+    font-size:16px;width:32px;height:32px;border-radius:50%;display:flex;
+    align-items:center;justify-content:center;margin-bottom:1px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  nav.bottomnav a.active .ic{
+    background:var(--primary);
+    transform:translateY(-3px) scale(1.08);
+    box-shadow:
+      0 6px 14px rgba(163,230,53,.55),
+      inset 0 1px 1px rgba(255,255,255,.6),
+      inset 0 -2px 2px rgba(0,0,0,.18);
+  }
+
+  @media (min-width:521px){
+    .app{border-left:1px solid var(--border);border-right:1px solid var(--border);}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar" id="topbar"></header>
+  <main id="view">
+    <div class="empty-state">Cargando Visit Potrero...</div>
+  </main>
+  <nav class="bottomnav">
+    <div class="inner" id="bottomnav"></div>
+  </nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+/* ============ DATOS ============
+   CATEGORIES, SUBCATEGORIES y BUSINESSES ahora se cargan en vivo desde
+   Supabase (ver loadData() al final del archivo) en vez de venir de un
+   data.js estático. PLACES/EVENTS/NOVEDADES todavía son contenido
+   editorial fijo (no lo carga cada comercio), igual que en el sitio viejo. */
+const CENTER = [-33.2333, -66.265];
+
+const PLACES = [
+  {
+    "id": "paseo-del-lago",
+    "name": "Paseo del Lago",
+    "type": "Peatonal",
+    "emoji": "🌉",
+    "desc": "Recorrido peatonal con miradores y rampas para personas con discapacidad, y un puente flotante que comunica con el Parque Nativo.",
+    "lat": -33.2293,
+    "lng": -66.271
+  },
+  {
+    "id": "paseo-artesanos",
+    "name": "Paseo de Artesanos Laura Amaya",
+    "type": "Paseo",
+    "emoji": "🎨",
+    "desc": "Feria de artesanos con productos regionales, tejidos y artesanías locales, en pleno centro de Potrero.",
+    "lat": -33.2353,
+    "lng": -66.262
+  },
+  {
+    "id": "parque-salagria",
+    "name": "Parque Recreativo La Salagria",
+    "type": "Parque recreativo",
+    "emoji": "🌳",
+    "desc": "Propuestas pensadas para el descanso, la recreación y los encuentros en familia o con amigos, a orillas del dique.",
+    "lat": -33.2243,
+    "lng": -66.257
+  },
+  {
+    "id": "quebrada-condores",
+    "name": "Quebrada de los Cóndores",
+    "type": "Fotográfico",
+    "emoji": "🦅",
+    "desc": "Ingreso y bienvenida al valle, con un mirador ideal para fotografía y contacto con las sierras.",
+    "lat": -33.2443,
+    "lng": -66.269
+  },
+  {
+    "id": "dique-potrero",
+    "name": "Dique Potrero de los Funes",
+    "type": "Naturaleza",
+    "emoji": "💧",
+    "desc": "El embalse que da nombre a la localidad. Apto para deportes náuticos, pesca y paseos en la costanera.",
+    "lat": -33.2323,
+    "lng": -66.276
+  }
+];
+
+let EVENT_CATEGORIES = [];
+let EVENTS = [];
+let hasSession = false;
+
+const NOVEDADES = [
+  {
+    "date": "05 Jul 2026",
+    "title": "Nueva señalética en el Paseo del Lago",
+    "desc": "Se incorporaron carteles informativos y de accesibilidad en todo el recorrido peatonal."
+  },
+  {
+    "date": "28 Jun 2026",
+    "title": "CCTA suma nuevos comercios adheridos",
+    "desc": "Se incorporaron 6 nuevos comercios a la guía oficial de Potrero de los Funes."
+  },
+  {
+    "date": "15 Jun 2026",
+    "title": "Mejoras en la costanera",
+    "desc": "Trabajos de mantenimiento y nueva iluminación en el sector de la Salagria."
+  }
+];
+
+const SAMPLE_PHOTOS = [
+  "https://images.pexels.com/photos/1639562/pexels-photo-1639562.jpeg?auto=compress&cs=tinysrgb&w=800",
+  "https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=800"
+];
+
+let CATEGORIES = [];
+let SUBCATEGORIES = {};
+let BUSINESSES = [];
+
+function cat(slug){ return CATEGORIES.find(c=>c.slug===slug) || CATEGORIES[0] || {slug:'', label:'Comercio', emoji:'🏪', color:'#111111'}; }
+function jitter(base, i, scale){ return base + ((i*37 % 100)/100 - .5) * scale; }
+
+/* ============ CARGA DESDE SUPABASE (reemplaza al data.js viejo) ============ */
+async function loadData(){
+  const { data: cats } = await supabaseClient
+    .from('categories')
+    .select('id, label, icon, color, sort_order')
+    .order('sort_order', { ascending: true });
+
+  CATEGORIES = (cats || []).map(c => ({
+    slug: c.id,
+    label: c.label,
+    emoji: c.icon || '🏪',
+    color: c.color || '#111111'
+  }));
+
+  const { data: subs } = await supabaseClient
+    .from('subcategories')
+    .select('id, category_id, label, sort_order')
+    .order('sort_order', { ascending: true });
+
+  SUBCATEGORIES = {};
+  const subLabelById = {};
+  (subs || []).forEach((s) => {
+    subLabelById[s.id] = s.label;
+    if (!SUBCATEGORIES[s.category_id]) SUBCATEGORIES[s.category_id] = [];
+    SUBCATEGORIES[s.category_id].push(s.label);
+  });
+
+  const { data: rows, error } = await supabaseClient
+    .from('businesses')
+    .select('*')
+    .eq('status', 'published');
+
+  if (error) {
+    document.getElementById('view').innerHTML = `<div class="empty-state">No se pudo cargar el catálogo: ${error.message}</div>`;
+    throw error;
+  }
+
+  BUSINESSES = (rows || []).map((b) => ({
+    id: b.legacy_id || b.id,
+    uuid: b.id,
+    name: b.name,
+    category: b.category_id,
+    subcategory: b.subcategory_id ? (subLabelById[b.subcategory_id] || '') : '',
+    address: b.address || '',
+    desc: b.description || '',
+    phone: b.phone || '',
+    email: b.email || '',
+    instagram: b.instagram || '',
+    facebook: b.facebook || '',
+    web: b.website || '',
+    hours: (b.hours && b.hours.texto) || '',
+    open: b.open !== false,
+    top: false,
+    featured: !!b.featured,
+    lat: b.lat,
+    lng: b.lng,
+    photo: (b.images && b.images[0]) ? b.images[0] : null
+  }));
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  hasSession = !!sessionData.session;
+
+  await loadAgendaData();
+}
+
+/* ============ AGENDA DE EVENTOS: carga de datos ============ */
+async function loadAgendaData(){
+  const { data: cats } = await supabaseClient
+    .from('event_categories')
+    .select('id, label, icon, color, sort_order')
+    .order('sort_order', { ascending: true });
+
+  EVENT_CATEGORIES = cats || [];
+
+  const { data: rows, error } = await supabaseClient
+    .from('events')
+    .select('*, businesses(id, legacy_id, name, category_id)')
+    .eq('status', 'published')
+    .order('start_date', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando agenda', error);
+    EVENTS = [];
+    return;
+  }
+
+  EVENTS = (rows || []).map((e) => ({
+    id: e.id,
+    title: e.title,
+    shortDesc: e.short_description || '',
+    desc: e.description || '',
+    cover: e.cover_image || '',
+    gallery: e.gallery || [],
+    category: e.category_id,
+    tags: e.tags || [],
+    startDate: e.start_date,
+    endDate: e.end_date,
+    startTime: e.start_time,
+    endTime: e.end_time,
+    address: e.address || '',
+    lat: e.lat,
+    lng: e.lng,
+    contactName: e.contact_name || '',
+    phone: e.phone || '',
+    whatsapp: e.whatsapp || '',
+    instagram: e.instagram || '',
+    website: e.website || '',
+    price: e.price,
+    isFree: !!e.is_free,
+    requiresRegistration: !!e.requires_registration,
+    registrationUrl: e.registration_url || '',
+    capacity: e.capacity,
+    isFeatured: !!e.is_featured,
+    featuredOrder: e.featured_order || 0,
+    isOfficial: !!e.is_official,
+    viewsCount: e.views_count || 0,
+    business: e.businesses || null
+  }));
+}
+
+/* ============ HELPERS ============ */
+function allItems(){
+  return BUSINESSES.map(b=>({...b, kind:'comercio'}));
+}
+function getBusiness(id){ return BUSINESSES.find(b=>b.id===id); }
+function getPlace(id){ return PLACES.find(p=>p.id===id); }
+
+// Elige siempre la misma foto de ejemplo para un mismo comercio (según su id),
+// sin importar en qué lista/orden aparezca — así la card y la ficha coinciden.
+function photoForBusiness(b){
+  if(b.photo) return b.photo;
+  // Alojamiento todavía no tiene fotos reales cargadas: mostramos el logo
+  // como placeholder hasta que se suba una foto propia desde el panel del comercio.
+  if(b.category === 'alojamiento') return 'images/logo.png';
+  let hash = 0;
+  for(let i=0;i<b.id.length;i++){ hash = (hash*31 + b.id.charCodeAt(i)) >>> 0; }
+  return SAMPLE_PHOTOS[hash % SAMPLE_PHOTOS.length];
+}
+
+// Devuelve las subcategorías de un comercio como array, sin importar si
+// vienen en el campo nuevo (subcategories: []) o en el viejo (subcategory: '').
+function subcatsOf(b){
+  if(Array.isArray(b.subcategories)) return b.subcategories.filter(Boolean);
+  if(b.subcategory) return [b.subcategory];
+  return [];
+}
+
+// El placeholder (logo) no debe recortarse como una foto real: se ve
+// completo y con fondo blanco en vez de "cover" sobre el color de la categoría.
+function isLogoPlaceholder(photo){ return photo === 'images/logo.png'; }
+
+function bizThumb(b){
+  const c = cat(b.category);
+  const photo = photoForBusiness(b);
+  const isLogo = isLogoPlaceholder(photo);
+  return `<div class="thumb${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
+    ${photo ? `<img src="${photo}" alt="${b.name}" loading="lazy"${isLogo ? ' class="logo-fit"' : ''}>` : c.emoji}
+  </div>`;
+}
+
+function badgesFor(b){
+  let h = '';
+  if(b.top) h += `<span class="badge top">★ TOP</span>`;
+  if(b.featured) h += `<span class="badge featured">☆ Destacado</span>`;
+  h += b.open ? `<span class="badge open">● Abierto</span>` : `<span class="badge closed">● Cerrado</span>`;
+  return h;
+}
+
+function bizCard(b, i){
+  return `<div class="biz-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/comercio/${b.id}')">
+    <div class="info">
+      <div class="badges">${badgesFor(b)}</div>
+      <div class="name">${b.name}</div>
+      <div class="cat">${cat(b.category).label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
+      <div class="addr">📍 ${b.address}</div>
+    </div>
+    ${bizThumb(b, i)}
+  </div>`;
+}
+
+function promoCard(b, i){
+  const c = cat(b.category);
+  const highlight = b.top ? '★ Top de Potrero' : (b.featured ? '☆ Recomendado' : c.label);
+  const photo = photoForBusiness(b);
+  const isLogo = isLogoPlaceholder(photo);
+  return `<div class="promo-card reveal" style="transition-delay:${(i%4)*70}ms" onclick="navigate('/comercio/${b.id}')">
+    <div class="promo-img${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
+      ${photo ? `<img src="${photo}" alt="${b.name}" loading="lazy"${isLogo ? ' class="logo-fit"' : ''}>` : c.emoji}
+    </div>
+    <div class="promo-caption">
+      <div class="promo-name">${b.name}</div>
+      <div class="promo-highlight">${highlight}</div>
+      <div class="promo-sub">${c.label} · ${b.open ? 'Abierto ahora' : b.hours}</div>
+    </div>
+  </div>`;
+}
+/* Nota: estructura de tarjeta calcada de .discount-card de PLIN
+   (business chico arriba, título grande, subtítulo chico, foto 150px arriba). */
+
+function placeCard(p, i){
+  return `<div class="place-card reveal" style="transition-delay:${((i||0)%4)*70}ms" onclick="navigate('/lugares/${p.id}')">
+    <div class="img">${p.emoji}</div>
+    <div class="body">
+      <div class="tag">${p.type}</div>
+      <div class="name">${p.name}</div>
+      <div class="desc">${p.desc}</div>
+    </div>
+  </div>`;
+}
+
+/* ============ BLOQUEO DE SWIPE HORIZONTAL ============ */
+function lockHorizontalSwipe(id){ /* no-op: manejado por CSS touch-action */ }
+
+/* ============ FLECHAS DE CATEGORÍAS ============ */
+function updateCatChevrons(){
+  const grid = document.getElementById('catGrid');
+  const left = document.getElementById('catChevronLeft');
+  const right = document.getElementById('catChevronRight');
+  const fadeLeft = document.getElementById('catFadeLeft');
+  const fadeRight = document.getElementById('catFadeRight');
+  if(!grid || !left || !right) return;
+  const maxScroll = grid.scrollWidth - grid.clientWidth;
+  const atStart = grid.scrollLeft <= 4;
+  const atEnd = maxScroll <= 4 || grid.scrollLeft >= maxScroll - 4;
+  left.classList.toggle('is-hidden', atStart);
+  right.classList.toggle('is-hidden', atEnd);
+  if(fadeLeft) fadeLeft.classList.toggle('is-hidden', atStart);
+  if(fadeRight) fadeRight.classList.toggle('is-hidden', atEnd);
+}
+function scrollCatGrid(dir){
+  const grid = document.getElementById('catGrid');
+  if(!grid) return;
+  grid.scrollBy({left: dir * 170, behavior:'smooth'});
+}
+function setupCatChevrons(){
+  const grid = document.getElementById('catGrid');
+  if(!grid) return;
+  grid.addEventListener('scroll', updateCatChevrons, {passive:true});
+  updateCatChevrons();
+}
+
+function setupEdgeFade(scrollId, fadeRightId){
+  const el = document.getElementById(scrollId);
+  const fadeRight = document.getElementById(fadeRightId);
+  if(!el || !fadeRight) return;
+  const update = () => {
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const atEnd = maxScroll <= 4 || el.scrollLeft >= maxScroll - 4;
+    fadeRight.classList.toggle('is-hidden', atEnd);
+  };
+  el.addEventListener('scroll', update, {passive:true});
+  update();
+}
+
+/* ============ SCROLL REVEAL ============ */
+let revealObserver = null;
+function initScrollReveal(){
+  const els = document.querySelectorAll('.reveal:not(.revealed)');
+  if(!els.length) return;
+  if(!('IntersectionObserver' in window)){
+    els.forEach(el=>el.classList.add('revealed'));
+    return;
+  }
+  if(!revealObserver){
+    revealObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('revealed');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.12, rootMargin:'0px 0px -30px 0px'});
+  }
+  els.forEach(el=>revealObserver.observe(el));
+}
+
+/* ============ ROUTER ============ */
+let lastHandledHash = null;
+function navigate(path){
+  const newHash = '#' + path;
+  if(location.hash === newHash){ render(); return; }
+  lastHandledHash = newHash;
+  location.hash = newHash;
+  render();
+}
+window.addEventListener('hashchange', () => {
+  if(location.hash === lastHandledHash){ lastHandledHash = null; return; }
+  render();
+});
+
+function parseRoute(){
+  let h = location.hash.replace(/^#/,'') || '/';
+  const parts = h.split('/').filter(Boolean);
+  return parts;
+}
+
+function setTopbar({title, sub, back}){
+  const tb = document.getElementById('topbar');
+  tb.classList.remove('hidden');
+  tb.innerHTML = `
+    ${back ? `<button class="back" onclick="history.back()">←</button>` : `<div class="logo">🏔️</div>`}
+    <div>
+      <div class="title">${title}</div>
+      ${sub ? `<div class="sub">${sub}</div>` : ''}
+    </div>`;
+}
+function hideTopbar(){
+  const tb = document.getElementById('topbar');
+  tb.classList.add('hidden');
+  tb.innerHTML = '';
+}
+
+function setBottomnav(active){
+  const items = [
+    {key:'home', path:'/', ic:'🏠', label:'Inicio'},
+    {key:'mapa', path:'/mapa', ic:'🗺️', label:'Mapa'},
+    {key:'agenda', path:'/agenda', ic:'🎉', label:'Agenda'},
+    {key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'},
+  ];
+  document.getElementById('bottomnav').innerHTML = items.map(i=>
+    `<a class="${active===i.key?'active':''}" onclick="navigate('${i.path}')"><span class="ic">${i.ic}</span>${i.label}</a>`
+  ).join('') + `<a href="login.html"><span class="ic">🏪</span>Comercios</a>`;
+}
+
+function render(){
+  const parts = parseRoute();
+  window.scrollTo(0,0);
+  if(parts.length===0){ return renderHome(); }
+  if(parts[0]==='categoria') return renderCategoria(parts[1]);
+  if(parts[0]==='buscar') return renderBuscar();
+  if(parts[0]==='mapa') return renderMapa();
+  if(parts[0]==='agenda' && parts[1]==='anteriores') return renderAgendaAnteriores();
+  if(parts[0]==='agenda') return renderAgenda();
+  if(parts[0]==='evento') return renderEventoDetail(parts[1]);
+  if(parts[0]==='novedades') return renderNovedades();
+  if(parts[0]==='comercio') return renderComercio(parts[1]);
+  if(parts[0]==='lugares') return renderLugar(parts[1]);
+  return renderHome();
+}
+
+/* ---- HOME ---- */
+let homeScrollHandler = null;
+let homeLastScrollY = 0;
+let homeTicking = false;
+let homeIsCollapsed = false;
+let homeIsScrolled = false;
+function setupHomePanelFade(){
+  const panel = document.querySelector('.home-panel');
+  if(!panel) return;
+  if(homeScrollHandler) window.removeEventListener('scroll', homeScrollHandler);
+  homeLastScrollY = window.scrollY;
+  homeIsCollapsed = false;
+  homeIsScrolled = false;
+  homeTicking = false;
+
+  const update = () => {
+    homeTicking = false;
+    const p = document.querySelector('.home-panel');
+    if(!p){ window.removeEventListener('scroll', homeScrollHandler); homeScrollHandler = null; return; }
+    const y = Math.max(0, window.scrollY);
+    const delta = y - homeLastScrollY;
+
+    if(y > 24) homeIsScrolled = true;
+    else if(y < 6) homeIsScrolled = false;
+    p.classList.toggle('scrolled', homeIsScrolled);
+
+    if(y <= 8){
+      homeIsCollapsed = false;
+    } else if(delta > 14){
+      homeIsCollapsed = true;
+    } else if(delta < -14){
+      homeIsCollapsed = false;
+    }
+    p.classList.toggle('collapsed', homeIsCollapsed);
+    homeLastScrollY = y;
+  };
+
+  homeScrollHandler = () => {
+    if(homeTicking) return;
+    homeTicking = true;
+    requestAnimationFrame(update);
+  };
+  window.addEventListener('scroll', homeScrollHandler, {passive:true});
+  update();
+  const setActive = () => panel.classList.add('panel-active');
+  const clearActive = () => panel.classList.remove('panel-active');
+  panel.addEventListener('pointerdown', setActive);
+  panel.addEventListener('pointerup', () => setTimeout(clearActive, 250));
+  panel.addEventListener('pointerleave', clearActive);
+  panel.addEventListener('pointercancel', clearActive);
+}
+
+function renderHome(){
+  hideTopbar();
+  setBottomnav('home');
+  const highlights = BUSINESSES.filter(b=>b.top || b.featured);
+  const view = document.getElementById('view');
+  view.innerHTML = `
+    <div class="home-panel">
+      <div class="panel-topbar">
+        <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
+        <button class="menu-btn" onclick="navigate('/buscar')">☰</button>
+      </div>
+      <div class="searchbar" style="margin-bottom:16px;cursor:pointer;" onclick="navigate('/buscar')">
+        <span>🔎</span><span style="color:var(--muted);font-size:14px;">Buscá tu comercio</span>
+      </div>
+      <div class="cat-grid-wrap">
+        <div class="edge-fade on-panel left is-hidden" id="catFadeLeft"></div>
+        <button class="scroll-chevron left is-hidden" id="catChevronLeft" onclick="scrollCatGrid(-1)" aria-label="Categorías anteriores"></button>
+        <div class="cat-grid" id="catGrid">
+          ${CATEGORIES.map(c=>`<div class="cat-chip" onclick="navigate('/categoria/${c.slug}')">
+            <div class="emoji">${c.emoji}</div><span class="label">${c.label}</span>
+          </div>`).join('')}
+        </div>
+        <div class="edge-fade on-panel right" id="catFadeRight"></div>
+        <button class="scroll-chevron right" id="catChevronRight" onclick="scrollCatGrid(1)" aria-label="Más categorías"></button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:0;">
+      <div class="section-head"><h2>Descuentos imperdibles</h2><span class="see-all" onclick="navigate('/buscar')">ver todos</span></div>
+      <div class="hscroll-wrap">
+        <div class="hscroll" id="promoScroll">${highlights.map(promoCard).join('')}</div>
+        <div class="edge-fade right" id="promoFadeRight"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Lugares para visitar</h2></div>
+      <div class="section-desc">Los rincones más lindos de Potrero</div>
+      <div class="hscroll-wrap">
+        <div class="hscroll" id="placeScroll">${PLACES.map(placeCard).join('')}</div>
+        <div class="edge-fade right" id="placeFadeRight"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><h2>Todos los comercios</h2><span class="see-all" onclick="navigate('/buscar')">Ver todos</span></div>
+      <div class="section-desc">Descubrí negocios locales recomendados.</div>
+      <div class="biz-list">${BUSINESSES.slice(0,8).map(bizCard).join('')}</div>
+    </div>
+  `;
+  setupHomePanelFade();
+  setupCatChevrons();
+  setupEdgeFade('promoScroll', 'promoFadeRight');
+  setupEdgeFade('placeScroll', 'placeFadeRight');
+  lockHorizontalSwipe('catGrid');
+  lockHorizontalSwipe('promoScroll');
+  lockHorizontalSwipe('placeScroll');
+  initScrollReveal();
+}
+
+/* ---- CATEGORIA ---- */
+let categoriaFilterSub = 'all';
+let categoriaFilterQ = '';
+function renderCategoria(slug){
+  const c = cat(slug);
+  categoriaFilterSub = 'all';
+  categoriaFilterQ = '';
+  setTopbar({title:c.label, sub:'Visit Potrero', back:true});
+  setBottomnav('');
+  const subcats = (typeof SUBCATEGORIES !== 'undefined' && SUBCATEGORIES[slug]) || [];
+  document.getElementById('view').innerHTML = `
+    <div class="section" style="margin-top:0;">
+      <div class="searchbar" style="margin-bottom:14px;">
+        <span>🔎</span>
+        <input id="categoriaSearchInput" placeholder="Buscar en ${c.label.toLowerCase()}...">
+      </div>
+      ${subcats.length ? `<div class="filter-row" id="subFilterRow"></div>` : ''}
+      <div class="biz-list" id="categoriaItems"></div>
+    </div>
+  `;
+  const searchInput = document.getElementById('categoriaSearchInput');
+  searchInput.addEventListener('input', e=>{
+    categoriaFilterQ = e.target.value;
+    renderCategoriaItems(slug);
+  });
+  if(subcats.length){
+    renderSubFilterRow(slug, subcats);
+    lockHorizontalSwipe('subFilterRow');
+  }
+  renderCategoriaItems(slug);
+}
+function renderSubFilterRow(slug, subcats){
+  document.getElementById('subFilterRow').innerHTML = ['all', ...subcats].map(sc=>{
+    const label = sc==='all' ? 'Todas' : sc;
+    return `<button class="filter-pill ${categoriaFilterSub===sc?'active':''}" onclick="setCategoriaFilterSub('${slug}','${sc}')">${label}</button>`;
+  }).join('');
+}
+function setCategoriaFilterSub(slug, sc){
+  categoriaFilterSub = (categoriaFilterSub === sc) ? 'all' : sc;
+  const subcats = (typeof SUBCATEGORIES !== 'undefined' && SUBCATEGORIES[slug]) || [];
+  renderSubFilterRow(slug, subcats);
+  renderCategoriaItems(slug);
+}
+function renderCategoriaItems(slug){
+  const q = categoriaFilterQ.trim();
+  const items = BUSINESSES.filter(b=>{
+    if(b.category !== slug) return false;
+    if(categoriaFilterSub !== 'all' && !subcatsOf(b).includes(categoriaFilterSub)) return false;
+    if(!q) return true;
+    return fuzzyMatch(q, b.name) || fuzzyMatch(q, b.address) || subcatsOf(b).some(sc=>fuzzyMatch(q, sc));
+  });
+  document.getElementById('categoriaItems').innerHTML = items.length ? items.map(bizCard).join('') : `<div class="empty-state">No encontramos comercios con ese filtro.</div>`;
+  initScrollReveal();
+}
+
+/* ---- BUSCAR ---- */
+let searchState = {q:'', cat:'all'};
+function renderBuscar(){
+  setTopbar({title:'Buscar', sub:'Visit Potrero', back:true});
+  setBottomnav('');
+  const view = document.getElementById('view');
+  view.innerHTML = `
+    <div class="searchbar">
+      <span>🔎</span>
+      <input id="searchInput" placeholder="Buscar comercios, lugares..." value="${searchState.q}">
+    </div>
+    <div class="filter-row" id="filterRow"></div>
+    <div class="biz-list" id="results"></div>
+  `;
+  renderFilterRow();
+  lockHorizontalSwipe('filterRow');
+  const input = document.getElementById('searchInput');
+  input.addEventListener('input', e=>{
+    searchState.q = e.target.value;
+    renderResults();
+  });
+  renderResults();
+  input.focus();
+}
+function renderFilterRow(){
+  document.getElementById('filterRow').innerHTML = ['all',...CATEGORIES.map(c=>c.slug)].map(slug=>{
+    const label = slug==='all' ? 'Todas' : cat(slug).emoji+' '+cat(slug).label;
+    return `<button class="filter-pill ${searchState.cat===slug?'active':''}" onclick="setSearchCat('${slug}')">${label}</button>`;
+  }).join('');
+}
+function setSearchCat(slug){
+  searchState.cat = slug;
+  renderFilterRow();
+  lockHorizontalSwipe('filterRow');
+  renderResults();
+}
+/* ---- Búsqueda tolerante a acentos y pequeños errores de tipeo ---- */
+function normalizeText(s){
+  return (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+}
+function levenshtein(a, b){
+  const m = a.length, n = b.length;
+  if(m===0) return n;
+  if(n===0) return m;
+  const dp = Array.from({length:m+1}, (_,i)=>[i, ...new Array(n).fill(0)]);
+  for(let j=0;j<=n;j++) dp[0][j] = j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      const cost = a[i-1]===b[j-1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[m][n];
+}
+function fuzzyMatch(query, text){
+  const nq = normalizeText(query);
+  const nt = normalizeText(text);
+  if(!nq) return true;
+  if(nt.includes(nq)) return true;
+  const queryWords = nq.split(/\s+/).filter(Boolean);
+  const textWords = nt.split(/\s+/).filter(Boolean);
+  return queryWords.every(qw => {
+    if(textWords.some(tw => tw.includes(qw) || qw.includes(tw))) return true;
+    const maxDist = qw.length <= 4 ? 1 : (qw.length <= 8 ? 2 : 3);
+    return textWords.some(tw => levenshtein(qw, tw) <= maxDist);
+  });
+}
+
+function renderResults(){
+  const q = searchState.q.trim();
+  let items = BUSINESSES.filter(b=>{
+    const matchCat = searchState.cat==='all' || b.category===searchState.cat;
+    const matchQ = !q || fuzzyMatch(q, b.name) || fuzzyMatch(q, b.address) || fuzzyMatch(q, cat(b.category).label) || subcatsOf(b).some(sc=>fuzzyMatch(q, sc));
+    return matchCat && matchQ;
+  });
+  document.getElementById('results').innerHTML = items.length ? items.map(bizCard).join('') : `<div class="empty-state">No encontramos resultados. Probá con otra búsqueda.</div>`;
+  initScrollReveal();
+}
+
+/* ---- COMERCIO DETAIL ---- */
+function renderComercio(id){
+  const b = getBusiness(id);
+  if(!b){ setTopbar({title:'No encontrado', back:true}); setBottomnav(''); document.getElementById('view').innerHTML = `<div class="empty-state">Comercio no encontrado.</div>`; return; }
+  const c = cat(b.category);
+  setTopbar({title:b.name, sub:c.label, back:true});
+  setBottomnav('');
+  const photo = photoForBusiness(b);
+  const isLogo = isLogoPlaceholder(photo);
+  const igUrl = instagramUrl(b.instagram);
+  const webUrl = websiteUrl(b.web);
+  const fbUrl = facebookUrl(b.facebook);
+  document.getElementById('view').innerHTML = `
+    <div class="detail-hero${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
+      ${photo ? `<img src="${photo}" alt="${b.name}"${isLogo ? ' class="logo-fit"' : ''}>` : c.emoji}
+    </div>
+    <div class="detail-title">${b.name}</div>
+    <div class="detail-cat">${c.emoji} ${c.label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
+    <div class="detail-badges">${badgesFor(b)}</div>
+
+    ${b.desc ? `<div class="detail-block">
+      <h3>Descripción</h3>
+      <p>${b.desc}</p>
+    </div>` : ''}
+
+    <div class="detail-block">
+      <h3>Información</h3>
+      ${b.address ? `<div class="detail-row"><span class="ic">📍</span>${b.address}</div>` : ''}
+      ${b.hours ? `<div class="detail-row"><span class="ic">🕒</span>${b.hours}</div>` : ''}
+      ${b.phone ? `<div class="detail-row"><span class="ic">📞</span>${b.phone}</div>` : ''}
+      ${b.email ? `<div class="detail-row"><span class="ic">✉️</span><a href="mailto:${b.email}">${b.email}</a></div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${b.web}</a></div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span><a href="${igUrl}" target="_blank" rel="noopener">${b.instagram}</a></div>` : ''}
+      ${fbUrl ? `<div class="detail-row"><span class="ic">📘</span><a href="${fbUrl}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
+    </div>
+
+    <div class="cta-btns">
+      ${b.phone ? `<a class="wsp" href="https://wa.me/${b.phone.replace(/[^0-9]/g,'')}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+      <a class="map" href="https://www.google.com/maps?q=${b.lat},${b.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>
+    </div>
+  `;
+}
+
+function instagramUrl(v){
+  if(!v) return '';
+  v = v.trim();
+  if(/^https?:\/\//i.test(v)) return v;
+  return 'https://instagram.com/' + v.replace(/^@/,'');
+}
+function websiteUrl(v){
+  if(!v) return '';
+  v = v.trim();
+  if(/^https?:\/\//i.test(v)) return v;
+  return 'https://' + v;
+}
+function facebookUrl(v){
+  if(!v) return '';
+  v = v.trim();
+  if(/^https?:\/\//i.test(v)) return v;
+  return 'https://facebook.com/' + v.replace(/^\//,'');
+}
+
+/* ---- LUGAR DETAIL ---- */
+function renderLugar(id){
+  const p = getPlace(id);
+  if(!p){ setTopbar({title:'No encontrado', back:true}); setBottomnav(''); document.getElementById('view').innerHTML = `<div class="empty-state">Lugar no encontrado.</div>`; return; }
+  setTopbar({title:p.name, sub:p.type, back:true});
+  setBottomnav('');
+  document.getElementById('view').innerHTML = `
+    <div class="detail-hero">${p.emoji}</div>
+    <div class="detail-title">${p.name}</div>
+    <div class="detail-cat">${p.type}</div>
+    <div class="detail-block">
+      <h3>Descripción</h3>
+      <p>${p.desc}</p>
+    </div>
+    <div class="cta-btns">
+      <a class="map" style="flex:1" href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>
+    </div>
+  `;
+}
+
+/* ---- AGENDA DE EVENTOS ---- */
+const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_ES = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+function parseYMD(s){
+  // 'YYYY-MM-DD' -> Date local (evita corrimientos de huso horario de new Date('YYYY-MM-DD'))
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function todayYMD(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function eventCat(id){ return EVENT_CATEGORIES.find(c=>c.id===id) || {id:'', label:'Evento', icon:'🎉', color:'#111111'}; }
+function fmtDay(dateStr){
+  const d = parseYMD(dateStr);
+  return `${d.getDate()} de ${MESES_ES[d.getMonth()]}`;
+}
+function fmtDayShort(dateStr){
+  const d = parseYMD(dateStr);
+  return `${DIAS_ES[d.getDay()].slice(0,3)} ${d.getDate()} ${MESES_ES[d.getMonth()].slice(0,3)}`;
+}
+function fmtTimeRange(e){
+  if(e.startTime && e.endTime) return `${e.startTime.slice(0,5)} a ${e.endTime.slice(0,5)} hs`;
+  if(e.startTime) return `Desde las ${e.startTime.slice(0,5)} hs`;
+  return '';
+}
+function fmtDateRange(e){
+  if(e.startDate === e.endDate) return fmtDay(e.startDate);
+  const d1 = parseYMD(e.startDate), d2 = parseYMD(e.endDate);
+  if(d1.getMonth() === d2.getMonth()) return `Del ${d1.getDate()} al ${d2.getDate()} de ${MESES_ES[d2.getMonth()]}`;
+  return `Del ${fmtDay(e.startDate)} al ${fmtDay(e.endDate)}`;
+}
+function eventEndMoment(e){
+  const d = parseYMD(e.endDate);
+  const t = e.endTime || e.startTime || '23:59:59';
+  const [h,m] = t.split(':').map(Number);
+  d.setHours(h||23, m||59, 0, 0);
+  return d;
+}
+function eventStartMoment(e){
+  const d = parseYMD(e.startDate);
+  const t = e.startTime || '00:00:00';
+  const [h,m] = t.split(':').map(Number);
+  d.setHours(h||0, m||0, 0, 0);
+  return d;
+}
+function isEventFinished(e){ return eventEndMoment(e).getTime() < Date.now(); }
+function isEventToday(e){ return e.startDate === todayYMD() || (e.startDate <= todayYMD() && e.endDate >= todayYMD()); }
+function isEventThisWeekend(e){
+  const now = new Date();
+  const dow = now.getDay(); // 0 dom ... 6 sáb
+  const toFriday = (5 - dow + 7) % 7;
+  const friday = new Date(now); friday.setHours(0,0,0,0); friday.setDate(now.getDate() + toFriday);
+  const sunday = new Date(friday); sunday.setDate(friday.getDate() + 2); sunday.setHours(23,59,59,999);
+  const s = eventStartMoment(e), en = eventEndMoment(e);
+  return en >= friday && s <= sunday;
+}
+function activeUpcomingEvents(){
+  return EVENTS.filter(e=>!isEventFinished(e)).sort((a,b)=>{
+    const d = a.startDate.localeCompare(b.startDate);
+    if(d !== 0) return d;
+    return (a.startTime||'00:00').localeCompare(b.startTime||'00:00');
+  });
+}
+function priceLabel(e){
+  if(e.isFree) return 'Gratis';
+  if(e.price != null && e.price !== '') return `$${Number(e.price).toLocaleString('es-AR')}`;
+  return '';
+}
+function organizerName(e){
+  if(e.business) return e.business.name;
+  if(e.isOfficial) return 'Municipalidad de Potrero de los Funes';
+  return e.contactName || '';
+}
+function waLink(phone){
+  if(!phone) return '';
+  return 'https://wa.me/' + phone.replace(/[^0-9]/g,'');
+}
+
+let agendaState = { q:'', quick:'all', cat:'all', onlyFree:false };
+
+function agendaCard(e, i){
+  const c = eventCat(e.category);
+  const org = organizerName(e);
+  return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/evento/${e.id}')">
+    <div class="cover" style="background:${c.color || '#111'}">
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy">` : (c.icon||'🎉')}
+      <span class="cat-tag">${c.icon||''} ${c.label}</span>
+      ${e.isFree ? `<span class="free-tag">Gratis</span>` : ''}
+    </div>
+    <div class="body">
+      <div class="when">${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
+      <h3>${e.title}</h3>
+      ${e.address ? `<div class="meta-row">📍 ${e.address}</div>` : ''}
+      ${e.desc || e.shortDesc ? `<div class="desc">${e.shortDesc || e.desc}</div>` : ''}
+      ${org ? `<div class="org"><span>Organiza:</span> ${org}</div>` : ''}
+      <span class="more-btn">Ver más →</span>
+    </div>
+  </div>`;
+}
+
+function featuredCard(e){
+  const c = eventCat(e.category);
+  return `<div class="featured-card" onclick="navigate('/evento/${e.id}')">
+    <div class="cover" style="background:${c.color || '#111'}">
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}">` : (c.icon||'🎉')}
+      <span class="star">★ Destacado</span>
+    </div>
+    <div class="cap">
+      <div class="when">${fmtDateRange(e)}</div>
+      <h3>${e.title}</h3>
+      <div class="sub">${c.label}${e.address ? ' · ' + e.address : ''}</div>
+    </div>
+  </div>`;
+}
+
+function matchesAgendaFilters(e){
+  if(agendaState.cat !== 'all' && e.category !== agendaState.cat) return false;
+  if(agendaState.onlyFree && !e.isFree) return false;
+  if(agendaState.quick === 'hoy' && !isEventToday(e)) return false;
+  if(agendaState.quick === 'finde' && !isEventThisWeekend(e)) return false;
+  const q = agendaState.q.trim();
+  if(q){
+    const org = organizerName(e);
+    if(!fuzzyMatch(q, e.title) && !fuzzyMatch(q, e.address) && !fuzzyMatch(q, org)) return false;
+  }
+  return true;
+}
+
+function renderAgenda(){
+  hideTopbar();
+  setBottomnav('agenda');
+  const view = document.getElementById('view');
+
+  const featured = activeUpcomingEvents().filter(e=>e.isFeatured).sort((a,b)=>a.featuredOrder-b.featuredOrder);
+
+  view.innerHTML = `
+    <div class="section agenda-intro" style="margin-top:0;">
+      <h1>Agenda de eventos</h1>
+      <p>Descubrí qué hacer en Potrero de los Funes: fiestas, ferias, música en vivo y mucho más.</p>
+    </div>
+
+    <div class="searchbar">
+      <span>🔎</span>
+      <input id="agendaSearch" placeholder="Buscar por nombre, lugar u organizador..." value="${agendaState.q}">
+    </div>
+
+    <div class="filter-row" id="agendaQuickRow"></div>
+    <div class="filter-row wrap" id="agendaCatRow" style="margin-bottom:20px;"></div>
+
+    ${featured.length ? `
+    <div class="section" style="margin-top:0;">
+      <div class="section-head"><h2>Destacados</h2></div>
+      <div class="featured-scroll">${featured.map(featuredCard).join('')}</div>
+    </div>` : ''}
+
+    <div class="section" style="margin-top:${featured.length?'32px':'0'};">
+      <div class="section-head"><h2>Próximamente</h2></div>
+      <div id="agendaList"></div>
+      <div class="agenda-archive-link"><a onclick="navigate('/agenda/anteriores')">Ver eventos anteriores →</a></div>
+    </div>
+
+    ${hasSession ? `<div class="fab-cargar"><a href="panel.html#eventos">+ Cargar un evento</a></div>` : ''}
+  `;
+
+  document.getElementById('agendaQuickRow').innerHTML = [
+    {k:'all', l:'Próximos'}, {k:'hoy', l:'Hoy'}, {k:'finde', l:'Este finde'}
+  ].map(f=>`<button class="filter-pill ${agendaState.quick===f.k?'active':''}" onclick="setAgendaQuick('${f.k}')">${f.l}</button>`).join('')
+   + `<button class="filter-pill free ${agendaState.onlyFree?'active':''}" onclick="toggleAgendaFree()">💚 Gratuitos</button>`;
+
+  document.getElementById('agendaCatRow').innerHTML = ['all', ...EVENT_CATEGORIES.map(c=>c.id)].map(id=>{
+    const label = id==='all' ? 'Todas las categorías' : eventCat(id).icon + ' ' + eventCat(id).label;
+    return `<button class="filter-pill ${agendaState.cat===id?'active':''}" onclick="setAgendaCat('${id}')">${label}</button>`;
+  }).join('');
+
+  document.getElementById('agendaSearch').addEventListener('input', e=>{
+    agendaState.q = e.target.value;
+    renderAgendaList();
+  });
+
+  renderAgendaList();
+  initScrollReveal();
+}
+
+function setAgendaQuick(k){ agendaState.quick = k; renderAgenda(); }
+function toggleAgendaFree(){ agendaState.onlyFree = !agendaState.onlyFree; renderAgenda(); }
+function setAgendaCat(id){ agendaState.cat = id; renderAgenda(); }
+
+function renderAgendaList(){
+  const items = activeUpcomingEvents().filter(matchesAgendaFilters);
+  const list = document.getElementById('agendaList');
+  if(!list) return;
+
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty-state agenda-search-empty">No encontramos eventos con ese filtro. Probá con otra búsqueda o mirá "Próximos".</div>`;
+    return;
+  }
+
+  const today = todayYMD();
+  const tomorrow = (()=>{ const d=parseYMD(today); d.setDate(d.getDate()+1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const in7 = (()=>{ const d=parseYMD(today); d.setDate(d.getDate()+7); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+
+  const buckets = { hoy:[], manana:[], semana:[], despues:[] };
+  items.forEach(e=>{
+    if(e.startDate === today) buckets.hoy.push(e);
+    else if(e.startDate === tomorrow) buckets.manana.push(e);
+    else if(e.startDate < in7) buckets.semana.push(e);
+    else buckets.despues.push(e);
+  });
+
+  let html = '';
+  let counter = 0;
+  const section = (title, arr) => {
+    if(!arr.length) return;
+    html += `<div class="agenda-group-title">${title}</div>`;
+    arr.forEach(e=>{ html += agendaCard(e, counter++); });
+  };
+  section('Hoy', buckets.hoy);
+  section('Mañana', buckets.manana);
+  section('Esta semana', buckets.semana);
+  section('Próximos eventos', buckets.despues);
+
+  list.innerHTML = html;
+  initScrollReveal();
+}
+
+function renderAgendaAnteriores(){
+  setTopbar({title:'Eventos anteriores', sub:'Visit Potrero', back:true});
+  setBottomnav('agenda');
+  const items = EVENTS.filter(isEventFinished).sort((a,b)=>b.startDate.localeCompare(a.startDate));
+  document.getElementById('view').innerHTML = `
+    <div class="section" style="margin-top:0;">
+      ${items.length ? items.map((e,i)=>agendaCard(e,i)).join('') : '<div class="empty-state">Todavía no hay eventos archivados.</div>'}
+    </div>
+  `;
+  initScrollReveal();
+}
+
+function eventIcsHref(e){
+  const pad = n => String(n).padStart(2,'0');
+  const toIcsDate = (d) => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const start = eventStartMoment(e);
+  const end = eventEndMoment(e);
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Visit Potrero//Agenda//ES','BEGIN:VEVENT',
+    `UID:${e.id}@visitpotrero`,
+    `DTSTART:${toIcsDate(start)}`,
+    `DTEND:${toIcsDate(end)}`,
+    `SUMMARY:${(e.title||'').replace(/\n/g,' ')}`,
+    `LOCATION:${(e.address||'').replace(/\n/g,' ')}`,
+    `DESCRIPTION:${(e.shortDesc || e.desc || '').replace(/\n/g,' ')}`,
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+}
+
+function shareEvent(id){
+  const e = EVENTS.find(x=>x.id===id);
+  if(!e) return;
+  const url = location.origin + location.pathname + '#/evento/' + id;
+  if(navigator.share){
+    navigator.share({ title: e.title, text: e.shortDesc || e.title, url }).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>alert('Enlace copiado: ' + url));
+  } else {
+    prompt('Copiá el enlace del evento:', url);
+  }
+}
+
+function renderEventoDetail(id){
+  const e = EVENTS.find(x=>x.id===id);
+  if(!e){
+    setTopbar({title:'No encontrado', back:true});
+    setBottomnav('');
+    document.getElementById('view').innerHTML = `<div class="empty-state">Evento no encontrado o todavía no está publicado.</div>`;
+    return;
+  }
+  const c = eventCat(e.category);
+  setTopbar({title:e.title, sub:c.label, back:true});
+  setBottomnav('');
+
+  supabaseClient.rpc('increment_event_views', { p_event_id: id }).then(()=>{}).catch(()=>{});
+
+  supabaseClient
+    .from('event_schedule_items')
+    .select('*')
+    .eq('event_id', id)
+    .order('item_date', { ascending: true })
+    .order('start_time', { ascending: true })
+    .then(({ data }) => {
+      const schedule = data || [];
+      if(!schedule.length) return;
+      const block = document.getElementById('scheduleBlock');
+      if(!block) return;
+      block.classList.remove('hidden');
+      block.querySelector('.list').innerHTML = schedule.map(s=>`
+        <div class="schedule-item">
+          <div class="d">${fmtDay(s.item_date)}</div>
+          ${(s.start_time||s.end_time) ? `<div class="t">${s.start_time ? s.start_time.slice(0,5) : ''}${s.end_time ? ' a ' + s.end_time.slice(0,5) : ''} hs</div>` : ''}
+          <div class="desc">${s.description}</div>
+        </div>`).join('');
+    });
+
+  const igUrl = instagramUrl(e.instagram);
+  const webUrl = websiteUrl(e.website);
+  const orgBiz = e.business;
+  const orgLink = orgBiz ? `navigate('/comercio/${orgBiz.legacy_id || orgBiz.id}')` : '';
+
+  document.getElementById('view').innerHTML = `
+    <div class="detail-hero" style="background:${c.color||'#111'}">
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}">` : (c.icon||'🎉')}
+    </div>
+    <div class="detail-title">${e.title}</div>
+    <div class="detail-cat">${c.icon||''} ${c.label}</div>
+    <div class="event-badges">
+      <span class="badge ${e.isFree ? 'free' : 'price'}">${e.isFree ? '● Entrada gratuita' : (priceLabel(e) ? '● ' + priceLabel(e) : '● Consultar precio')}</span>
+      ${e.requiresRegistration ? '<span class="badge price">● Requiere inscripción</span>' : ''}
+    </div>
+
+    <div class="detail-block">
+      <h3>Cuándo</h3>
+      <p>${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</p>
+    </div>
+
+    <div class="detail-block hidden" id="scheduleBlock">
+      <h3>Cronograma</h3>
+      <div class="list"></div>
+    </div>
+
+    ${(e.desc || e.shortDesc) ? `<div class="detail-block">
+      <h3>Descripción</h3>
+      <p>${e.desc || e.shortDesc}</p>
+    </div>` : ''}
+
+    <div class="detail-block">
+      <h3>Lugar y contacto</h3>
+      ${e.address ? `<div class="detail-row"><span class="ic">📍</span>${e.address}</div>` : ''}
+      ${orgBiz || e.isOfficial || e.contactName ? `<div class="detail-row"><span class="ic">🏪</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(e))}</div>` : ''}
+      ${e.phone ? `<div class="detail-row"><span class="ic">📞</span>${e.phone}</div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${e.website}</a></div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span><a href="${igUrl}" target="_blank" rel="noopener">${e.instagram}</a></div>` : ''}
+      ${e.capacity ? `<div class="detail-row"><span class="ic">👥</span>Cupo limitado: ${e.capacity} personas</div>` : ''}
+    </div>
+
+    <div class="cta-btns">
+      ${e.whatsapp ? `<a class="wsp" href="${waLink(e.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+      ${(e.lat && e.lng) ? `<a class="map" href="https://www.google.com/maps?q=${e.lat},${e.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (e.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(e.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : '')}
+    </div>
+    <div class="cta-btns" style="margin-top:10px;">
+      <a class="map" style="flex:1;" onclick="shareEvent('${e.id}')">📤 Compartir</a>
+      <a class="map" style="flex:1;" href="${eventIcsHref(e)}" download="${(e.title||'evento').replace(/[^a-z0-9]+/gi,'-')}.ics">📅 Agendar</a>
+    </div>
+    ${e.requiresRegistration && e.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${e.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
+  `;
+}
+
+function renderNovedades(){
+  setTopbar({title:'Novedades', sub:'Visit Potrero', back:true});
+  setBottomnav('novedades');
+  document.getElementById('view').innerHTML = `
+    <div class="section" style="margin-top:0;">
+      ${NOVEDADES.map((e,i)=>`<div class="event-card reveal" style="transition-delay:${(i%6)*60}ms"><div class="date">${e.date}</div><h3>${e.title}</h3><p>${e.desc}</p></div>`).join('')}
+    </div>
+  `;
+  initScrollReveal();
+}
+
+/* ---- MAPA ---- */
+let mapInstance = null;
+function renderMapa(){
+  setTopbar({title:'Mapa interactivo', sub:'Visit Potrero', back:true});
+  setBottomnav('mapa');
+  document.getElementById('view').innerHTML = `<div id="mapview"></div>`;
+  setTimeout(initMap, 0);
+}
+function initMap(){
+  const el = document.getElementById('mapview');
+  if(!el || typeof L === 'undefined') return;
+  if(mapInstance){ mapInstance.remove(); mapInstance = null; }
+  mapInstance = L.map('mapview').setView(CENTER, 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(mapInstance);
+
+  BUSINESSES.forEach(b=>{
+    if(typeof b.lat !== 'number' || typeof b.lng !== 'number') return;
+    const c = cat(b.category);
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="background:#111;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #A3E635;">
+              <span style="transform:rotate(45deg);font-size:14px;">${c.emoji}</span>
+            </div>`,
+      iconSize:[30,30], iconAnchor:[15,30]
+    });
+    L.marker([b.lat, b.lng], {icon}).addTo(mapInstance)
+      .bindPopup(`<b>${b.name}</b><br>${c.label}<br><span class="popup-link" onclick="navigate('/comercio/${b.id}')">Ver ficha →</span>`);
+  });
+
+  PLACES.forEach(p=>{
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="background:#111;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #A3E635;">
+              <span style="transform:rotate(45deg);font-size:14px;">${p.emoji}</span>
+            </div>`,
+      iconSize:[30,30], iconAnchor:[15,30]
+    });
+    L.marker([p.lat, p.lng], {icon}).addTo(mapInstance)
+      .bindPopup(`<b>${p.name}</b><br>${p.type}<br><span class="popup-link" onclick="navigate('/lugares/${p.id}')">Ver más →</span>`);
+  });
+}
+
+/* ============ INICIO ============ */
+(async function start(){
+  try {
+    await loadData();
+  } catch (e) {
+    console.error('Error cargando datos de Supabase', e);
+    return;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
