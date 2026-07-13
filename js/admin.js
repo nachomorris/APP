@@ -353,6 +353,26 @@ async function deleteBusiness(id) {
   loadList();
 }
 
+// ---------- Secciones de nivel superior (Comercios / Eventos / Novedades) ----------
+// Cada sección + su botón de pestaña se registran acá para poder mostrar una
+// sola a la vez sin que cada archivo (admin-events.js, admin-novedades.js...)
+// tenga que conocer a los demás.
+const ADMIN_SECTION_TABS = {
+  businessesSection: 'mainTabBusinesses',
+  eventsAdminSection: 'mainTabEvents',
+  novedadesAdminSection: 'mainTabNovedades',
+};
+
+function showAdminSection(sectionId) {
+  Object.keys(ADMIN_SECTION_TABS).forEach((secId) => {
+    const secEl = document.getElementById(secId);
+    if (secEl) secEl.classList.toggle('hidden', secId !== sectionId);
+    const tabEl = document.getElementById(ADMIN_SECTION_TABS[secId]);
+    if (tabEl) tabEl.classList.toggle('active', secId === sectionId);
+  });
+  clearAlert();
+}
+
 // ---------- Init ----------
 let currentAdminUser = null;
 

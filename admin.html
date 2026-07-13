@@ -44,6 +44,7 @@
   <div class="section-tabs">
     <button id="mainTabBusinesses" class="active">🏪 Comercios</button>
     <button id="mainTabEvents">🎉 Eventos</button>
+    <button id="mainTabNovedades">📰 Novedades</button>
   </div>
 
   <div id="businessesSection">
@@ -355,12 +356,58 @@
   </div>
   <!-- fin eventsAdminSection -->
 
+  <!-- ===== SECCIÓN NOVEDADES (admin) ===== -->
+  <div id="novedadesAdminSection" class="hidden">
+
+    <div id="novedadesListView">
+      <div class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <h2 style="margin:0;">Novedades</h2>
+          <button class="btn btn-primary btn-small" id="newNovedadBtn">+ Nueva novedad</button>
+        </div>
+        <p class="subtitle" style="margin-bottom:14px;">Estas novedades aparecen en la sección "Novedades" del sitio, ordenadas de la más reciente a la más vieja.</p>
+        <div id="novedadesList">
+          <p class="empty-state">Cargando...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="novedadFormView" class="hidden">
+      <div class="card">
+        <h2 id="novedadFormTitle">Nueva novedad</h2>
+        <form id="novedadForm">
+          <input type="hidden" id="nov_id">
+
+          <label for="nov_title">Título *</label>
+          <input type="text" id="nov_title" required>
+
+          <label for="nov_description">Descripción</label>
+          <textarea id="nov_description"></textarea>
+
+          <label for="nov_published_at">Fecha *</label>
+          <input type="date" id="nov_published_at" required>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
+            <input type="checkbox" id="nov_is_published" style="width:auto;" checked>
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Publicada (visible en el sitio)</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary" id="novSaveBtn">Guardar novedad</button>
+          <button type="button" class="btn btn-secondary" id="novCancelBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin novedadesAdminSection -->
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-events.js"></script>
+<script src="js/admin-novedades.js"></script>
 
 </body>
 </html>

@@ -27,18 +27,10 @@ const evadRecurrenceType = document.getElementById('evad_recurrence_type');
 let evAdminSectionLoaded = false;
 
 mainTabBusinesses.addEventListener('click', () => {
-  mainTabBusinesses.classList.add('active');
-  mainTabEvents.classList.remove('active');
-  businessesSection.classList.remove('hidden');
-  eventsAdminSection.classList.add('hidden');
-  clearAlert();
+  showAdminSection('businessesSection');
 });
 mainTabEvents.addEventListener('click', () => {
-  mainTabEvents.classList.add('active');
-  mainTabBusinesses.classList.remove('active');
-  eventsAdminSection.classList.remove('hidden');
-  businessesSection.classList.add('hidden');
-  clearAlert();
+  showAdminSection('eventsAdminSection');
   if (!evAdminSectionLoaded) {
     evAdminSectionLoaded = true;
     initEventsAdminSection();

@@ -441,23 +441,7 @@ let EVENT_CATEGORIES = [];
 let EVENTS = [];
 let hasSession = false;
 
-const NOVEDADES = [
-  {
-    "date": "05 Jul 2026",
-    "title": "Nueva señalética en el Paseo del Lago",
-    "desc": "Se incorporaron carteles informativos y de accesibilidad en todo el recorrido peatonal."
-  },
-  {
-    "date": "28 Jun 2026",
-    "title": "CCTA suma nuevos comercios adheridos",
-    "desc": "Se incorporaron 6 nuevos comercios a la guía oficial de Potrero de los Funes."
-  },
-  {
-    "date": "15 Jun 2026",
-    "title": "Mejoras en la costanera",
-    "desc": "Trabajos de mantenimiento y nueva iluminación en el sector de la Salagria."
-  }
-];
+let NOVEDADES = [];
 
 const SAMPLE_PHOTOS = [
   "https://images.pexels.com/photos/1639562/pexels-photo-1639562.jpeg?auto=compress&cs=tinysrgb&w=800",
@@ -588,6 +572,30 @@ async function loadAgendaData(){
     isOfficial: !!e.is_official,
     viewsCount: e.views_count || 0,
     business: e.businesses || null
+  }));
+
+  await loadNovedades();
+}
+
+/* ============ NOVEDADES: carga de datos ============ */
+async function loadNovedades(){
+  const { data, error } = await supabaseClient
+    .from('novedades')
+    .select('id, title, description, published_at')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false });
+
+  if (error) {
+    console.error('Error cargando novedades', error);
+    NOVEDADES = [];
+    return;
+  }
+
+  NOVEDADES = (data || []).map((n) => ({
+    id: n.id,
+    title: n.title,
+    desc: n.description || '',
+    date: n.published_at
   }));
 }
 
@@ -1499,10 +1507,15 @@ function renderNovedades(){
   setBottomnav('novedades');
   document.getElementById('view').innerHTML = `
     <div class="section" style="margin-top:0;">
-      ${NOVEDADES.map((e,i)=>`<div class="event-card reveal" style="transition-delay:${(i%6)*60}ms"><div class="date">${e.date}</div><h3>${e.title}</h3><p>${e.desc}</p></div>`).join('')}
+      ${NOVEDADES.length ? NOVEDADES.map((e,i)=>`<div class="event-card reveal" style="transition-delay:${(i%6)*60}ms"><div class="date">${fmtNovedadDate(e.date)}</div><h3>${e.title}</h3><p>${e.desc}</p></div>`).join('') : '<div class="empty-state">Todavía no hay novedades cargadas.</div>'}
     </div>
   `;
   initScrollReveal();
+}
+function fmtNovedadDate(dateStr){
+  if(!dateStr) return '';
+  const d = parseYMD(dateStr);
+  return `${String(d.getDate()).padStart(2,'0')} ${MESES_ES[d.getMonth()].slice(0,3)} ${d.getFullYear()}`;
 }
 
 /* ============ INICIO ============ */
