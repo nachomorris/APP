@@ -38,7 +38,9 @@
   .admin-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
   .evad-preview-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; }
-  .evad-preview { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 22px; max-width: 360px; }
+  .evad-preview-label .evad-preview-status { text-transform: none; letter-spacing: 0; color: var(--primary-dark); font-weight: 700; }
+  .evad-preview-wrap { max-width: 360px; margin-bottom: 22px; }
+  .evad-preview { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); cursor: default; }
   .evad-preview .cover { height: 140px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 38px; color: #fff; background: var(--ink); }
   .evad-preview .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .evad-preview .cover .date-badge { position: absolute; top: 10px; left: 10px; background: #fff; color: var(--ink); border-radius: 12px; padding: 6px 11px; text-align: center; line-height: 1.05; box-shadow: 0 3px 8px rgba(0,0,0,.28); }
@@ -48,11 +50,11 @@
   .evad-preview .body { padding: 14px 16px 16px; }
   .evad-preview .when { font-size: 13.5px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
   .evad-preview h3 { font-size: 16px; font-weight: 800; margin: 0 0 6px; }
-  .evad-preview .meta-row { font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
-  .evad-preview .desc { font-size: 12.5px; color: var(--muted); line-height: 1.4; margin: 8px 0 10px; }
-  .evad-preview .org { font-size: 11.5px; color: var(--ink); font-weight: 600; margin-bottom: 0; }
+  .evad-preview .meta-row { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
+  .evad-preview .desc { font-size: 12.5px; color: var(--muted); line-height: 1.4; margin: 8px 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .evad-preview .org { font-size: 11.5px; color: var(--ink); font-weight: 600; margin-bottom: 10px; }
   .evad-preview .org span { color: var(--muted); font-weight: 500; }
-  .evad-preview .badge-status { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: var(--primary-light); color: var(--primary-dark); margin-bottom: 8px; }
+  .evad-preview .more-btn { display: inline-block; background: var(--ink); color: var(--primary); font-size: 12.5px; font-weight: 700; padding: 9px 16px; border-radius: 12px; }
 </style>
 </head>
 <body>
@@ -270,9 +272,8 @@
 
     <div id="eventsAdminListView">
       <div class="tabs" id="evAdminStatusTabs">
-        <button class="tab active" data-evstatus="pending">Pendientes <span class="tab-count" data-count-for="pending">0</span></button>
-        <button class="tab" data-evstatus="needs_changes">Con cambios pedidos <span class="tab-count" data-count-for="needs_changes">0</span></button>
-        <button class="tab" data-evstatus="published">Publicados <span class="tab-count" data-count-for="published">0</span></button>
+        <button class="tab active" data-evstatus="published">Publicados <span class="tab-count" data-count-for="published">0</span></button>
+        <button class="tab" data-evstatus="pending">Pendientes <span class="tab-count" data-count-for="pending">0</span></button>
         <button class="tab" data-evstatus="featured">Destacados <span class="tab-count" data-count-for="featured">0</span></button>
         <button class="tab" data-evstatus="finished">Finalizados <span class="tab-count" data-count-for="finished">0</span></button>
         <button class="tab" data-evstatus="hidden">Ocultos <span class="tab-count" data-count-for="hidden">0</span></button>
@@ -299,8 +300,10 @@
       <div class="card">
         <h2 id="evAdminFormTitle">Editar evento</h2>
 
-        <div class="evad-preview-label">Así se va a ver en la Agenda</div>
-        <div id="evadPreview" class="evad-preview"></div>
+        <div class="evad-preview-wrap">
+          <div class="evad-preview-label">Así se va a ver en la Agenda · <span class="evad-preview-status" id="evadPreviewStatus"></span></div>
+          <div id="evadPreview" class="evad-preview"></div>
+        </div>
 
         <form id="evAdminForm">
           <input type="hidden" id="evad_id">

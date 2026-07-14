@@ -7,7 +7,7 @@
 let evAdminCategories = [];
 let evAdminBusinesses = [];
 let evAdminEvents = [];
-let evAdminStatusFilter = 'pending';
+let evAdminStatusFilter = 'published';
 
 const mainTabBusinesses = document.getElementById('mainTabBusinesses');
 const mainTabEvents = document.getElementById('mainTabEvents');
@@ -328,20 +328,27 @@ evadRecurrenceType.addEventListener('change', () => {
 });
 
 // ---------- Vista previa en vivo (cómo se va a ver en la Agenda pública) ----------
-const MESES_ES_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+// Réplica exacta de las funciones de formato de fecha/hora que usa index.html
+// (MESES_ES, fmtDay, fmtDateRange, fmtTimeRange) para que la previsualización
+// se vea idéntica a la tarjeta real de la Agenda.
+const EVAD_MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-function evAdFmtTimeShort(t) {
-  return t ? t.slice(0, 5) : '';
+function evAdFmtDay(dateStr) {
+  const d = evAdParseDate(dateStr);
+  return `${d.getDate()} de ${EVAD_MESES_ES[d.getMonth()]}`;
 }
-
-function evAdPreviewDateRange(startStr, endStr) {
+function evAdFmtDateRange(startStr, endStr) {
   if (!startStr) return '';
-  const s = evAdParseDate(startStr);
-  const sTxt = `${s.getDate()} de ${MESES_ES_SHORT[s.getMonth()]}`;
-  if (!endStr || endStr === startStr) return sTxt;
-  const e = evAdParseDate(endStr);
-  const eTxt = `${e.getDate()} de ${MESES_ES_SHORT[e.getMonth()]}`;
-  return `${sTxt} al ${eTxt}`;
+  if (startStr === endStr || !endStr) return evAdFmtDay(startStr);
+  const d1 = evAdParseDate(startStr);
+  const d2 = evAdParseDate(endStr);
+  if (d1.getMonth() === d2.getMonth()) return `Del ${d1.getDate()} al ${d2.getDate()} de ${EVAD_MESES_ES[d2.getMonth()]}`;
+  return `Del ${evAdFmtDay(startStr)} al ${evAdFmtDay(endStr)}`;
+}
+function evAdFmtTimeRange(startTime, endTime) {
+  if (startTime && endTime) return `${startTime.slice(0, 5)} a ${endTime.slice(0, 5)} hs`;
+  if (startTime) return `Desde las ${startTime.slice(0, 5)} hs`;
+  return '';
 }
 
 function renderEvAdPreview() {
@@ -362,22 +369,21 @@ function renderEvAdPreview() {
   const status = document.getElementById('evad_status').value;
 
   const cat = evAdminCategories.find((c) => c.id === evadCategorySelect.value) || {};
-  const org = isOfficial ? 'Municipalidad (oficial)' : evadBusinessSearch.value.trim();
+  const org = isOfficial ? 'Municipalidad de Potrero de los Funes' : evadBusinessSearch.value.trim();
 
-  const dateLabel = evAdPreviewDateRange(startDate, endDate);
-  let timeLabel = '';
-  if (startTime && endTime) timeLabel = `${evAdFmtTimeShort(startTime)} a ${evAdFmtTimeShort(endTime)}`;
-  else if (startTime) timeLabel = evAdFmtTimeShort(startTime);
+  const dateLabel = startDate ? evAdFmtDateRange(startDate, endDate) : '';
+  const timeLabel = evAdFmtTimeRange(startTime, endTime);
 
   let dayNum = '–';
   let monLabel = '';
   if (startDate) {
     const d = evAdParseDate(startDate);
     dayNum = d.getDate();
-    monLabel = MESES_ES_SHORT[d.getMonth()];
+    monLabel = EVAD_MESES_ES[d.getMonth()].slice(0, 3);
   }
 
-  const st = evStatusLabel(status);
+  const statusEl = document.getElementById('evadPreviewStatus');
+  if (statusEl) statusEl.textContent = evStatusLabel(status).text;
 
   preview.innerHTML = `
     <div class="cover" style="background:${cat.color || '#111'}">
@@ -386,12 +392,12 @@ function renderEvAdPreview() {
       ${isFree ? '<span class="free-tag">Gratis</span>' : ''}
     </div>
     <div class="body">
-      <span class="badge-status">${st.text}</span>
       ${dateLabel ? `<div class="when">🗓️ ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</div>` : ''}
       <h3>${escapeHtml(title)}</h3>
       ${address ? `<div class="meta-row">📍 ${escapeHtml(address)}</div>` : ''}
       ${(shortDesc || desc) ? `<div class="desc">${escapeHtml(shortDesc || desc)}</div>` : ''}
       ${org ? `<div class="org"><span>Organiza:</span> ${escapeHtml(org)}</div>` : ''}
+      <span class="more-btn">Ver más →</span>
     </div>
   `;
 }
