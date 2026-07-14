@@ -23,6 +23,11 @@
     cursor: pointer; box-shadow: var(--shadow);
   }
   .tab.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
+  .tab .tab-count {
+    display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(0,0,0,.08); color: inherit; font-size: 11.5px; font-weight: 800;
+  }
+  .tab.active .tab-count { background: rgba(255,255,255,.22); }
   .admin-card { margin-bottom: 14px; }
   .admin-card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .admin-card .name { font-weight: 800; font-size: 17px; margin-bottom: 2px; }
@@ -31,6 +36,23 @@
   .admin-card dt { color: var(--muted); font-size: 12px; margin-top: 8px; text-transform: uppercase; letter-spacing: .02em; }
   .admin-card dd { margin: 2px 0 0; }
   .admin-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+  .evad-preview-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; }
+  .evad-preview { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow); margin-bottom: 22px; max-width: 360px; }
+  .evad-preview .cover { height: 140px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 38px; color: #fff; background: var(--ink); }
+  .evad-preview .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .evad-preview .cover .date-badge { position: absolute; top: 10px; left: 10px; background: #fff; color: var(--ink); border-radius: 12px; padding: 6px 11px; text-align: center; line-height: 1.05; box-shadow: 0 3px 8px rgba(0,0,0,.28); }
+  .evad-preview .cover .date-badge .day { display: block; font-size: 19px; font-weight: 800; }
+  .evad-preview .cover .date-badge .mon { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--primary-dark); letter-spacing: .03em; }
+  .evad-preview .cover .free-tag { position: absolute; top: 10px; right: 10px; background: var(--primary); color: var(--ink); font-size: 10.5px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+  .evad-preview .body { padding: 14px 16px 16px; }
+  .evad-preview .when { font-size: 13.5px; font-weight: 800; color: var(--ink); margin-bottom: 6px; }
+  .evad-preview h3 { font-size: 16px; font-weight: 800; margin: 0 0 6px; }
+  .evad-preview .meta-row { font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
+  .evad-preview .desc { font-size: 12.5px; color: var(--muted); line-height: 1.4; margin: 8px 0 10px; }
+  .evad-preview .org { font-size: 11.5px; color: var(--ink); font-weight: 600; margin-bottom: 0; }
+  .evad-preview .org span { color: var(--muted); font-weight: 500; }
+  .evad-preview .badge-status { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: var(--primary-light); color: var(--primary-dark); margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -248,14 +270,14 @@
 
     <div id="eventsAdminListView">
       <div class="tabs" id="evAdminStatusTabs">
-        <button class="tab active" data-evstatus="pending">Pendientes</button>
-        <button class="tab" data-evstatus="needs_changes">Con cambios pedidos</button>
-        <button class="tab" data-evstatus="published">Publicados</button>
-        <button class="tab" data-evstatus="featured">Destacados</button>
-        <button class="tab" data-evstatus="finished">Finalizados</button>
-        <button class="tab" data-evstatus="hidden">Ocultos</button>
-        <button class="tab" data-evstatus="rejected">Rechazados</button>
-        <button class="tab" data-evstatus="all">Todos</button>
+        <button class="tab active" data-evstatus="pending">Pendientes <span class="tab-count" data-count-for="pending">0</span></button>
+        <button class="tab" data-evstatus="needs_changes">Con cambios pedidos <span class="tab-count" data-count-for="needs_changes">0</span></button>
+        <button class="tab" data-evstatus="published">Publicados <span class="tab-count" data-count-for="published">0</span></button>
+        <button class="tab" data-evstatus="featured">Destacados <span class="tab-count" data-count-for="featured">0</span></button>
+        <button class="tab" data-evstatus="finished">Finalizados <span class="tab-count" data-count-for="finished">0</span></button>
+        <button class="tab" data-evstatus="hidden">Ocultos <span class="tab-count" data-count-for="hidden">0</span></button>
+        <button class="tab" data-evstatus="rejected">Rechazados <span class="tab-count" data-count-for="rejected">0</span></button>
+        <button class="tab" data-evstatus="all">Todos <span class="tab-count" data-count-for="all">0</span></button>
       </div>
 
       <div class="row-2" style="margin-bottom:10px;">
@@ -277,6 +299,9 @@
       <div class="card">
         <h2 id="evAdminFormTitle">Editar evento</h2>
 
+        <div class="evad-preview-label">Así se va a ver en la Agenda</div>
+        <div id="evadPreview" class="evad-preview"></div>
+
         <form id="evAdminForm">
           <input type="hidden" id="evad_id">
 
@@ -285,10 +310,13 @@
             <span style="font-weight:600; color:var(--muted); font-size:14px;">Evento oficial (municipal, sin ficha organizadora)</span>
           </label>
 
-          <label for="evad_business_id">Ficha organizadora</label>
-          <select id="evad_business_id">
-            <option value="">(sin ficha / evento oficial)</option>
-          </select>
+          <label for="evad_business_search">Ficha organizadora</label>
+          <div class="autocomplete-wrap">
+            <input type="text" id="evad_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
+            <input type="hidden" id="evad_business_id">
+            <div id="evad_business_results" class="autocomplete-results hidden"></div>
+          </div>
+          <p class="field-hint">Dejalo vacío si el evento no tiene una ficha organizadora.</p>
 
           <label for="evad_title">Título del evento *</label>
           <input type="text" id="evad_title" required>
@@ -386,12 +414,6 @@
             <input type="text" id="evad_registration_url">
           </div>
 
-          <label for="evad_capacity">Capacidad (opcional)</label>
-          <input type="number" id="evad_capacity" min="1">
-
-          <label for="evad_tags">Etiquetas</label>
-          <input type="text" id="evad_tags" placeholder="separadas por coma">
-
           <label for="evad_recurrence_type">Repetición</label>
           <select id="evad_recurrence_type">
             <option value="none">No se repite</option>
@@ -423,9 +445,6 @@
             <option value="finished">Finalizado</option>
             <option value="hidden">Oculto</option>
           </select>
-
-          <label for="evad_review_note">Observación para el organizador (visible para él)</label>
-          <textarea id="evad_review_note" placeholder="Ej: falta la foto de portada, corregí el horario..."></textarea>
 
           <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
             <input type="checkbox" id="evad_is_featured" style="width:auto;">

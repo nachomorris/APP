@@ -17,7 +17,9 @@ const evAdminListView = document.getElementById('eventsAdminListView');
 const evAdminFormView = document.getElementById('eventsAdminFormView');
 const evAdminForm = document.getElementById('evAdminForm');
 const evAdminList = document.getElementById('evAdminList');
-const evadBusinessSelect = document.getElementById('evad_business_id');
+const evadBusinessIdInput = document.getElementById('evad_business_id');
+const evadBusinessSearch = document.getElementById('evad_business_search');
+const evadBusinessResults = document.getElementById('evad_business_results');
 const evadCategorySelect = document.getElementById('evad_category_id');
 const evadIsOfficial = document.getElementById('evad_is_official');
 const evadIsFree = document.getElementById('evad_is_free');
@@ -63,9 +65,54 @@ async function loadEvAdminBusinesses() {
     .order('name', { ascending: true });
   if (error) { showAlert('No se pudieron cargar los comercios: ' + error.message, 'error'); return; }
   evAdminBusinesses = data || [];
-  evadBusinessSelect.innerHTML = '<option value="">(sin ficha / evento oficial)</option>' +
-    evAdminBusinesses.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
 }
+
+// ---------- Buscador de ficha organizadora (filtra localmente sobre evAdminBusinesses) ----------
+function evAdSetBusinessSelection(id, name) {
+  evadBusinessIdInput.value = id || '';
+  evadBusinessSearch.value = name || '';
+  hideEvAdBusinessResults();
+  if (typeof renderEvAdPreview === 'function') renderEvAdPreview();
+}
+function hideEvAdBusinessResults() {
+  evadBusinessResults.classList.add('hidden');
+}
+function renderEvAdBusinessResults(query) {
+  const q = query.trim().toLowerCase();
+  if (q.length < 1) {
+    evadBusinessResults.innerHTML = '<div class="autocomplete-empty">Escribí para buscar un comercio.</div>';
+    evadBusinessResults.classList.remove('hidden');
+    return;
+  }
+  const items = evAdminBusinesses.filter((b) => b.name.toLowerCase().includes(q)).slice(0, 15);
+  if (!items.length) {
+    evadBusinessResults.innerHTML = '<div class="autocomplete-empty">No encontramos comercios con ese nombre.</div>';
+  } else {
+    evadBusinessResults.innerHTML = items.map((b) =>
+      `<div class="autocomplete-item" data-business="${b.id}" data-name="${escapeHtml(b.name)}">${escapeHtml(b.name)}</div>`
+    ).join('');
+    evadBusinessResults.querySelectorAll('[data-business]').forEach((el) => {
+      el.addEventListener('click', () => evAdSetBusinessSelection(el.getAttribute('data-business'), el.getAttribute('data-name')));
+    });
+  }
+  evadBusinessResults.classList.remove('hidden');
+}
+evadBusinessSearch.addEventListener('input', () => {
+  evadBusinessIdInput.value = ''; // obliga a confirmar eligiendo de la lista
+  renderEvAdBusinessResults(evadBusinessSearch.value);
+  if (typeof renderEvAdPreview === 'function') renderEvAdPreview();
+});
+evadBusinessSearch.addEventListener('focus', () => {
+  if (!evadBusinessSearch.disabled) renderEvAdBusinessResults(evadBusinessSearch.value);
+});
+evadBusinessSearch.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideEvAdBusinessResults();
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#evad_business_search') && !e.target.closest('#evad_business_results')) {
+    hideEvAdBusinessResults();
+  }
+});
 
 // ---------- Listado ----------
 document.getElementById('evAdminStatusTabs').addEventListener('click', (e) => {
@@ -97,7 +144,24 @@ async function loadEvAdminEvents() {
     .order('start_date', { ascending: true });
   if (error) { evAdminList.innerHTML = ''; showAlert('No se pudo cargar el listado de eventos: ' + error.message, 'error'); return; }
   evAdminEvents = data || [];
+  updateEvAdminStatusCounts();
   renderEvAdminList();
+}
+
+function updateEvAdminStatusCounts() {
+  const counts = {
+    pending: 0, needs_changes: 0, published: 0, featured: 0,
+    finished: 0, hidden: 0, rejected: 0, all: evAdminEvents.length,
+  };
+  evAdminEvents.forEach((e) => {
+    if (e.status in counts) counts[e.status]++;
+    if (e.is_featured) counts.featured++;
+    if (evAdminIsFinished(e)) counts.finished++;
+  });
+  document.querySelectorAll('#evAdminStatusTabs .tab-count').forEach((el) => {
+    const key = el.getAttribute('data-count-for');
+    el.textContent = counts[key] != null ? counts[key] : 0;
+  });
 }
 
 function evStatusLabel(status) {
@@ -247,20 +311,93 @@ async function deleteEvAdmin(id) {
 
 // ---------- Formulario (crear oficial / editar cualquiera) ----------
 function evAdShowList() { evAdminFormView.classList.add('hidden'); evAdminListView.classList.remove('hidden'); clearAlert(); }
-function evAdShowForm() { evAdminListView.classList.add('hidden'); evAdminFormView.classList.remove('hidden'); }
+function evAdShowForm() { evAdminListView.classList.add('hidden'); evAdminFormView.classList.remove('hidden'); renderEvAdPreview(); }
 document.getElementById('evAdminCancelBtn').addEventListener('click', evAdShowList);
 
 evadIsFree.addEventListener('change', () => document.getElementById('evad_price_wrap').classList.toggle('hidden', evadIsFree.checked));
 evadRequiresRegistration.addEventListener('change', () => document.getElementById('evad_registration_wrap').classList.toggle('hidden', !evadRequiresRegistration.checked));
 evadIsOfficial.addEventListener('change', () => {
-  evadBusinessSelect.disabled = evadIsOfficial.checked;
-  if (evadIsOfficial.checked) evadBusinessSelect.value = '';
+  evadBusinessSearch.disabled = evadIsOfficial.checked;
+  if (evadIsOfficial.checked) evAdSetBusinessSelection('', '');
+  renderEvAdPreview();
 });
 evadRecurrenceType.addEventListener('change', () => {
   const t = evadRecurrenceType.value;
   document.getElementById('evad_recurrence_until_wrap').classList.toggle('hidden', t === 'none' || t === 'custom');
   document.getElementById('evad_recurrence_custom_wrap').classList.toggle('hidden', t !== 'custom');
 });
+
+// ---------- Vista previa en vivo (cómo se va a ver en la Agenda pública) ----------
+const MESES_ES_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+function evAdFmtTimeShort(t) {
+  return t ? t.slice(0, 5) : '';
+}
+
+function evAdPreviewDateRange(startStr, endStr) {
+  if (!startStr) return '';
+  const s = evAdParseDate(startStr);
+  const sTxt = `${s.getDate()} de ${MESES_ES_SHORT[s.getMonth()]}`;
+  if (!endStr || endStr === startStr) return sTxt;
+  const e = evAdParseDate(endStr);
+  const eTxt = `${e.getDate()} de ${MESES_ES_SHORT[e.getMonth()]}`;
+  return `${sTxt} al ${eTxt}`;
+}
+
+function renderEvAdPreview() {
+  const preview = document.getElementById('evadPreview');
+  if (!preview) return;
+
+  const title = document.getElementById('evad_title').value.trim() || 'Título del evento';
+  const shortDesc = document.getElementById('evad_short_description').value.trim();
+  const desc = document.getElementById('evad_description').value.trim();
+  const cover = document.getElementById('evad_cover_image').value.trim();
+  const address = document.getElementById('evad_address').value.trim();
+  const startDate = document.getElementById('evad_start_date').value;
+  const endDate = document.getElementById('evad_end_date').value;
+  const startTime = document.getElementById('evad_start_time').value;
+  const endTime = document.getElementById('evad_end_time').value;
+  const isFree = evadIsFree.checked;
+  const isOfficial = evadIsOfficial.checked;
+  const status = document.getElementById('evad_status').value;
+
+  const cat = evAdminCategories.find((c) => c.id === evadCategorySelect.value) || {};
+  const org = isOfficial ? 'Municipalidad (oficial)' : evadBusinessSearch.value.trim();
+
+  const dateLabel = evAdPreviewDateRange(startDate, endDate);
+  let timeLabel = '';
+  if (startTime && endTime) timeLabel = `${evAdFmtTimeShort(startTime)} a ${evAdFmtTimeShort(endTime)}`;
+  else if (startTime) timeLabel = evAdFmtTimeShort(startTime);
+
+  let dayNum = '–';
+  let monLabel = '';
+  if (startDate) {
+    const d = evAdParseDate(startDate);
+    dayNum = d.getDate();
+    monLabel = MESES_ES_SHORT[d.getMonth()];
+  }
+
+  const st = evStatusLabel(status);
+
+  preview.innerHTML = `
+    <div class="cover" style="background:${cat.color || '#111'}">
+      ${cover ? `<img src="${escapeHtml(cover)}" alt="">` : (cat.icon || '🎉')}
+      <div class="date-badge"><span class="day">${dayNum}</span><span class="mon">${monLabel}</span></div>
+      ${isFree ? '<span class="free-tag">Gratis</span>' : ''}
+    </div>
+    <div class="body">
+      <span class="badge-status">${st.text}</span>
+      ${dateLabel ? `<div class="when">🗓️ ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</div>` : ''}
+      <h3>${escapeHtml(title)}</h3>
+      ${address ? `<div class="meta-row">📍 ${escapeHtml(address)}</div>` : ''}
+      ${(shortDesc || desc) ? `<div class="desc">${escapeHtml(shortDesc || desc)}</div>` : ''}
+      ${org ? `<div class="org"><span>Organiza:</span> ${escapeHtml(org)}</div>` : ''}
+    </div>
+  `;
+}
+
+evAdminForm.addEventListener('input', renderEvAdPreview);
+evAdminForm.addEventListener('change', renderEvAdPreview);
 
 function evAdResetForm() {
   evAdminForm.reset();
@@ -269,14 +406,15 @@ function evAdResetForm() {
   document.getElementById('evad_registration_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_until_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_custom_wrap').classList.add('hidden');
-  evadBusinessSelect.disabled = false;
+  evadBusinessSearch.disabled = false;
+  evAdSetBusinessSelection('', '');
 }
 
 document.getElementById('newOfficialEventBtn').addEventListener('click', () => {
   evAdResetForm();
   document.getElementById('evAdminFormTitle').textContent = 'Nuevo evento oficial';
   evadIsOfficial.checked = true;
-  evadBusinessSelect.disabled = true;
+  evadBusinessSearch.disabled = true;
   document.getElementById('evad_status').value = 'published';
   evAdShowForm();
 });
@@ -286,8 +424,9 @@ function openEvAdminForm(e) {
   document.getElementById('evAdminFormTitle').textContent = 'Editar evento';
   document.getElementById('evad_id').value = e.id;
   evadIsOfficial.checked = !!e.is_official;
-  evadBusinessSelect.disabled = !!e.is_official;
-  evadBusinessSelect.value = e.business_id || '';
+  evadBusinessSearch.disabled = !!e.is_official;
+  const org = e.businesses ? e.businesses.name : '';
+  evAdSetBusinessSelection(e.business_id || '', org);
   document.getElementById('evad_title').value = e.title || '';
   document.getElementById('evad_short_description').value = e.short_description || '';
   document.getElementById('evad_description').value = e.description || '';
@@ -311,11 +450,8 @@ function openEvAdminForm(e) {
   evadRequiresRegistration.checked = !!e.requires_registration;
   document.getElementById('evad_registration_wrap').classList.toggle('hidden', !evadRequiresRegistration.checked);
   document.getElementById('evad_registration_url').value = e.registration_url || '';
-  document.getElementById('evad_capacity').value = e.capacity != null ? e.capacity : '';
-  document.getElementById('evad_tags').value = (e.tags || []).join(', ');
   evadRecurrenceType.value = 'none'; // editar una fila puntual no regenera la serie
   document.getElementById('evad_status').value = e.status;
-  document.getElementById('evad_review_note').value = e.review_note || '';
   document.getElementById('evad_is_featured').checked = !!e.is_featured;
   document.getElementById('evad_featured_order').value = e.featured_order || 0;
   evAdShowForm();
@@ -366,7 +502,7 @@ evAdminForm.addEventListener('submit', async (e) => {
   const spanDays = Math.round((evAdParseDate(endDate) - evAdParseDate(startDate)) / 86400000);
 
   const basePayload = {
-    business_id: isOfficial ? null : (evadBusinessSelect.value || null),
+    business_id: isOfficial ? null : (evadBusinessIdInput.value || null),
     is_official: isOfficial,
     title: document.getElementById('evad_title').value.trim(),
     short_description: document.getElementById('evad_short_description').value.trim(),
@@ -387,11 +523,8 @@ evAdminForm.addEventListener('submit', async (e) => {
     price: isFree ? null : (document.getElementById('evad_price').value ? parseFloat(document.getElementById('evad_price').value) : null),
     requires_registration: requiresReg,
     registration_url: requiresReg ? document.getElementById('evad_registration_url').value.trim() : '',
-    capacity: document.getElementById('evad_capacity').value ? parseInt(document.getElementById('evad_capacity').value, 10) : null,
-    tags: document.getElementById('evad_tags').value.split(',').map((s) => s.trim()).filter(Boolean),
     recurrence_type: recurrenceType,
     status: document.getElementById('evad_status').value,
-    review_note: document.getElementById('evad_review_note').value.trim() || null,
     is_featured: document.getElementById('evad_is_featured').checked,
     featured_order: parseInt(document.getElementById('evad_featured_order').value, 10) || 0,
   };
