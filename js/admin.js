@@ -61,6 +61,8 @@ tabs.forEach((tab) => {
 });
 
 // ---------- Auth + chequeo de admin ----------
+let currentAdminRole = null;
+
 async function requireAdmin() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if (!sessionData.session) {
@@ -72,15 +74,28 @@ async function requireAdmin() {
 
   const { data: profile, error } = await supabaseClient
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, role')
     .eq('id', user.id)
     .single();
 
-  if (error || !profile || !profile.is_admin) {
+  const isFullAdmin = !!(profile && profile.is_admin);
+  const isMasterEventos = !!(profile && profile.role === 'master_eventos');
+
+  if (error || !profile || (!isFullAdmin && !isMasterEventos)) {
     listEl.innerHTML = '';
     showAlert('Esta sección es solo para administradores.', 'error');
     setTimeout(() => { window.location.href = 'panel.html'; }, 1800);
     return null;
+  }
+
+  currentAdminRole = profile.role;
+
+  if (isMasterEventos && !isFullAdmin) {
+    // Master Eventos: solo puede ver/administrar la pestaña Eventos.
+    ['mainTabBusinesses', 'mainTabNovedades', 'mainTabUsuarios'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
   }
 
   return user;
@@ -652,9 +667,15 @@ let currentAdminUser = null;
 (async () => {
   currentAdminUser = await requireAdmin();
   if (!currentAdminUser) return;
+
+  if (currentAdminRole === 'master_eventos') {
+    // Solo administra eventos: no hace falta cargar comercios/categorías
+    // de comercio, va directo a la pestaña Eventos.
+    const eventsTab = document.getElementById('mainTabEvents');
+    if (eventsTab) eventsTab.click();
+    return;
+  }
+
   await loadCategories();
   loadList();
-  if (typeof initEventsAdminSection === 'function') {
-    // La sección de eventos se inicializa recién al abrir esa pestaña (ver admin-events.js).
-  }
 })();

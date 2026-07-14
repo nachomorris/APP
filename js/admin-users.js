@@ -15,6 +15,7 @@ const ROLE_LABELS = {
   comercio_pro: 'Comercio Pro',
   eventos: 'Eventos',
   presidente: 'Presidente de cámara',
+  master_eventos: 'Master Eventos',
   admin: 'Administrador',
 };
 
