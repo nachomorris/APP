@@ -1,6 +1,6 @@
 // ============================================================
-// Admin — sección "Usuarios": listado de todas las cuentas
-// registradas + bloquear/desbloquear su acceso al panel.
+// Admin — sección "Usuarios": listado (solo tabla) de todas las
+// cuentas registradas, con su rol y bloquear/desbloquear el acceso.
 // Se carga después de js/admin.js (reutiliza showAlert, clearAlert,
 // escapeHtml, currentAdminUser, showAdminSection).
 // ============================================================
@@ -8,6 +8,13 @@
 let usersAdminSectionLoaded = false;
 let allUsersAdmin = [];
 let businessCountByOwner = {};
+
+const ROLE_LABELS = {
+  comercio: 'Comercio',
+  comercio_pro: 'Comercio Pro',
+  eventos: 'Eventos',
+  admin: 'Administrador',
+};
 
 const mainTabUsuarios = document.getElementById('mainTabUsuarios');
 const usersAdminList = document.getElementById('usersAdminList');
@@ -29,7 +36,7 @@ async function loadUsersAdmin() {
   const [{ data: profiles, error: profErr }, { data: businesses, error: bizErr }] = await Promise.all([
     supabaseClient
       .from('profiles')
-      .select('id, full_name, phone, email, is_admin, is_blocked, created_at')
+      .select('id, full_name, phone, email, is_admin, is_blocked, role, created_at')
       .order('created_at', { ascending: false }),
     supabaseClient.from('businesses').select('owner_id'),
   ]);
@@ -41,13 +48,11 @@ async function loadUsersAdmin() {
   }
 
   businessCountByOwner = {};
-  (businesses || []).forEach((b) => {
-    if (!b.owner_id) return;
-    businessCountByOwner[b.owner_id] = (businessCountByOwner[b.owner_id] || 0) + 1;
-  });
-  if (bizErr) {
-    // no bloquea el listado de usuarios, solo no vamos a poder mostrar el conteo
-    businessCountByOwner = {};
+  if (!bizErr) {
+    (businesses || []).forEach((b) => {
+      if (!b.owner_id) return;
+      businessCountByOwner[b.owner_id] = (businessCountByOwner[b.owner_id] || 0) + 1;
+    });
   }
 
   allUsersAdmin = profiles || [];
@@ -63,6 +68,8 @@ function renderUsersAdminList() {
     return haystack.includes(term);
   });
 
+  usersAdminList.innerHTML = '';
+
   if (allUsersAdmin.length === 0) {
     usersAdminList.innerHTML = '<p class="empty-state">Todavía no hay usuarios registrados.</p>';
     return;
@@ -72,51 +79,121 @@ function renderUsersAdminList() {
     return;
   }
 
-  usersAdminList.innerHTML = '';
-  filtered.forEach((u) => renderUserRow(u));
+  renderUsersTable(filtered);
 }
 
-function renderUserRow(u) {
-  const count = businessCountByOwner[u.id] || 0;
+function buildUserActionEl(u) {
   const isSelf = currentAdminUser && u.id === currentAdminUser.id;
-
-  const card = document.createElement('div');
-  card.className = 'card admin-card';
-  card.innerHTML = `
-    <div class="top">
-      <div>
-        <div class="name">${escapeHtml(u.full_name) || '(sin nombre)'}</div>
-        <div class="cat">${escapeHtml(u.email) || '(sin email)'}</div>
-      </div>
-      <span class="badge ${u.is_blocked ? 'badge-rejected' : 'badge-published'}">${u.is_blocked ? 'Bloqueado' : 'Activo'}</span>
-    </div>
-    <dl>
-      <dt>Teléfono</dt>
-      <dd>${escapeHtml(u.phone) || '—'}</dd>
-      <dt>Fichas a su nombre</dt>
-      <dd>${count}</dd>
-      <dt>Tipo de cuenta</dt>
-      <dd>${u.is_admin ? 'Administrador' : 'Comercio'}</dd>
-    </dl>
-    <div class="admin-actions"></div>
-  `;
-
-  const actions = card.querySelector('.admin-actions');
-
-  if (u.is_admin) {
+  if (u.role === 'admin') {
     const note = document.createElement('span');
     note.style.cssText = 'font-size:12px; color:var(--muted);';
-    note.textContent = isSelf ? 'Sos vos: no te podés bloquear a vos mismo.' : 'Cuenta de administrador: no se bloquea desde acá.';
-    actions.appendChild(note);
+    note.textContent = isSelf ? 'Sos vos' : 'No se bloquea desde acá';
+    return note;
+  }
+  const toggleBtn = document.createElement('button');
+  toggleBtn.className = u.is_blocked ? 'btn btn-primary btn-small' : 'btn btn-danger btn-small';
+  toggleBtn.textContent = u.is_blocked ? 'Desbloquear' : 'Bloquear';
+  toggleBtn.addEventListener('click', () => toggleUserBlocked(u));
+  return toggleBtn;
+}
+
+function buildRoleSelectEl(u) {
+  const isSelf = currentAdminUser && u.id === currentAdminUser.id;
+
+  const select = document.createElement('select');
+  select.style.cssText = 'margin:0; padding:6px 8px; font-size:13px;';
+  Object.keys(ROLE_LABELS).forEach((roleId) => {
+    const opt = document.createElement('option');
+    opt.value = roleId;
+    opt.textContent = ROLE_LABELS[roleId];
+    if (u.role === roleId) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  if (isSelf) {
+    select.disabled = true;
+    select.title = 'No te podés cambiar el rol a vos mismo.';
   } else {
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = u.is_blocked ? 'btn btn-primary btn-small' : 'btn btn-danger btn-small';
-    toggleBtn.textContent = u.is_blocked ? 'Desbloquear' : 'Bloquear';
-    toggleBtn.addEventListener('click', () => toggleUserBlocked(u));
-    actions.appendChild(toggleBtn);
+    select.addEventListener('change', () => changeUserRole(u, select.value, select));
   }
 
-  usersAdminList.appendChild(card);
+  return select;
+}
+
+function renderUsersTable(list) {
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+
+  const table = document.createElement('table');
+  table.className = 'admin-table';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Teléfono</th>
+        <th>Fichas</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+
+  const tbody = table.querySelector('tbody');
+
+  list.forEach((u) => {
+    const count = businessCountByOwner[u.id] || 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="wrap"><strong>${escapeHtml(u.full_name) || '(sin nombre)'}</strong></td>
+      <td class="wrap">${escapeHtml(u.email) || '—'}</td>
+      <td>${escapeHtml(u.phone) || '—'}</td>
+      <td>${count}</td>
+      <td class="role-cell"></td>
+      <td><span class="badge ${u.is_blocked ? 'badge-rejected' : 'badge-published'}">${u.is_blocked ? 'Bloqueado' : 'Activo'}</span></td>
+      <td><div class="row-actions"></div></td>
+    `;
+    tr.querySelector('.role-cell').appendChild(buildRoleSelectEl(u));
+    tr.querySelector('.row-actions').appendChild(buildUserActionEl(u));
+    tbody.appendChild(tr);
+  });
+
+  wrap.appendChild(table);
+  usersAdminList.appendChild(wrap);
+}
+
+async function changeUserRole(u, newRole, selectEl) {
+  if (newRole === u.role) return;
+
+  const label = ROLE_LABELS[newRole];
+  const confirmMsg = newRole === 'admin'
+    ? `¿Seguro que querés hacer administrador a ${u.full_name || u.email}? Va a tener acceso total al panel de admin.`
+    : `¿Cambiar el rol de ${u.full_name || u.email} a "${label}"?`;
+
+  if (!window.confirm(confirmMsg)) {
+    selectEl.value = u.role;
+    return;
+  }
+
+  selectEl.disabled = true;
+  const { error } = await supabaseClient
+    .from('profiles')
+    .update({ role: newRole })
+    .eq('id', u.id);
+  selectEl.disabled = false;
+
+  if (error) {
+    showAlert('No se pudo cambiar el rol: ' + error.message, 'error');
+    selectEl.value = u.role;
+    return;
+  }
+
+  u.role = newRole;
+  u.is_admin = newRole === 'admin';
+  showAlert('Rol actualizado.', 'success');
+  renderUsersAdminList();
 }
 
 async function toggleUserBlocked(u) {

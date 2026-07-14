@@ -38,10 +38,12 @@ async function requireSession() {
   return data.session.user;
 }
 
+let currentUserRole = 'comercio';
+
 async function checkAdminLink(userId) {
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('is_admin, is_blocked')
+    .select('is_admin, is_blocked, role')
     .eq('id', userId)
     .single();
 
@@ -54,6 +56,9 @@ async function checkAdminLink(userId) {
   if (profile && profile.is_admin) {
     document.getElementById('adminLink').classList.remove('hidden');
   }
+
+  currentUserRole = (profile && profile.role) || 'comercio';
+  if (typeof applyRoleVisibility === 'function') applyRoleVisibility(currentUserRole);
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {

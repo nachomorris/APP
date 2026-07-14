@@ -61,6 +61,23 @@ function switchMainTab(tab) {
     initAccountSection();
   }
 }
+// ---------- Mostrar/ocultar pestañas según el rol del usuario ----------
+// comercio: solo administra su(s) ficha(s), no ve "Mis eventos".
+// eventos: no puede tener fichas, no ve "Mis fichas" (arranca en eventos).
+// comercio_pro / admin: ven todo.
+function applyRoleVisibility(role) {
+  const hideEventos = role === 'comercio';
+  const hideFichas = role === 'eventos';
+
+  mainTabEventos.classList.toggle('hidden', hideEventos);
+  mainTabFichas.classList.toggle('hidden', hideFichas);
+  document.getElementById('newBusinessBtn').classList.toggle('hidden', hideFichas);
+
+  if (hideFichas) {
+    switchMainTab('eventos');
+  }
+}
+
 mainTabFichas.addEventListener('click', () => switchMainTab('fichas'));
 mainTabEventos.addEventListener('click', () => switchMainTab('eventos'));
 mainTabCuenta.addEventListener('click', () => switchMainTab('cuenta'));
