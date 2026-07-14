@@ -327,10 +327,10 @@ evadRecurrenceType.addEventListener('change', () => {
   document.getElementById('evad_recurrence_custom_wrap').classList.toggle('hidden', t !== 'custom');
 });
 
-// ---------- Vista previa en vivo (cómo se va a ver en la Agenda pública) ----------
-// Réplica exacta de las funciones de formato de fecha/hora que usa index.html
-// (MESES_ES, fmtDay, fmtDateRange, fmtTimeRange) para que la previsualización
-// se vea idéntica a la tarjeta real de la Agenda.
+// ---------- Vista previa en vivo (réplica de la página de detalle real del evento) ----------
+// Mismas funciones de formato de fecha/hora/precio/links que usa index.html
+// (MESES_ES, fmtDay, fmtDateRange, fmtTimeRange, priceLabel, organizerName, websiteUrl,
+// instagramUrl) para que se vea igual a lo que el visitante ve al entrar al evento.
 const EVAD_MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 function evAdFmtDay(dateStr) {
@@ -350,6 +350,23 @@ function evAdFmtTimeRange(startTime, endTime) {
   if (startTime) return `Desde las ${startTime.slice(0, 5)} hs`;
   return '';
 }
+function evAdPriceLabel(isFree, price) {
+  if (isFree) return 'Gratis';
+  if (price != null && price !== '') return `$${Number(price).toLocaleString('es-AR')}`;
+  return '';
+}
+function evAdWebsiteUrl(v) {
+  if (!v) return '';
+  v = v.trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  return 'https://' + v;
+}
+function evAdInstagramUrl(v) {
+  if (!v) return '';
+  v = v.trim();
+  if (/^https?:\/\//i.test(v)) return v;
+  return 'https://instagram.com/' + v.replace(/^@/, '');
+}
 
 function renderEvAdPreview() {
   const preview = document.getElementById('evadPreview');
@@ -364,40 +381,56 @@ function renderEvAdPreview() {
   const endDate = document.getElementById('evad_end_date').value;
   const startTime = document.getElementById('evad_start_time').value;
   const endTime = document.getElementById('evad_end_time').value;
+  const phone = document.getElementById('evad_phone').value.trim();
+  const instagram = document.getElementById('evad_instagram').value.trim();
+  const website = document.getElementById('evad_website').value.trim();
   const isFree = evadIsFree.checked;
+  const requiresReg = evadRequiresRegistration.checked;
   const isOfficial = evadIsOfficial.checked;
   const status = document.getElementById('evad_status').value;
+  const businessName = evadBusinessSearch.value.trim();
 
   const cat = evAdminCategories.find((c) => c.id === evadCategorySelect.value) || {};
-  const org = isOfficial ? 'Municipalidad de Potrero de los Funes' : evadBusinessSearch.value.trim();
+  const org = businessName ? businessName : (isOfficial ? 'Municipalidad de Potrero de los Funes' : '');
 
   const dateLabel = startDate ? evAdFmtDateRange(startDate, endDate) : '';
   const timeLabel = evAdFmtTimeRange(startTime, endTime);
-
-  let dayNum = '–';
-  let monLabel = '';
-  if (startDate) {
-    const d = evAdParseDate(startDate);
-    dayNum = d.getDate();
-    monLabel = EVAD_MESES_ES[d.getMonth()].slice(0, 3);
-  }
+  const price = evAdPriceLabel(isFree, document.getElementById('evad_price').value);
+  const igUrl = evAdInstagramUrl(instagram);
+  const webUrl = evAdWebsiteUrl(website);
 
   const statusEl = document.getElementById('evadPreviewStatus');
   if (statusEl) statusEl.textContent = evStatusLabel(status).text;
 
   preview.innerHTML = `
-    <div class="cover" style="background:${cat.color || '#111'}">
+    <div class="detail-hero" style="background:${cat.color || '#111'}">
       ${cover ? `<img src="${escapeHtml(cover)}" alt="">` : (cat.icon || '🎉')}
-      <div class="date-badge"><span class="day">${dayNum}</span><span class="mon">${monLabel}</span></div>
-      ${isFree ? '<span class="free-tag">Gratis</span>' : ''}
+      ${cover ? '<span class="zoom-hint">🔍 Ver flyer</span>' : ''}
     </div>
-    <div class="body">
-      ${dateLabel ? `<div class="when">🗓️ ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</div>` : ''}
-      <h3>${escapeHtml(title)}</h3>
-      ${address ? `<div class="meta-row">📍 ${escapeHtml(address)}</div>` : ''}
-      ${(shortDesc || desc) ? `<div class="desc">${escapeHtml(shortDesc || desc)}</div>` : ''}
-      ${org ? `<div class="org"><span>Organiza:</span> ${escapeHtml(org)}</div>` : ''}
-      <span class="more-btn">Ver más →</span>
+    <div class="detail-title">${escapeHtml(title)}</div>
+    <div class="detail-cat">${cat.icon || ''} ${escapeHtml(cat.label || 'Sin categoría')}</div>
+    <div class="event-badges">
+      <span class="badge ${isFree ? 'free' : 'price'}">${isFree ? '● Entrada gratuita' : (price ? '● ' + escapeHtml(price) : '● Consultar precio')}</span>
+      ${requiresReg ? '<span class="badge price">● Requiere inscripción</span>' : ''}
+    </div>
+
+    <div class="detail-block">
+      <h3>Cuándo</h3>
+      <p>${dateLabel ? escapeHtml(dateLabel) : '(sin fecha cargada)'}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</p>
+    </div>
+
+    ${(desc || shortDesc) ? `<div class="detail-block">
+      <h3>Descripción</h3>
+      <p>${escapeHtml(desc || shortDesc)}</p>
+    </div>` : ''}
+
+    <div class="detail-block">
+      <h3>Lugar y contacto</h3>
+      ${address ? `<div class="detail-row"><span class="ic">📍</span>${escapeHtml(address)}</div>` : ''}
+      ${org ? `<div class="detail-row"><span class="ic">🏪</span>${escapeHtml(org)}</div>` : ''}
+      ${phone ? `<div class="detail-row"><span class="ic">📞</span>${escapeHtml(phone)}</div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span>${escapeHtml(website)}</div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span>${escapeHtml(instagram)}</div>` : ''}
     </div>
   `;
 }
