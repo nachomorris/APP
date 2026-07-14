@@ -57,6 +57,7 @@
   <div class="section-tabs">
     <button id="mainTabFichas" class="active">🏪 Mis fichas</button>
     <button id="mainTabEventos">🎉 Mis eventos</button>
+    <button id="mainTabSocios" class="hidden">🤝 Mis socios</button>
     <button id="mainTabCuenta">👤 Mi cuenta</button>
   </div>
 
@@ -409,6 +410,19 @@
   </div>
   <!-- ===== FIN SECCIÓN EVENTOS ===== -->
 
+  <!-- ===== SECCIÓN MIS SOCIOS (rol presidente) ===== -->
+  <div id="sociosSection" class="hidden">
+    <div class="card">
+      <h2 style="margin-top:0;" id="sociosTitle">Mis socios</h2>
+      <p class="subtitle" style="margin-bottom:14px;">Comercios adheridos a tu cámara. Solo podés verlos, no editarlos.</p>
+      <input type="text" id="searchSocios" placeholder="Buscar por nombre o dirección..." style="margin-bottom:14px;">
+      <div id="sociosList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+  </div>
+  <!-- ===== FIN SECCIÓN MIS SOCIOS ===== -->
+
   <!-- ===== SECCIÓN MI CUENTA ===== -->
   <div id="cuentaSection" class="hidden">
 
@@ -468,6 +482,7 @@
 <script src="js/panel-events.js"></script>
 <script src="js/panel-account.js"></script>
 <script src="js/panel-photo.js"></script>
+<script src="js/panel-presidente.js"></script>
 
 </body>
 </html>

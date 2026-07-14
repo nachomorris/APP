@@ -39,11 +39,12 @@ async function requireSession() {
 }
 
 let currentUserRole = 'comercio';
+let currentUserChamber = null;
 
 async function checkAdminLink(userId) {
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('is_admin, is_blocked, role')
+    .select('is_admin, is_blocked, role, chamber')
     .eq('id', userId)
     .single();
 
@@ -58,6 +59,7 @@ async function checkAdminLink(userId) {
   }
 
   currentUserRole = (profile && profile.role) || 'comercio';
+  currentUserChamber = (profile && profile.chamber) || null;
   if (typeof applyRoleVisibility === 'function') applyRoleVisibility(currentUserRole);
 }
 

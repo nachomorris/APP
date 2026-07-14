@@ -38,20 +38,24 @@ function evTodayStr() {
   return evFmtDate(new Date());
 }
 
-// ---------- Tabs de nivel superior (Mis fichas / Mis eventos / Mi cuenta) ----------
+// ---------- Tabs de nivel superior (Mis fichas / Mis eventos / Mis socios / Mi cuenta) ----------
 const mainTabFichas = document.getElementById('mainTabFichas');
 const mainTabEventos = document.getElementById('mainTabEventos');
+const mainTabSocios = document.getElementById('mainTabSocios');
 const mainTabCuenta = document.getElementById('mainTabCuenta');
 const fichasSection = document.getElementById('fichasSection');
 const eventosSection = document.getElementById('eventosSection');
+const sociosSection = document.getElementById('sociosSection');
 const cuentaSection = document.getElementById('cuentaSection');
 
 function switchMainTab(tab) {
   mainTabFichas.classList.toggle('active', tab === 'fichas');
   mainTabEventos.classList.toggle('active', tab === 'eventos');
+  mainTabSocios.classList.toggle('active', tab === 'socios');
   mainTabCuenta.classList.toggle('active', tab === 'cuenta');
   fichasSection.classList.toggle('hidden', tab !== 'fichas');
   eventosSection.classList.toggle('hidden', tab !== 'eventos');
+  sociosSection.classList.toggle('hidden', tab !== 'socios');
   cuentaSection.classList.toggle('hidden', tab !== 'cuenta');
   clearAlert();
   if (tab === 'eventos' && !eventCategories.length) {
@@ -60,20 +64,31 @@ function switchMainTab(tab) {
   if (tab === 'cuenta' && typeof initAccountSection === 'function') {
     initAccountSection();
   }
+  if (tab === 'socios' && typeof initSociosSection === 'function') {
+    initSociosSection();
+  }
 }
+mainTabSocios.addEventListener('click', () => switchMainTab('socios'));
+
 // ---------- Mostrar/ocultar pestañas según el rol del usuario ----------
-// comercio: solo administra su(s) ficha(s), no ve "Mis eventos".
+// comercio: solo administra su(s) ficha(s), no ve "Mis eventos" ni "Mis socios".
+// comercio_pro: lo mismo + puede cargar eventos.
 // eventos: no puede tener fichas, no ve "Mis fichas" (arranca en eventos).
-// comercio_pro / admin: ven todo.
+// presidente: solo ve "Mis socios" (no tiene fichas ni eventos propios).
+// admin: ve todo.
 function applyRoleVisibility(role) {
-  const hideEventos = role === 'comercio';
-  const hideFichas = role === 'eventos';
+  const hideEventos = role === 'comercio' || role === 'presidente';
+  const hideFichas = role === 'eventos' || role === 'presidente';
+  const showSocios = role === 'presidente';
 
   mainTabEventos.classList.toggle('hidden', hideEventos);
   mainTabFichas.classList.toggle('hidden', hideFichas);
+  mainTabSocios.classList.toggle('hidden', !showSocios);
   document.getElementById('newBusinessBtn').classList.toggle('hidden', hideFichas);
 
-  if (hideFichas) {
+  if (showSocios) {
+    switchMainTab('socios');
+  } else if (hideFichas) {
     switchMainTab('eventos');
   }
 }

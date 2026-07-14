@@ -491,14 +491,65 @@
   <!-- fin novedadesAdminSection -->
 
   <div id="usuariosAdminSection" class="hidden">
-    <div class="card">
-      <h2 style="margin-top:0;">Usuarios registrados</h2>
-      <input type="text" id="searchUsersAdmin" placeholder="Buscar por nombre, email o teléfono..." style="margin-bottom:14px;">
 
-      <div id="usersAdminList">
-        <p class="empty-state">Cargando...</p>
+    <div id="usuariosListView">
+      <div class="card">
+        <h2 style="margin-top:0;">Usuarios registrados</h2>
+        <input type="text" id="searchUsersAdmin" placeholder="Buscar por nombre, email o teléfono..." style="margin-bottom:14px;">
+
+        <div id="usersAdminList">
+          <p class="empty-state">Cargando...</p>
+        </div>
       </div>
     </div>
+
+    <div id="usuariosFormView" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0;">Editar usuario</h2>
+        <form id="userForm">
+          <input type="hidden" id="user_id">
+
+          <label for="user_email">Email</label>
+          <input type="email" id="user_email" disabled>
+
+          <label for="user_full_name">Nombre y apellido</label>
+          <input type="text" id="user_full_name">
+
+          <label for="user_phone">Teléfono</label>
+          <input type="tel" id="user_phone">
+
+          <label for="user_role">Rol</label>
+          <select id="user_role">
+            <option value="comercio">Comercio</option>
+            <option value="comercio_pro">Comercio Pro</option>
+            <option value="eventos">Eventos</option>
+            <option value="presidente">Presidente de cámara</option>
+            <option value="admin">Administrador</option>
+          </select>
+
+          <div id="user_chamber_wrap" class="hidden">
+            <label for="user_chamber">Cámara que preside</label>
+            <select id="user_chamber">
+              <option value="">Seleccioná una cámara</option>
+              <option value="UDAER">UDAER</option>
+              <option value="CCTA">CCTA</option>
+              <option value="AEHGA">AEHGA</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="saveUserBtn">Guardar cambios</button>
+          <button type="button" class="btn btn-secondary" id="cancelUserBtn">Cancelar</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0;">Fichas asociadas a este perfil</h2>
+        <div id="userBusinessesList">
+          <p class="empty-state">Cargando...</p>
+        </div>
+      </div>
+    </div>
+
   </div>
   <!-- fin usuariosAdminSection -->
 
