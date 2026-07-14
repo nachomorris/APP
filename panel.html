@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
   .preview-label {
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
@@ -25,6 +26,18 @@
   .preview-name { font-size: 14px; font-weight: 700; margin: 0 0 2px; color: var(--ink); }
   .preview-cat { font-size: 11.5px; color: var(--primary-dark); font-weight: 600; }
   .preview-addr { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+  /* En pantallas más anchas (tablet/desktop) aprovecha más espacio.
+     En celular (por debajo de 860px) queda igual que antes. */
+  @media (min-width: 860px) {
+    .container { max-width: 900px; padding: 28px 40px 60px; }
+    .topbar { max-width: 900px; }
+    #formView, #eventFormView { max-width: 720px; margin: 0 auto; }
+  }
+  @media (min-width: 1280px) {
+    .container { max-width: 1100px; }
+    .topbar { max-width: 1100px; }
+  }
 </style>
 </head>
 <body>
@@ -44,6 +57,7 @@
   <div class="section-tabs">
     <button id="mainTabFichas" class="active">🏪 Mis fichas</button>
     <button id="mainTabEventos">🎉 Mis eventos</button>
+    <button id="mainTabCuenta">👤 Mi cuenta</button>
   </div>
 
   <!-- ===== SECCIÓN FICHAS ===== -->
@@ -57,17 +71,21 @@
         <button class="btn btn-primary btn-small" id="newBusinessBtn">+ Nueva ficha</button>
       </div>
 
-      <input type="text" id="searchFichas" placeholder="Buscar por nombre o dirección..." style="margin-bottom:10px;">
+      <div id="fichasSearchWrap" class="hidden">
+        <input type="text" id="searchFichas" placeholder="Buscar por nombre o dirección..." style="margin-bottom:10px;">
 
-      <div class="row-2" style="margin-bottom:14px;">
-        <select id="filterCategory">
-          <option value="">Todas las categorías</option>
-        </select>
-        <select id="filterSubcategory">
-          <option value="">Todas las subcategorías</option>
-        </select>
+        <div class="row-2">
+          <select id="filterCategory">
+            <option value="">Todas las categorías</option>
+          </select>
+          <select id="filterSubcategory">
+            <option value="">Todas las subcategorías</option>
+          </select>
+        </div>
       </div>
+    </div>
 
+    <div class="card">
       <div id="businessList">
         <p class="empty-state">Cargando...</p>
       </div>
@@ -94,6 +112,19 @@
         <select id="subcategory_id">
           <option value="">(opcional)</option>
         </select>
+
+        <label>Foto de portada</label>
+        <div class="photo-upload-wrap">
+          <div class="photo-preview" id="photoPreview">
+            <img id="photoPreviewImg" style="display:none;" alt="Foto de portada">
+            <span id="photoPreviewEmpty">Sin foto todavía</span>
+          </div>
+          <div>
+            <input type="file" id="photoInput" accept="image/*" class="hidden">
+            <button type="button" class="btn btn-secondary btn-small" id="choosePhotoBtn">Elegir foto</button>
+            <p class="field-hint" id="photoHint">Guardá la ficha primero; después vas a poder subirle una foto.</p>
+          </div>
+        </div>
 
         <label for="description">Descripción</label>
         <textarea id="description" placeholder="Contale a los visitantes de qué se trata tu comercio..."></textarea>
@@ -137,6 +168,29 @@
           </div>
         </div>
         <p class="field-hint">Buscá tu comercio en Google Maps, hacé clic derecho sobre el pin y copiá las dos coordenadas de ahí. Así aparece bien ubicado en el mapa.</p>
+
+        <div id="amenitiesWrap" class="hidden">
+          <label style="margin-top:20px;">Servicios que ofrece</label>
+          <div class="amenities-check-grid">
+            <label><input type="checkbox" class="amenity-check" value="wifi"> 📶 Wifi</label>
+            <label><input type="checkbox" class="amenity-check" value="estacionamiento"> 🅿️ Estacionamiento</label>
+            <label><input type="checkbox" class="amenity-check" value="piscina"> 🏊 Piscina</label>
+            <label><input type="checkbox" class="amenity-check" value="desayuno"> 🍳 Desayuno</label>
+            <label><input type="checkbox" class="amenity-check" value="gym"> 🏋️ Gimnasio</label>
+            <label><input type="checkbox" class="amenity-check" value="aire_acondicionado"> ❄️ Aire acondicionado</label>
+            <label><input type="checkbox" class="amenity-check" value="parrilla"> 🔥 Parrilla</label>
+            <label><input type="checkbox" class="amenity-check" value="spa"> 💆 Spa</label>
+            <label><input type="checkbox" class="amenity-check" value="petfriendly"> 🐾 Pet friendly</label>
+          </div>
+        </div>
+
+        <div id="gastroTagsWrap" class="hidden">
+          <label style="margin-top:20px;">Etiquetas</label>
+          <div class="amenities-check-grid">
+            <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> 🏔️ Menú Serrano</label>
+            <label><input type="checkbox" class="gastro-tag-check" value="bna"> 🏷️ BNA</label>
+          </div>
+        </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
           <input type="checkbox" id="open_now" style="width:auto;" checked>
@@ -355,12 +409,65 @@
   </div>
   <!-- ===== FIN SECCIÓN EVENTOS ===== -->
 
+  <!-- ===== SECCIÓN MI CUENTA ===== -->
+  <div id="cuentaSection" class="hidden">
+
+    <div class="card">
+      <h2 style="margin-top:0;">Mis datos</h2>
+      <form id="accountForm">
+        <label for="acc_email">Email</label>
+        <input type="email" id="acc_email" disabled>
+
+        <label for="acc_full_name">Nombre y apellido</label>
+        <input type="text" id="acc_full_name" placeholder="Tu nombre">
+
+        <label for="acc_phone">Teléfono</label>
+        <input type="tel" id="acc_phone" placeholder="Ej: +54 9 266...">
+
+        <button type="submit" class="btn btn-primary" id="saveAccountBtn">Guardar datos</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Cambiar contraseña</h2>
+      <form id="passwordForm">
+        <label for="acc_new_password">Nueva contraseña</label>
+        <input type="password" id="acc_new_password" placeholder="Mínimo 6 caracteres" minlength="6" required autocomplete="new-password">
+
+        <label for="acc_confirm_password">Repetir nueva contraseña</label>
+        <input type="password" id="acc_confirm_password" minlength="6" required autocomplete="new-password">
+
+        <button type="submit" class="btn btn-primary" id="savePasswordBtn">Actualizar contraseña</button>
+      </form>
+    </div>
+
+  </div>
+  <!-- ===== FIN SECCIÓN MI CUENTA ===== -->
+
+</div>
+
+<!-- ===== Modal: ajustar recorte de la foto ===== -->
+<div id="cropperModal" class="cropper-modal hidden">
+  <div class="cropper-modal-inner">
+    <h3>Ajustá tu foto</h3>
+    <p class="field-hint" style="margin-top:0;">Arrastrá para mover y usá la rueda o pellizcá para acercar/alejar.</p>
+    <div class="cropper-container-box">
+      <img id="cropperImage">
+    </div>
+    <div class="cropper-actions">
+      <button type="button" class="btn btn-secondary" id="cropperCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="cropperConfirmBtn">Guardar foto</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/panel.js"></script>
 <script src="js/panel-events.js"></script>
+<script src="js/panel-account.js"></script>
+<script src="js/panel-photo.js"></script>
 
 </body>
 </html>

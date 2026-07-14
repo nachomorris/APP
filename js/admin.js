@@ -2,6 +2,7 @@ let currentFilter = 'pending';
 let allCategories = [];
 let allSubcategories = [];
 let currentBusinessesList = [];
+let businessViewMode = 'cards';
 
 const alertBox = document.getElementById('alert');
 const listEl = document.getElementById('list');
@@ -18,6 +19,10 @@ const ownerResults = document.getElementById('owner_results');
 const searchBusinessesAdmin = document.getElementById('searchBusinessesAdmin');
 const filterCategoryAdmin = document.getElementById('filterCategoryAdmin');
 const filterSubcategoryAdmin = document.getElementById('filterSubcategoryAdmin');
+const filterChamberAdmin = document.getElementById('filterChamberAdmin');
+const chamberSelect = document.getElementById('chamber');
+const viewCardsBtn = document.getElementById('viewCardsBtn');
+const viewTableBtn = document.getElementById('viewTableBtn');
 
 function showAlert(message, type) {
   alertBox.textContent = message;
@@ -88,7 +93,7 @@ async function loadList() {
 
   let query = supabaseClient
     .from('businesses')
-    .select('*, categories(label), profiles(full_name, phone)')
+    .select('*, categories(label), profiles(full_name, phone), business_chambers(chamber)')
     .order('created_at', { ascending: false });
 
   if (currentFilter !== 'all') {
@@ -111,10 +116,19 @@ function renderFilteredBusinessList() {
   const term = searchBusinessesAdmin.value.trim().toLowerCase();
   const catFilter = filterCategoryAdmin.value;
   const subFilter = filterSubcategoryAdmin.value;
+  const chamberFilter = filterChamberAdmin.value;
 
   const filtered = currentBusinessesList.filter((b) => {
     if (catFilter && b.category_id !== catFilter) return false;
     if (subFilter && b.subcategory_id !== subFilter) return false;
+    if (chamberFilter) {
+      const chamber = getChamber(b);
+      if (chamberFilter === 'none') {
+        if (chamber) return false;
+      } else if (chamber !== chamberFilter) {
+        return false;
+      }
+    }
     if (term) {
       const haystack = ((b.name || '') + ' ' + (b.address || '')).toLowerCase();
       if (!haystack.includes(term)) return false;
@@ -132,7 +146,11 @@ function renderFilteredBusinessList() {
   }
 
   listEl.innerHTML = '';
-  filtered.forEach((b) => renderCard(b));
+  if (businessViewMode === 'table') {
+    renderTable(filtered);
+  } else {
+    filtered.forEach((b) => renderCard(b));
+  }
 }
 
 searchBusinessesAdmin.addEventListener('input', renderFilteredBusinessList);
@@ -141,6 +159,20 @@ filterCategoryAdmin.addEventListener('change', () => {
   renderFilteredBusinessList();
 });
 filterSubcategoryAdmin.addEventListener('change', renderFilteredBusinessList);
+filterChamberAdmin.addEventListener('change', renderFilteredBusinessList);
+
+viewCardsBtn.addEventListener('click', () => {
+  businessViewMode = 'cards';
+  viewCardsBtn.classList.add('active');
+  viewTableBtn.classList.remove('active');
+  renderFilteredBusinessList();
+});
+viewTableBtn.addEventListener('click', () => {
+  businessViewMode = 'table';
+  viewTableBtn.classList.add('active');
+  viewCardsBtn.classList.remove('active');
+  renderFilteredBusinessList();
+});
 
 function populateAdminCategoryFilter() {
   const current = filterCategoryAdmin.value;
@@ -156,11 +188,111 @@ function populateAdminSubcategoryFilter(categoryId) {
   filterSubcategoryAdmin.value = opts.some((s) => s.id === current) ? current : '';
 }
 
+function getChamber(b) {
+  const bc = b.business_chambers;
+  if (!bc) return '';
+  if (Array.isArray(bc)) return bc[0] ? bc[0].chamber : '';
+  return bc.chamber || '';
+}
+
+function subcategoryLabel(b) {
+  if (!b.subcategory_id) return '';
+  const sub = allSubcategories.find((s) => s.id === b.subcategory_id);
+  return sub ? sub.label : '';
+}
+
+function attachActionButtons(container, b) {
+  if (b.status !== 'published') {
+    const approveBtn = document.createElement('button');
+    approveBtn.className = 'btn btn-primary btn-small';
+    approveBtn.textContent = 'Aprobar';
+    approveBtn.addEventListener('click', () => setStatus(b.id, 'published'));
+    container.appendChild(approveBtn);
+  }
+
+  if (b.status !== 'rejected') {
+    const rejectBtn = document.createElement('button');
+    rejectBtn.className = 'btn btn-secondary btn-small';
+    rejectBtn.textContent = 'Rechazar';
+    rejectBtn.addEventListener('click', () => rejectBusiness(b.id));
+    container.appendChild(rejectBtn);
+  }
+
+  if (b.status !== 'pending') {
+    const pendingBtn = document.createElement('button');
+    pendingBtn.className = 'btn btn-secondary btn-small';
+    pendingBtn.textContent = 'Volver a pendiente';
+    pendingBtn.addEventListener('click', () => setStatus(b.id, 'pending'));
+    container.appendChild(pendingBtn);
+  }
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'btn btn-secondary btn-small';
+  editBtn.textContent = 'Editar';
+  editBtn.addEventListener('click', () => openEditForm(b));
+  container.appendChild(editBtn);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn btn-danger btn-small';
+  deleteBtn.textContent = 'Eliminar';
+  deleteBtn.addEventListener('click', () => deleteBusiness(b.id));
+  container.appendChild(deleteBtn);
+}
+
+function renderTable(list) {
+  const wrap = document.createElement('div');
+  wrap.className = 'table-wrap';
+
+  const table = document.createElement('table');
+  table.className = 'admin-table';
+  table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Categoría</th>
+        <th>Subcategoría</th>
+        <th>Estado</th>
+        <th>Dueño</th>
+        <th>Cámara</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+
+  const tbody = table.querySelector('tbody');
+
+  list.forEach((b) => {
+    const st = statusLabel(b.status);
+    const owner = b.profiles || {};
+    const category = b.categories ? b.categories.label : '';
+    const chamber = getChamber(b);
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="wrap"><strong>${escapeHtml(b.name)}</strong></td>
+      <td>${escapeHtml(category) || '—'}</td>
+      <td>${escapeHtml(subcategoryLabel(b)) || '—'}</td>
+      <td><span class="badge ${st.cls}">${st.text}</span></td>
+      <td class="wrap">${escapeHtml(owner.full_name) || '(sin nombre)'}</td>
+      <td>${chamber ? escapeHtml(chamber) : '—'}</td>
+      <td><div class="row-actions"></div></td>
+    `;
+
+    attachActionButtons(tr.querySelector('.row-actions'), b);
+    tbody.appendChild(tr);
+  });
+
+  wrap.appendChild(table);
+  listEl.appendChild(wrap);
+}
+
 function renderCard(b) {
   const st = statusLabel(b.status);
   const owner = b.profiles || {};
   const category = b.categories ? b.categories.label : '';
   const hoursText = (b.hours && b.hours.texto) || '';
+  const chamber = getChamber(b);
 
   const card = document.createElement('div');
   card.className = 'card admin-card';
@@ -195,48 +327,16 @@ function renderCard(b) {
       </dd>
 
       ${b.rejection_note ? `<dt>Nota de rechazo</dt><dd>${escapeHtml(b.rejection_note)}</dd>` : ''}
+
+      <dt>Cámara (uso interno)</dt>
+      <dd>${chamber ? escapeHtml(chamber) : '—'}</dd>
     </dl>
 
     <div class="admin-actions"></div>
   `;
 
   const actions = card.querySelector('.admin-actions');
-
-  if (b.status !== 'published') {
-    const approveBtn = document.createElement('button');
-    approveBtn.className = 'btn btn-primary btn-small';
-    approveBtn.textContent = 'Aprobar';
-    approveBtn.addEventListener('click', () => setStatus(b.id, 'published'));
-    actions.appendChild(approveBtn);
-  }
-
-  if (b.status !== 'rejected') {
-    const rejectBtn = document.createElement('button');
-    rejectBtn.className = 'btn btn-secondary btn-small';
-    rejectBtn.textContent = 'Rechazar';
-    rejectBtn.addEventListener('click', () => rejectBusiness(b.id));
-    actions.appendChild(rejectBtn);
-  }
-
-  if (b.status !== 'pending') {
-    const pendingBtn = document.createElement('button');
-    pendingBtn.className = 'btn btn-secondary btn-small';
-    pendingBtn.textContent = 'Volver a pendiente';
-    pendingBtn.addEventListener('click', () => setStatus(b.id, 'pending'));
-    actions.appendChild(pendingBtn);
-  }
-
-  const editBtn = document.createElement('button');
-  editBtn.className = 'btn btn-secondary btn-small';
-  editBtn.textContent = 'Editar';
-  editBtn.addEventListener('click', () => openEditForm(b));
-  actions.appendChild(editBtn);
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'btn btn-danger btn-small';
-  deleteBtn.textContent = 'Eliminar';
-  deleteBtn.addEventListener('click', () => deleteBusiness(b.id));
-  actions.appendChild(deleteBtn);
+  attachActionButtons(actions, b);
 
   listEl.appendChild(card);
 }
@@ -291,8 +391,20 @@ function refreshSubcategoryOptions(categoryId, selectedSubcatId) {
     });
 }
 
+const amenitiesWrap = document.getElementById('amenitiesWrap');
+const gastroTagsWrap = document.getElementById('gastroTagsWrap');
+function updateAmenitiesVisibility() {
+  const isAlojamiento = categorySelect.value === 'alojamiento';
+  const isGastronomia = categorySelect.value === 'gastronomia';
+  amenitiesWrap.classList.toggle('hidden', !isAlojamiento);
+  gastroTagsWrap.classList.toggle('hidden', !isGastronomia);
+  if (!isAlojamiento) document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
+  if (!isGastronomia) document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
+}
+
 categorySelect.addEventListener('change', () => {
   refreshSubcategoryOptions(categorySelect.value, null);
+  updateAmenitiesVisibility();
 });
 
 // ---------- Buscador de dueño (para reasignar la ficha a otro usuario) ----------
@@ -396,8 +508,21 @@ function openEditForm(b) {
   document.getElementById('lng').value = (b.lng !== null && b.lng !== undefined) ? b.lng : '';
   document.getElementById('open_now').checked = b.open !== false;
   document.getElementById('featured').checked = !!b.featured;
+  chamberSelect.value = getChamber(b);
   categorySelect.value = b.category_id || '';
   refreshSubcategoryOptions(b.category_id, b.subcategory_id);
+  updateAmenitiesVisibility();
+  const savedAmenities = Array.isArray(b.amenities) ? b.amenities : [];
+  document.querySelectorAll('.amenity-check').forEach((cb) => {
+    cb.checked = savedAmenities.includes(cb.value);
+  });
+  document.querySelectorAll('.gastro-tag-check').forEach((cb) => {
+    cb.checked = savedAmenities.includes(cb.value);
+  });
+  if (typeof refreshPhotoUploadState === 'function') {
+    const currentPhoto = (Array.isArray(b.images) && b.images[0]) ? b.images[0] : null;
+    refreshPhotoUploadState(b.id, currentPhoto);
+  }
   showFormView();
 }
 
@@ -430,6 +555,7 @@ businessForm.addEventListener('submit', async (e) => {
     lng: document.getElementById('lng').value.trim() ? parseFloat(document.getElementById('lng').value.trim()) : null,
     open: document.getElementById('open_now').checked,
     featured: document.getElementById('featured').checked,
+    amenities: Array.from(document.querySelectorAll('.amenity-check:checked, .gastro-tag-check:checked')).map((cb) => cb.value),
   };
 
   if (!payload.category_id) {
@@ -442,11 +568,24 @@ businessForm.addEventListener('submit', async (e) => {
 
   const { error } = await supabaseClient.from('businesses').update(payload).eq('id', id);
 
+  if (error) {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Guardar cambios';
+    showAlert('No se pudo guardar: ' + error.message, 'error');
+    return;
+  }
+
+  // La cámara vive en una tabla aparte (solo admin puede leerla/escribirla).
+  const chamberValue = chamberSelect.value;
+  const chamberResult = chamberValue
+    ? await supabaseClient.from('business_chambers').upsert({ business_id: id, chamber: chamberValue, updated_at: new Date().toISOString() })
+    : await supabaseClient.from('business_chambers').delete().eq('business_id', id);
+
   saveBtn.disabled = false;
   saveBtn.textContent = 'Guardar cambios';
 
-  if (error) {
-    showAlert('No se pudo guardar: ' + error.message, 'error');
+  if (chamberResult.error) {
+    showAlert('La ficha se guardó, pero no se pudo actualizar la cámara: ' + chamberResult.error.message, 'error');
     return;
   }
 

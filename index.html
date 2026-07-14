@@ -273,6 +273,11 @@
   .agenda-intro p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.4;}
 
   .filter-row.wrap{flex-wrap:wrap;overflow:visible;}
+  .amenities-filter-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:2px 0 8px;}
+  .detail-amenities{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .detail-amenity-tag{border:1px solid var(--border);background:var(--card);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--ink);}
+  .card-amenities{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;}
+  .card-amenity-icon{font-size:12px;}
   .filter-pill.free{border-color:var(--primary-dark);}
   .filter-pill.free.active{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
 
@@ -462,6 +467,33 @@ let CATEGORIES = [];
 let SUBCATEGORIES = {};
 let BUSINESSES = [];
 
+/* Servicios/amenities de alojamiento (lista fija) */
+const AMENITIES = [
+  {id:'wifi', label:'Wifi', icon:'📶'},
+  {id:'estacionamiento', label:'Estacionamiento', icon:'🅿️'},
+  {id:'piscina', label:'Piscina', icon:'🏊'},
+  {id:'desayuno', label:'Desayuno', icon:'🍳'},
+  {id:'gym', label:'Gimnasio', icon:'🏋️'},
+  {id:'aire_acondicionado', label:'Aire acondicionado', icon:'❄️'},
+  {id:'parrilla', label:'Parrilla', icon:'🔥'},
+  {id:'spa', label:'Spa', icon:'💆'},
+  {id:'petfriendly', label:'Pet friendly', icon:'🐾'}
+];
+/* Etiquetas de gastronomía (mismo mecanismo que amenities de alojamiento) */
+const GASTRO_TAGS = [
+  {id:'menu_serrano', label:'Menú Serrano', icon:'🏔️'},
+  {id:'bna', label:'BNA', icon:'🏷️'}
+];
+/* Lista de tags/amenities aplicable según la categoría (vacío = esa categoría no tiene) */
+function tagsForCategory(slug){
+  if(slug === 'alojamiento') return AMENITIES;
+  if(slug === 'gastronomia') return GASTRO_TAGS;
+  return [];
+}
+function amenityInfo(id){
+  return AMENITIES.find(a=>a.id===id) || GASTRO_TAGS.find(a=>a.id===id) || {id, label:id, icon:'✔️'};
+}
+
 function cat(slug){ return CATEGORIES.find(c=>c.slug===slug) || CATEGORIES[0] || {slug:'', label:'Comercio', emoji:'🏪', color:'#111111'}; }
 function jitter(base, i, scale){ return base + ((i*37 % 100)/100 - .5) * scale; }
 
@@ -521,7 +553,8 @@ async function loadData(){
     featured: !!b.featured,
     lat: b.lat,
     lng: b.lng,
-    photo: (b.images && b.images[0]) ? b.images[0] : null
+    photo: (b.images && b.images[0]) ? b.images[0] : null,
+    amenities: Array.isArray(b.amenities) ? b.amenities : []
   }));
 
   const { data: sessionData } = await supabaseClient.auth.getSession();
@@ -658,12 +691,14 @@ function badgesFor(b){
 }
 
 function bizCard(b, i){
+  const showAmenities = (b.category === 'alojamiento' || b.category === 'gastronomia') && b.amenities && b.amenities.length;
   return `<div class="biz-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/comercio/${b.id}')">
     <div class="info">
       <div class="badges">${badgesFor(b)}</div>
       <div class="name">${b.name}</div>
       <div class="cat">${cat(b.category).label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
       <div class="addr">📍 ${b.address}</div>
+      ${showAmenities ? `<div class="card-amenities">${b.amenities.map(a=>`<span class="card-amenity-icon" title="${amenityInfo(a).label}">${amenityInfo(a).icon}</span>`).join('')}</div>` : ''}
     </div>
     ${bizThumb(b, i)}
   </div>`;
@@ -942,13 +977,17 @@ function renderHome(){
 /* ---- CATEGORIA ---- */
 let categoriaFilterSub = 'all';
 let categoriaFilterQ = '';
+let categoriaFilterAmenities = [];
 function renderCategoria(slug){
   const c = cat(slug);
   categoriaFilterSub = 'all';
   categoriaFilterQ = '';
+  categoriaFilterAmenities = [];
   setTopbar({title:c.label, sub:'Visit Potrero', back:true});
   setBottomnav('');
   const subcats = (typeof SUBCATEGORIES !== 'undefined' && SUBCATEGORIES[slug]) || [];
+  const catTags = tagsForCategory(slug);
+  const tagLabel = slug === 'gastronomia' ? 'Etiquetas' : 'Servicios';
   document.getElementById('view').innerHTML = `
     <div class="section" style="margin-top:0;">
       <div class="searchbar" style="margin-bottom:14px;">
@@ -956,6 +995,10 @@ function renderCategoria(slug){
         <input id="categoriaSearchInput" placeholder="Buscar en ${c.label.toLowerCase()}...">
       </div>
       ${subcats.length ? `<div class="filter-row" id="subFilterRow"></div>` : ''}
+      ${catTags.length ? `
+        <div class="amenities-filter-label">${tagLabel}</div>
+        <div class="filter-row wrap" id="amenitiesFilterRow"></div>
+      ` : ''}
       <div class="biz-list" id="categoriaItems"></div>
     </div>
   `;
@@ -968,6 +1011,22 @@ function renderCategoria(slug){
     renderSubFilterRow(slug, subcats);
     lockHorizontalSwipe('subFilterRow');
   }
+  if(catTags.length){
+    renderAmenitiesFilterRow(slug);
+    lockHorizontalSwipe('amenitiesFilterRow');
+  }
+  renderCategoriaItems(slug);
+}
+function renderAmenitiesFilterRow(slug){
+  document.getElementById('amenitiesFilterRow').innerHTML = tagsForCategory(slug).map(a=>{
+    const active = categoriaFilterAmenities.includes(a.id);
+    return `<button class="filter-pill ${active?'active':''}" onclick="toggleCategoriaAmenity('${slug}','${a.id}')">${a.icon} ${a.label}</button>`;
+  }).join('');
+}
+function toggleCategoriaAmenity(slug, id){
+  const i = categoriaFilterAmenities.indexOf(id);
+  if(i === -1) categoriaFilterAmenities.push(id); else categoriaFilterAmenities.splice(i,1);
+  renderAmenitiesFilterRow(slug);
   renderCategoriaItems(slug);
 }
 function renderSubFilterRow(slug, subcats){
@@ -987,6 +1046,10 @@ function renderCategoriaItems(slug){
   const items = BUSINESSES.filter(b=>{
     if(b.category !== slug) return false;
     if(categoriaFilterSub !== 'all' && !subcatsOf(b).includes(categoriaFilterSub)) return false;
+    if(categoriaFilterAmenities.length){
+      const ba = b.amenities || [];
+      if(!categoriaFilterAmenities.every(a=>ba.includes(a))) return false;
+    }
     if(!q) return true;
     return fuzzyMatch(q, b.name) || fuzzyMatch(q, b.address) || subcatsOf(b).some(sc=>fuzzyMatch(q, sc));
   });
@@ -1096,6 +1159,11 @@ function renderComercio(id){
     ${b.desc ? `<div class="detail-block">
       <h3>Descripción</h3>
       <p>${b.desc}</p>
+    </div>` : ''}
+
+    ${(b.amenities && b.amenities.length) ? `<div class="detail-block">
+      <h3>Servicios</h3>
+      <div class="detail-amenities">${b.amenities.map(a=>{ const info = amenityInfo(a); return `<span class="detail-amenity-tag">${info.icon} ${info.label}</span>`; }).join('')}</div>
     </div>` : ''}
 
     <div class="detail-block">

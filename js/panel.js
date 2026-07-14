@@ -102,8 +102,22 @@ function refreshSubcategoryOptions(categoryId, selectedSubcatId) {
     });
 }
 
+const amenitiesWrap = document.getElementById('amenitiesWrap');
+const gastroTagsWrap = document.getElementById('gastroTagsWrap');
+function updateAmenitiesVisibility() {
+  const isAlojamiento = categorySelect.value === 'alojamiento';
+  const isGastronomia = categorySelect.value === 'gastronomia';
+  amenitiesWrap.classList.toggle('hidden', !isAlojamiento);
+  gastroTagsWrap.classList.toggle('hidden', !isGastronomia);
+  // limpia los checks del grupo que queda oculto, para no arrastrar
+  // selecciones de una categoría a otra
+  if (!isAlojamiento) document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
+  if (!isGastronomia) document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
+}
+
 categorySelect.addEventListener('change', () => {
   refreshSubcategoryOptions(categorySelect.value, null);
+  updateAmenitiesVisibility();
   updatePreview();
 });
 
@@ -159,6 +173,12 @@ async function loadBusinesses() {
   }
 
   myBusinesses = data || [];
+
+  // Con una sola ficha (el caso más común) buscar y filtrar no aporta nada;
+  // solo se muestra si el dueño maneja varias.
+  const searchWrap = document.getElementById('fichasSearchWrap');
+  searchWrap.classList.toggle('hidden', myBusinesses.length <= 1);
+
   populateFilterOptions();
   renderBusinessList();
 }
@@ -296,9 +316,13 @@ async function openForm(businessId) {
   businessForm.reset();
   document.getElementById('business_id').value = '';
   subcategorySelect.innerHTML = '<option value="">(opcional)</option>';
+  document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
+  document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
+  updateAmenitiesVisibility();
 
   if (!businessId) {
     formTitle.textContent = 'Nueva ficha';
+    if (typeof refreshPhotoUploadState === 'function') refreshPhotoUploadState(null, null);
     showFormView();
     updatePreview();
     return;
@@ -331,6 +355,18 @@ async function openForm(businessId) {
   document.getElementById('open_now').checked = data.open !== false;
   categorySelect.value = data.category_id || '';
   refreshSubcategoryOptions(data.category_id, data.subcategory_id);
+  updateAmenitiesVisibility();
+  const savedAmenities = Array.isArray(data.amenities) ? data.amenities : [];
+  document.querySelectorAll('.amenity-check').forEach((cb) => {
+    cb.checked = savedAmenities.includes(cb.value);
+  });
+  document.querySelectorAll('.gastro-tag-check').forEach((cb) => {
+    cb.checked = savedAmenities.includes(cb.value);
+  });
+  if (typeof refreshPhotoUploadState === 'function') {
+    const currentPhoto = (Array.isArray(data.images) && data.images[0]) ? data.images[0] : null;
+    refreshPhotoUploadState(data.id, currentPhoto);
+  }
 
   showFormView();
   updatePreview();
@@ -355,6 +391,7 @@ businessForm.addEventListener('submit', async (e) => {
     lat: document.getElementById('lat').value.trim() ? parseFloat(document.getElementById('lat').value.trim()) : null,
     lng: document.getElementById('lng').value.trim() ? parseFloat(document.getElementById('lng').value.trim()) : null,
     open: document.getElementById('open_now').checked,
+    amenities: Array.from(document.querySelectorAll('.amenity-check:checked, .gastro-tag-check:checked')).map((cb) => cb.value),
   };
 
   if (!payload.category_id) {
@@ -366,11 +403,14 @@ businessForm.addEventListener('submit', async (e) => {
   saveBtn.textContent = 'Guardando...';
 
   let error;
+  let newId = null;
   if (id) {
     ({ error } = await supabaseClient.from('businesses').update(payload).eq('id', id));
   } else {
     payload.owner_id = currentUser.id;
-    ({ error } = await supabaseClient.from('businesses').insert(payload));
+    const insertResult = await supabaseClient.from('businesses').insert(payload).select('id').single();
+    error = insertResult.error;
+    newId = insertResult.data ? insertResult.data.id : null;
   }
 
   saveBtn.disabled = false;
@@ -381,9 +421,19 @@ businessForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  showListView();
-  showAlert(id ? 'Ficha actualizada.' : 'Ficha creada. Queda en revisión hasta que la aprobemos.', 'success');
   loadBusinesses();
+
+  if (id) {
+    showListView();
+    showAlert('Ficha actualizada.', 'success');
+  } else if (newId) {
+    // vuelve a abrir la ficha recién creada para poder agregarle la foto
+    await openForm(newId);
+    showAlert('Ficha creada. Queda en revisión hasta que la aprobemos. Ya podés agregarle una foto.', 'success');
+  } else {
+    showListView();
+    showAlert('Ficha creada. Queda en revisión hasta que la aprobemos.', 'success');
+  }
 });
 
 // ---------- Init ----------

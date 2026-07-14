@@ -7,8 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
-  .container { max-width: 640px; }
+  .container { max-width: 100%; padding: 24px 32px 60px; }
+  .topbar { max-width: 100%; border-radius: 0; }
+  #list { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  #list .admin-card { margin-bottom: 0; }
+  #list .table-wrap,
+  #list .empty-state { grid-column: 1 / -1; }
+  #formView { max-width: 720px; }
   .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
   .tab {
     padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
@@ -68,6 +75,21 @@
       </select>
     </div>
 
+    <div class="row-2" style="margin-bottom:14px;">
+      <select id="filterChamberAdmin">
+        <option value="">Todas las cámaras</option>
+        <option value="UDAER">UDAER</option>
+        <option value="CCTA">CCTA</option>
+        <option value="AEHGA">AEHGA</option>
+        <option value="none">Sin cámara</option>
+      </select>
+    </div>
+
+    <div class="view-toggle">
+      <button type="button" id="viewCardsBtn" class="active">🗂️ Tarjetas</button>
+      <button type="button" id="viewTableBtn">📊 Tabla</button>
+    </div>
+
     <div id="list">
       <p class="empty-state">Cargando...</p>
     </div>
@@ -100,6 +122,19 @@
         <select id="subcategory_id">
           <option value="">(opcional)</option>
         </select>
+
+        <label>Foto de portada</label>
+        <div class="photo-upload-wrap">
+          <div class="photo-preview" id="photoPreview">
+            <img id="photoPreviewImg" style="display:none;" alt="Foto de portada">
+            <span id="photoPreviewEmpty">Sin foto todavía</span>
+          </div>
+          <div>
+            <input type="file" id="photoInput" accept="image/*" class="hidden">
+            <button type="button" class="btn btn-secondary btn-small" id="choosePhotoBtn">Elegir foto</button>
+            <p class="field-hint">Formato horizontal (4:3). Después de elegirla vas a poder ajustar el recorte.</p>
+          </div>
+        </div>
 
         <label for="description">Descripción</label>
         <textarea id="description"></textarea>
@@ -154,6 +189,29 @@
           </div>
         </div>
 
+        <div id="amenitiesWrap" class="hidden">
+          <label style="margin-top:20px;">Servicios que ofrece</label>
+          <div class="amenities-check-grid">
+            <label><input type="checkbox" class="amenity-check" value="wifi"> 📶 Wifi</label>
+            <label><input type="checkbox" class="amenity-check" value="estacionamiento"> 🅿️ Estacionamiento</label>
+            <label><input type="checkbox" class="amenity-check" value="piscina"> 🏊 Piscina</label>
+            <label><input type="checkbox" class="amenity-check" value="desayuno"> 🍳 Desayuno</label>
+            <label><input type="checkbox" class="amenity-check" value="gym"> 🏋️ Gimnasio</label>
+            <label><input type="checkbox" class="amenity-check" value="aire_acondicionado"> ❄️ Aire acondicionado</label>
+            <label><input type="checkbox" class="amenity-check" value="parrilla"> 🔥 Parrilla</label>
+            <label><input type="checkbox" class="amenity-check" value="spa"> 💆 Spa</label>
+            <label><input type="checkbox" class="amenity-check" value="petfriendly"> 🐾 Pet friendly</label>
+          </div>
+        </div>
+
+        <div id="gastroTagsWrap" class="hidden">
+          <label style="margin-top:20px;">Etiquetas</label>
+          <div class="amenities-check-grid">
+            <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> 🏔️ Menú Serrano</label>
+            <label><input type="checkbox" class="gastro-tag-check" value="bna"> 🏷️ BNA</label>
+          </div>
+        </div>
+
         <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
           <input type="checkbox" id="open_now" style="width:auto;" checked>
           <span style="font-weight:600; color:var(--muted); font-size:14px;">Actualmente abierto</span>
@@ -163,6 +221,17 @@
           <input type="checkbox" id="featured" style="width:auto;">
           <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacado</span>
         </label>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:22px 0;">
+
+        <label for="chamber">Cámara / asociación (uso interno, NO se muestra en la web)</label>
+        <select id="chamber">
+          <option value="">Sin cámara</option>
+          <option value="UDAER">UDAER</option>
+          <option value="CCTA">CCTA</option>
+          <option value="AEHGA">AEHGA</option>
+        </select>
+        <p class="field-hint">Este dato es solo para vos. No aparece en el sitio ni en el panel del comercio.</p>
 
         <button type="submit" class="btn btn-primary" id="saveBtn">Guardar cambios</button>
         <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
@@ -422,11 +491,28 @@
 
 </div>
 
+<!-- ===== Modal: ajustar recorte de la foto ===== -->
+<div id="cropperModal" class="cropper-modal hidden">
+  <div class="cropper-modal-inner">
+    <h3>Ajustá la foto</h3>
+    <p class="field-hint" style="margin-top:0;">Arrastrá para mover y usá la rueda o pellizcá para acercar/alejar.</p>
+    <div class="cropper-container-box">
+      <img id="cropperImage">
+    </div>
+    <div class="cropper-actions">
+      <button type="button" class="btn btn-secondary" id="cropperCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="cropperConfirmBtn">Guardar foto</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-events.js"></script>
 <script src="js/admin-novedades.js"></script>
+<script src="js/admin-photo.js"></script>
 
 </body>
 </html>

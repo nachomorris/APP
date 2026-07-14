@@ -38,25 +38,32 @@ function evTodayStr() {
   return evFmtDate(new Date());
 }
 
-// ---------- Tabs de nivel superior (Mis fichas / Mis eventos) ----------
+// ---------- Tabs de nivel superior (Mis fichas / Mis eventos / Mi cuenta) ----------
 const mainTabFichas = document.getElementById('mainTabFichas');
 const mainTabEventos = document.getElementById('mainTabEventos');
+const mainTabCuenta = document.getElementById('mainTabCuenta');
 const fichasSection = document.getElementById('fichasSection');
 const eventosSection = document.getElementById('eventosSection');
+const cuentaSection = document.getElementById('cuentaSection');
 
 function switchMainTab(tab) {
-  const showEventos = tab === 'eventos';
-  mainTabFichas.classList.toggle('active', !showEventos);
-  mainTabEventos.classList.toggle('active', showEventos);
-  fichasSection.classList.toggle('hidden', showEventos);
-  eventosSection.classList.toggle('hidden', !showEventos);
+  mainTabFichas.classList.toggle('active', tab === 'fichas');
+  mainTabEventos.classList.toggle('active', tab === 'eventos');
+  mainTabCuenta.classList.toggle('active', tab === 'cuenta');
+  fichasSection.classList.toggle('hidden', tab !== 'fichas');
+  eventosSection.classList.toggle('hidden', tab !== 'eventos');
+  cuentaSection.classList.toggle('hidden', tab !== 'cuenta');
   clearAlert();
-  if (showEventos && !eventCategories.length) {
+  if (tab === 'eventos' && !eventCategories.length) {
     initEventsSection();
+  }
+  if (tab === 'cuenta' && typeof initAccountSection === 'function') {
+    initAccountSection();
   }
 }
 mainTabFichas.addEventListener('click', () => switchMainTab('fichas'));
 mainTabEventos.addEventListener('click', () => switchMainTab('eventos'));
+mainTabCuenta.addEventListener('click', () => switchMainTab('cuenta'));
 
 // ---------- Carga inicial de la sección eventos ----------
 async function initEventsSection() {
