@@ -494,12 +494,57 @@
 
     <div id="usuariosListView">
       <div class="card">
-        <h2 style="margin-top:0;">Usuarios registrados</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <h2 style="margin:0;">Usuarios registrados</h2>
+          <button class="btn btn-primary btn-small" id="newUserBtn">+ Nuevo usuario</button>
+        </div>
         <input type="text" id="searchUsersAdmin" placeholder="Buscar por nombre, email o teléfono..." style="margin-bottom:14px;">
 
         <div id="usersAdminList">
           <p class="empty-state">Cargando...</p>
         </div>
+      </div>
+    </div>
+
+    <div id="usuariosNewFormView" class="hidden">
+      <div class="card">
+        <h2 style="margin-top:0;">Nuevo usuario</h2>
+        <form id="newUserForm">
+          <label for="newuser_email">Email *</label>
+          <input type="email" id="newuser_email" required>
+
+          <label for="newuser_password">Contraseña *</label>
+          <input type="text" id="newuser_password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <p class="field-hint">Se la vas a tener que pasar vos al usuario; no le llega ningún aviso automático.</p>
+
+          <label for="newuser_full_name">Nombre y apellido</label>
+          <input type="text" id="newuser_full_name">
+
+          <label for="newuser_phone">Teléfono</label>
+          <input type="tel" id="newuser_phone">
+
+          <label for="newuser_role">Rol</label>
+          <select id="newuser_role">
+            <option value="comercio">Comercio</option>
+            <option value="comercio_pro">Comercio Pro</option>
+            <option value="eventos">Eventos</option>
+            <option value="presidente">Presidente de cámara</option>
+            <option value="admin">Administrador</option>
+          </select>
+
+          <div id="newuser_chamber_wrap" class="hidden">
+            <label for="newuser_chamber">Cámara que preside</label>
+            <select id="newuser_chamber">
+              <option value="">Seleccioná una cámara</option>
+              <option value="UDAER">UDAER</option>
+              <option value="CCTA">CCTA</option>
+              <option value="AEHGA">AEHGA</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="createUserBtn">Crear usuario</button>
+          <button type="button" class="btn btn-secondary" id="cancelNewUserBtn">Cancelar</button>
+        </form>
       </div>
     </div>
 
@@ -549,6 +594,14 @@
 
       <div class="card">
         <h2 style="margin-top:0;">Fichas asociadas a este perfil</h2>
+
+        <label for="assign_business_search">Asignarle otra ficha</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="assign_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
+          <div id="assign_business_results" class="autocomplete-results hidden"></div>
+        </div>
+        <p class="field-hint">Al elegir un comercio de la lista, este usuario pasa a ser su dueño (reemplaza al dueño anterior).</p>
+
         <div id="userBusinessesList">
           <p class="empty-state">Cargando...</p>
         </div>

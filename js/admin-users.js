@@ -24,6 +24,7 @@ const searchUsersAdmin = document.getElementById('searchUsersAdmin');
 
 const usuariosListView = document.getElementById('usuariosListView');
 const usuariosFormView = document.getElementById('usuariosFormView');
+const usuariosNewFormView = document.getElementById('usuariosNewFormView');
 const userForm = document.getElementById('userForm');
 const userIdInput = document.getElementById('user_id');
 const userEmailInput = document.getElementById('user_email');
@@ -35,6 +36,20 @@ const userChamberWrap = document.getElementById('user_chamber_wrap');
 const userChamberSelect = document.getElementById('user_chamber');
 const userBusinessesList = document.getElementById('userBusinessesList');
 const saveUserBtn = document.getElementById('saveUserBtn');
+
+const assignBusinessSearch = document.getElementById('assign_business_search');
+const assignBusinessResults = document.getElementById('assign_business_results');
+
+const newUserBtn = document.getElementById('newUserBtn');
+const newUserForm = document.getElementById('newUserForm');
+const newUserEmailInput = document.getElementById('newuser_email');
+const newUserPasswordInput = document.getElementById('newuser_password');
+const newUserFullNameInput = document.getElementById('newuser_full_name');
+const newUserPhoneInput = document.getElementById('newuser_phone');
+const newUserRoleSelect = document.getElementById('newuser_role');
+const newUserChamberWrap = document.getElementById('newuser_chamber_wrap');
+const newUserChamberSelect = document.getElementById('newuser_chamber');
+const createUserBtn = document.getElementById('createUserBtn');
 
 mainTabUsuarios.addEventListener('click', () => {
   showAdminSection('usuariosAdminSection');
@@ -49,11 +64,18 @@ searchUsersAdmin.addEventListener('input', renderUsersAdminList);
 
 function showUsersListView() {
   usuariosFormView.classList.add('hidden');
+  usuariosNewFormView.classList.add('hidden');
   usuariosListView.classList.remove('hidden');
 }
 function showUsersFormView() {
   usuariosListView.classList.add('hidden');
+  usuariosNewFormView.classList.add('hidden');
   usuariosFormView.classList.remove('hidden');
+}
+function showUsersNewFormView() {
+  usuariosListView.classList.add('hidden');
+  usuariosFormView.classList.add('hidden');
+  usuariosNewFormView.classList.remove('hidden');
 }
 
 async function loadUsersAdmin() {
@@ -315,6 +337,156 @@ userForm.addEventListener('submit', async (e) => {
   showAlert('Usuario actualizado.', 'success');
   loadUsersAdmin();
 });
+
+// ---------- Nuevo usuario ----------
+newUserBtn.addEventListener('click', () => {
+  newUserForm.reset();
+  updateNewUserChamberVisibility();
+  clearAlert();
+  showUsersNewFormView();
+});
+document.getElementById('cancelNewUserBtn').addEventListener('click', showUsersListView);
+
+function updateNewUserChamberVisibility() {
+  newUserChamberWrap.classList.toggle('hidden', newUserRoleSelect.value !== 'presidente');
+}
+newUserRoleSelect.addEventListener('change', updateNewUserChamberVisibility);
+
+newUserForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert();
+
+  const email = newUserEmailInput.value.trim();
+  const password = newUserPasswordInput.value;
+  const role = newUserRoleSelect.value;
+  const chamber = newUserChamberSelect.value;
+
+  if (!email) {
+    showAlert('El email es obligatorio.', 'error');
+    return;
+  }
+  if (!password || password.length < 6) {
+    showAlert('La contraseña tiene que tener al menos 6 caracteres.', 'error');
+    return;
+  }
+  if (role === 'presidente' && !chamber) {
+    showAlert('Elegí qué cámara preside este usuario.', 'error');
+    return;
+  }
+
+  createUserBtn.disabled = true;
+  createUserBtn.textContent = 'Creando...';
+
+  const { error } = await supabaseClient.rpc('admin_create_user', {
+    new_email: email,
+    new_password: password,
+    new_full_name: newUserFullNameInput.value.trim() || null,
+    new_phone: newUserPhoneInput.value.trim() || null,
+    new_role: role,
+    new_chamber: role === 'presidente' ? chamber : null,
+  });
+
+  createUserBtn.disabled = false;
+  createUserBtn.textContent = 'Crear usuario';
+
+  if (error) {
+    showAlert('No se pudo crear el usuario: ' + error.message, 'error');
+    return;
+  }
+
+  showUsersListView();
+  showAlert('Usuario creado correctamente.', 'success');
+  loadUsersAdmin();
+});
+
+// ---------- Asignar una ficha existente al usuario que se edita ----------
+let assignBusinessSearchTimeout = null;
+
+function hideAssignBusinessResults() {
+  assignBusinessResults.classList.add('hidden');
+}
+
+async function searchBusinessesToAssign(query) {
+  const q = query.trim();
+  if (q.length < 2) {
+    assignBusinessResults.innerHTML = '<div class="autocomplete-empty">Escribí al menos 2 letras para buscar.</div>';
+    assignBusinessResults.classList.remove('hidden');
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('businesses')
+    .select('id, name, address, owner_id, profiles(full_name)')
+    .ilike('name', `%${q}%`)
+    .order('name', { ascending: true })
+    .limit(15);
+
+  if (error) {
+    assignBusinessResults.innerHTML = `<div class="autocomplete-empty">Error buscando comercios: ${escapeHtml(error.message)}</div>`;
+    assignBusinessResults.classList.remove('hidden');
+    return;
+  }
+
+  const items = data || [];
+  if (!items.length) {
+    assignBusinessResults.innerHTML = '<div class="autocomplete-empty">No encontramos comercios con ese nombre.</div>';
+  } else {
+    assignBusinessResults.innerHTML = items.map((b) => {
+      const ownerName = b.profiles ? b.profiles.full_name : null;
+      const sub = ownerName ? `Dueño actual: ${escapeHtml(ownerName)}` : 'Sin dueño asignado';
+      return `<div class="autocomplete-item" data-business="${b.id}" data-name="${escapeHtml(b.name)}">
+        <div>${escapeHtml(b.name)}</div>
+        <div style="font-size:12px; color:var(--muted);">${sub}</div>
+      </div>`;
+    }).join('');
+    assignBusinessResults.querySelectorAll('[data-business]').forEach((el) => {
+      el.addEventListener('click', () => assignBusinessToCurrentUser(el.getAttribute('data-business'), el.getAttribute('data-name')));
+    });
+  }
+  assignBusinessResults.classList.remove('hidden');
+}
+
+assignBusinessSearch.addEventListener('input', () => {
+  clearTimeout(assignBusinessSearchTimeout);
+  const q = assignBusinessSearch.value;
+  assignBusinessSearchTimeout = setTimeout(() => searchBusinessesToAssign(q), 250);
+});
+assignBusinessSearch.addEventListener('focus', () => {
+  if (assignBusinessSearch.value.trim().length >= 2) searchBusinessesToAssign(assignBusinessSearch.value);
+});
+assignBusinessSearch.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideAssignBusinessResults();
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#assign_business_search') && !e.target.closest('#assign_business_results')) {
+    hideAssignBusinessResults();
+  }
+});
+
+async function assignBusinessToCurrentUser(businessId, businessName) {
+  const u = allUsersAdmin.find((x) => x.id === userIdInput.value);
+  if (!u) return;
+
+  if (!window.confirm(`¿Asignar "${businessName}" a ${u.full_name || u.email}? Esto reemplaza al dueño anterior de esa ficha.`)) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from('businesses')
+    .update({ owner_id: u.id })
+    .eq('id', businessId);
+
+  if (error) {
+    showAlert('No se pudo asignar la ficha: ' + error.message, 'error');
+    return;
+  }
+
+  assignBusinessSearch.value = '';
+  hideAssignBusinessResults();
+  showAlert(`"${businessName}" ahora pertenece a ${u.full_name || u.email}.`, 'success');
+  openUserEditForm(u);
+  loadUsersAdmin();
+}
 
 async function toggleUserBlocked(u) {
   const newValue = !u.is_blocked;
