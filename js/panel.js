@@ -41,9 +41,15 @@ async function requireSession() {
 async function checkAdminLink(userId) {
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, is_blocked')
     .eq('id', userId)
     .single();
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+    return;
+  }
 
   if (profile && profile.is_admin) {
     document.getElementById('adminLink').classList.remove('hidden');

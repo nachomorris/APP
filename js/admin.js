@@ -633,6 +633,7 @@ const ADMIN_SECTION_TABS = {
   businessesSection: 'mainTabBusinesses',
   eventsAdminSection: 'mainTabEvents',
   novedadesAdminSection: 'mainTabNovedades',
+  usuariosAdminSection: 'mainTabUsuarios',
 };
 
 function showAdminSection(sectionId) {

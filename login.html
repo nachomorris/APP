@@ -49,10 +49,24 @@ function showAlert(message, type) {
   alertBox.className = 'alert show alert-' + type;
 }
 
-// Si ya hay sesión activa, mandar directo al panel.
+// Si ya hay sesión activa, mandar directo al panel (salvo que la
+// cuenta esté bloqueada, ahí se cierra la sesión).
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
-  if (data.session) window.location.href = 'panel.html';
+  if (!data.session) return;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_blocked')
+    .eq('id', data.session.user.id)
+    .single();
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    return;
+  }
+
+  window.location.href = 'panel.html';
 })();
 
 form.addEventListener('submit', async (e) => {
@@ -67,10 +81,9 @@ form.addEventListener('submit', async (e) => {
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-  submitBtn.disabled = false;
-  submitBtn.textContent = 'Ingresar';
-
   if (error) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Ingresar';
     if (error.message.includes('Email not confirmed')) {
       showAlert('Todavía no confirmaste tu email. Revisá tu bandeja de entrada.', 'error');
     } else if (error.message.includes('Invalid login credentials')) {
@@ -78,6 +91,21 @@ form.addEventListener('submit', async (e) => {
     } else {
       showAlert(error.message, 'error');
     }
+    return;
+  }
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_blocked')
+    .eq('id', data.user.id)
+    .single();
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Ingresar';
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    showAlert('Tu cuenta está bloqueada. Contactate con el municipio para más información.', 'error');
     return;
   }
 

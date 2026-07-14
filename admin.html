@@ -52,6 +52,7 @@
     <button id="mainTabBusinesses" class="active">🏪 Comercios</button>
     <button id="mainTabEvents">🎉 Eventos</button>
     <button id="mainTabNovedades">📰 Novedades</button>
+    <button id="mainTabUsuarios">👤 Usuarios</button>
   </div>
 
   <div id="businessesSection">
@@ -489,6 +490,17 @@
   </div>
   <!-- fin novedadesAdminSection -->
 
+  <div id="usuariosAdminSection" class="hidden">
+    <div class="card">
+      <h2 style="margin-top:0;">Usuarios registrados</h2>
+      <input type="text" id="searchUsersAdmin" placeholder="Buscar por nombre, email o teléfono..." style="margin-bottom:14px;">
+      <div id="usersAdminList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+  </div>
+  <!-- fin usuariosAdminSection -->
+
 </div>
 
 <!-- ===== Modal: ajustar recorte de la foto ===== -->
@@ -513,6 +525,7 @@
 <script src="js/admin-events.js"></script>
 <script src="js/admin-novedades.js"></script>
 <script src="js/admin-photo.js"></script>
+<script src="js/admin-users.js"></script>
 
 </body>
 </html>
