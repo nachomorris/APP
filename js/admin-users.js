@@ -27,6 +27,7 @@ const usuariosFormView = document.getElementById('usuariosFormView');
 const userForm = document.getElementById('userForm');
 const userIdInput = document.getElementById('user_id');
 const userEmailInput = document.getElementById('user_email');
+const userNewPasswordInput = document.getElementById('user_new_password');
 const userFullNameInput = document.getElementById('user_full_name');
 const userPhoneInput = document.getElementById('user_phone');
 const userRoleSelect = document.getElementById('user_role');
@@ -251,6 +252,26 @@ userForm.addEventListener('submit', async (e) => {
     if (!window.confirm(confirmMsg)) return;
   }
 
+  const newEmail = userEmailInput.value.trim();
+  const newPassword = userNewPasswordInput.value;
+
+  if (!newEmail) {
+    showAlert('El email no puede quedar vacío.', 'error');
+    return;
+  }
+  if (newPassword && newPassword.length < 6) {
+    showAlert('La contraseña nueva tiene que tener al menos 6 caracteres.', 'error');
+    return;
+  }
+
+  const emailChanged = u && newEmail !== u.email;
+  if (emailChanged || newPassword) {
+    const parts = [];
+    if (emailChanged) parts.push(`el email a "${newEmail}"`);
+    if (newPassword) parts.push('la contraseña');
+    if (!window.confirm(`¿Confirmás cambiar ${parts.join(' y ')} de ${u.full_name || u.email}?`)) return;
+  }
+
   const payload = {
     full_name: userFullNameInput.value.trim() || null,
     phone: userPhoneInput.value.trim() || null,
@@ -263,12 +284,31 @@ userForm.addEventListener('submit', async (e) => {
 
   const { error } = await supabaseClient.from('profiles').update(payload).eq('id', id);
 
-  saveUserBtn.disabled = false;
-  saveUserBtn.textContent = 'Guardar cambios';
-
   if (error) {
+    saveUserBtn.disabled = false;
+    saveUserBtn.textContent = 'Guardar cambios';
     showAlert('No se pudo guardar: ' + error.message, 'error');
     return;
+  }
+
+  if (emailChanged || newPassword) {
+    const { error: credError } = await supabaseClient.rpc('admin_update_user_credentials', {
+      target_user_id: id,
+      new_email: emailChanged ? newEmail : null,
+      new_password: newPassword || null,
+    });
+
+    saveUserBtn.disabled = false;
+    saveUserBtn.textContent = 'Guardar cambios';
+
+    if (credError) {
+      showAlert('Se guardaron nombre/teléfono/rol, pero no se pudo cambiar el email/contraseña: ' + credError.message, 'error');
+      loadUsersAdmin();
+      return;
+    }
+  } else {
+    saveUserBtn.disabled = false;
+    saveUserBtn.textContent = 'Guardar cambios';
   }
 
   showUsersListView();

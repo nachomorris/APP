@@ -509,8 +509,13 @@
         <form id="userForm">
           <input type="hidden" id="user_id">
 
-          <label for="user_email">Email</label>
-          <input type="email" id="user_email" disabled>
+          <label for="user_email">Email (usuario para ingresar)</label>
+          <input type="email" id="user_email">
+          <p class="field-hint">Si lo cambiás, el usuario va a tener que ingresar con este nuevo email.</p>
+
+          <label for="user_new_password">Nueva contraseña (opcional)</label>
+          <input type="text" id="user_new_password" placeholder="Dejalo vacío para no cambiarla" autocomplete="new-password">
+          <p class="field-hint">Se la vas a tener que pasar vos al usuario; no le llega ningún aviso automático.</p>
 
           <label for="user_full_name">Nombre y apellido</label>
           <input type="text" id="user_full_name">
