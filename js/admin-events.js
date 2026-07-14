@@ -140,7 +140,7 @@ async function loadEvAdminEvents() {
   evAdminList.innerHTML = '<p class="empty-state">Cargando...</p>';
   const { data, error } = await supabaseClient
     .from('events')
-    .select('*, businesses(id, legacy_id, name), profiles(full_name, phone)')
+    .select('*, businesses(id, legacy_id, name), profiles(full_name, phone, email)')
     .order('start_date', { ascending: true });
   if (error) { evAdminList.innerHTML = ''; showAlert('No se pudo cargar el listado de eventos: ' + error.message, 'error'); return; }
   evAdminEvents = data || [];
@@ -414,6 +414,7 @@ function evAdResetForm() {
   document.getElementById('evad_recurrence_custom_wrap').classList.add('hidden');
   evadBusinessSearch.disabled = false;
   evAdSetBusinessSelection('', '');
+  document.getElementById('evadOwnerInfo').classList.add('hidden');
 }
 
 document.getElementById('newOfficialEventBtn').addEventListener('click', () => {
@@ -460,7 +461,29 @@ function openEvAdminForm(e) {
   document.getElementById('evad_status').value = e.status;
   document.getElementById('evad_is_featured').checked = !!e.is_featured;
   document.getElementById('evad_featured_order').value = e.featured_order || 0;
+  evAdRenderOwnerInfo(e);
   evAdShowForm();
+}
+
+// ---------- Info interna: quién cargó el evento (no se muestra públicamente) ----------
+function evAdRenderOwnerInfo(e) {
+  const box = document.getElementById('evadOwnerInfo');
+  const p = e.profiles || {};
+  const nameLine = e.is_official
+    ? 'Evento oficial (cargado desde el panel de admin)'
+    : (p.full_name || '(sin nombre cargado)');
+  const contactBits = [p.phone, p.email].filter(Boolean).join(' · ');
+  let createdLabel = '';
+  if (e.created_at) {
+    const d = new Date(e.created_at);
+    createdLabel = d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  box.innerHTML = `
+    <span class="tag">Info interna</span><br>
+    Cargado por: <b>${escapeHtml(nameLine)}</b>${contactBits ? ' · ' + escapeHtml(contactBits) : ''}
+    ${createdLabel ? ` · ${escapeHtml(createdLabel)}` : ''}
+  `;
+  box.classList.remove('hidden');
 }
 
 function evAdParseDate(str) {
