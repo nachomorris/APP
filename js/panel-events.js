@@ -75,10 +75,13 @@ mainTabSocios.addEventListener('click', () => switchMainTab('socios'));
 // comercio_pro: lo mismo + puede cargar eventos.
 // eventos: no puede tener fichas, no ve "Mis fichas" (arranca en eventos).
 // presidente: solo ve "Mis socios" (no tiene fichas ni eventos propios).
+// master_eventos: no maneja fichas ni tiene eventos "propios" acá — el control
+// total de la agenda lo hace desde admin.html (link "Panel de admin"), así que
+// en el panel de dueños solo ve "Mi cuenta".
 // admin: ve todo.
 function applyRoleVisibility(role) {
-  const hideEventos = role === 'comercio' || role === 'presidente';
-  const hideFichas = role === 'eventos' || role === 'presidente';
+  const hideEventos = role === 'comercio' || role === 'presidente' || role === 'master_eventos';
+  const hideFichas = role === 'eventos' || role === 'presidente' || role === 'master_eventos';
   const showSocios = role === 'presidente';
 
   mainTabEventos.classList.toggle('hidden', hideEventos);
@@ -88,6 +91,8 @@ function applyRoleVisibility(role) {
 
   if (showSocios) {
     switchMainTab('socios');
+  } else if (role === 'master_eventos') {
+    switchMainTab('cuenta');
   } else if (hideFichas) {
     switchMainTab('eventos');
   }

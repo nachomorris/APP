@@ -54,7 +54,7 @@ async function checkAdminLink(userId) {
     return;
   }
 
-  if (profile && profile.is_admin) {
+  if (profile && (profile.is_admin || profile.role === 'master_eventos')) {
     document.getElementById('adminLink').classList.remove('hidden');
   }
 
