@@ -131,6 +131,11 @@
   }
   .cat-chip .label{display:block;font-size:10.5px;font-weight:600;color:var(--ink);white-space:nowrap;}
   .cat-chip.active .emoji{outline:2px solid var(--ink);}
+  /* Deshabilitado temporalmente (ver TEMP_ENABLED_CATEGORY_SLUGS): se ve
+     gris y no se puede tocar, pero sigue visible. */
+  .cat-chip.disabled{cursor:default;}
+  .cat-chip.disabled .emoji{filter:grayscale(1);opacity:.45;}
+  .cat-chip.disabled .label{color:var(--muted);opacity:.7;}
 
   /* Flechitas de scroll de categorías (sutiles, como en el menú de Pehuen) */
   .cat-grid-wrap{position:relative;}
@@ -434,6 +439,20 @@
    loadPlaces(). EVENTS/NOVEDADES todavía son contenido editorial fijo
    por su cuenta, igual que en el sitio viejo. */
 let PLACES = [];
+
+// TEMPORAL (reversible): solo estas categorías quedan habilitadas en el
+// grid de iconos; el resto se ve en gris y no se puede tocar. Para
+// volver a habilitar todas, borrar este bloque y usar
+// `${CATEGORIES.map(...)}` directo (como estaba antes) en renderHome()
+// y renderChamberHome().
+const TEMP_ENABLED_CATEGORY_SLUGS = ['alojamiento', 'gastronomia'];
+function catChipHtml(c){
+  const enabled = TEMP_ENABLED_CATEGORY_SLUGS.includes(c.slug);
+  const onclick = enabled ? ` onclick="navigate('/categoria/${c.slug}')"` : '';
+  return `<div class="cat-chip${enabled ? '' : ' disabled'}"${onclick}>
+    <div class="emoji">${c.emoji}</div><span class="label">${c.label}</span>
+  </div>`;
+}
 
 let EVENT_CATEGORIES = [];
 let EVENTS = [];
@@ -1005,9 +1024,7 @@ function renderChamberHome(){
         <div class="edge-fade on-panel left is-hidden" id="catFadeLeft"></div>
         <button class="scroll-chevron left is-hidden" id="catChevronLeft" onclick="scrollCatGrid(-1)" aria-label="Categorías anteriores"></button>
         <div class="cat-grid" id="catGrid">
-          ${CATEGORIES.map(c=>`<div class="cat-chip" onclick="navigate('/categoria/${c.slug}')">
-            <div class="emoji">${c.emoji}</div><span class="label">${c.label}</span>
-          </div>`).join('')}
+          ${CATEGORIES.map(catChipHtml).join('')}
         </div>
         <div class="edge-fade on-panel right" id="catFadeRight"></div>
         <button class="scroll-chevron right" id="catChevronRight" onclick="scrollCatGrid(1)" aria-label="Más categorías"></button>
@@ -1041,9 +1058,7 @@ function renderHome(){
         <div class="edge-fade on-panel left is-hidden" id="catFadeLeft"></div>
         <button class="scroll-chevron left is-hidden" id="catChevronLeft" onclick="scrollCatGrid(-1)" aria-label="Categorías anteriores"></button>
         <div class="cat-grid" id="catGrid">
-          ${CATEGORIES.map(c=>`<div class="cat-chip" onclick="navigate('/categoria/${c.slug}')">
-            <div class="emoji">${c.emoji}</div><span class="label">${c.label}</span>
-          </div>`).join('')}
+          ${CATEGORIES.map(catChipHtml).join('')}
         </div>
         <div class="edge-fade on-panel right" id="catFadeRight"></div>
         <button class="scroll-chevron right" id="catChevronRight" onclick="scrollCatGrid(1)" aria-label="Más categorías"></button>
