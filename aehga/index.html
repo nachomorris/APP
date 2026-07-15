@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comercios AEHGA — Visit Potrero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .loading { text-align: center; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!--
+  Acceso directo visitpotrero.com/aehga/: redirige a la home general
+  pero en "modo cámara" (?camara=AEHGA), que filtra el listado a los
+  comercios socios de AEHGA. Reutiliza toda la lógica de index.html —
+  ver CHAMBER_MODE / renderChamberHome().
+-->
+<div class="loading">Entrando…</div>
+
+<script>
+  window.location.replace('../index.html?camara=AEHGA');
+</script>
+
+</body>
+</html>
