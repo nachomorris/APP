@@ -310,9 +310,29 @@ async function deleteEvAdmin(id) {
 }
 
 // ---------- Formulario (crear oficial / editar cualquiera) ----------
-function evAdShowList() { evAdminFormView.classList.add('hidden'); evAdminListView.classList.remove('hidden'); clearAlert(); }
-function evAdShowForm() { evAdminListView.classList.add('hidden'); evAdminFormView.classList.remove('hidden'); renderEvAdPreview(); }
+// La página de carga de evento se ve "limpia": sin topbar ni la barra de
+// secciones (Comercios/Eventos/Novedades/...), solo la flecha para volver.
+function evAdSetChromeVisible(visible) {
+  const topbar = document.querySelector('.topbar');
+  const tabs = document.querySelector('.section-tabs');
+  if (topbar) topbar.classList.toggle('hidden', !visible);
+  if (tabs) tabs.classList.toggle('hidden', !visible);
+}
+function evAdShowList() {
+  evAdminFormView.classList.add('hidden');
+  evAdminListView.classList.remove('hidden');
+  evAdSetChromeVisible(true);
+  clearAlert();
+}
+function evAdShowForm() {
+  evAdminListView.classList.add('hidden');
+  evAdminFormView.classList.remove('hidden');
+  evAdSetChromeVisible(false);
+  renderEvAdPreview();
+  window.scrollTo(0, 0);
+}
 document.getElementById('evAdminCancelBtn').addEventListener('click', evAdShowList);
+document.getElementById('evAdminBackBtn').addEventListener('click', evAdShowList);
 
 evadIsFree.addEventListener('change', () => document.getElementById('evad_price_wrap').classList.toggle('hidden', evadIsFree.checked));
 evadRequiresRegistration.addEventListener('change', () => document.getElementById('evad_registration_wrap').classList.toggle('hidden', !evadRequiresRegistration.checked));
@@ -761,7 +781,7 @@ function evAdResetForm() {
 
 document.getElementById('newOfficialEventBtn').addEventListener('click', () => {
   evAdResetForm();
-  document.getElementById('evAdminFormTitle').textContent = 'Nuevo evento oficial';
+  document.getElementById('evAdminFormTitle').textContent = 'Nuevo evento';
   evadIsOfficial.checked = true;
   evadBusinessSearch.disabled = true;
   document.getElementById('evad_status').value = 'published';

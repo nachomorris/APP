@@ -37,10 +37,21 @@
   .admin-card dd { margin: 2px 0 0; }
   .admin-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
+  /* Página de carga de evento: sin topbar/section-tabs, header propio y centrada */
+  .evad-form-page { max-width: 640px; margin: 28px auto 60px; }
+  .evad-form-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .evad-back-btn {
+    width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border);
+    background: #fff; box-shadow: var(--shadow); font-size: 18px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: var(--ink);
+  }
+  .evad-back-btn:hover { background: #f3f3f1; }
+  .evad-form-header h1 { margin: 0; font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--ink); }
+
   .evad-preview-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; }
   .evad-preview-label .evad-preview-status { text-transform: none; letter-spacing: 0; color: var(--primary-dark); font-weight: 700; }
   .evad-preview-wrap {
-    max-width: 420px; margin: 0 0 22px; padding: 16px 16px 4px; border-radius: 20px;
+    max-width: 420px; margin: 0 auto 22px; padding: 16px 16px 4px; border-radius: 20px;
     background: #f7f7f5; border: 1px solid var(--border);
   }
   .evad-preview { cursor: default; }
@@ -360,15 +371,18 @@
     </div>
 
     <div id="eventsAdminFormView" class="hidden">
-      <div class="card">
-        <h2 id="evAdminFormTitle">Editar evento</h2>
+      <div class="evad-form-page">
+        <div class="evad-form-header">
+          <button type="button" class="evad-back-btn" id="evAdminBackBtn" aria-label="Volver">←</button>
+          <h1 id="evAdminFormTitle">Nuevo evento</h1>
+        </div>
 
+        <div class="card">
         <form id="evAdminForm">
           <input type="hidden" id="evad_id">
 
           <div class="evad-preview-wrap">
-            <div class="evad-preview-label">Así se ve la ficha del evento · <span class="evad-preview-status" id="evadPreviewStatus"></span></div>
-            <p class="evad-preview-hint">💡 Podés editar los datos básicos tocando directamente acá arriba, o usar el formulario de abajo.</p>
+            <span class="evad-preview-status hidden" id="evadPreviewStatus"></span>
             <div id="evadPreview" class="evad-preview"></div>
           </div>
 
@@ -554,6 +568,7 @@
           <button type="submit" class="btn btn-primary" id="evAdminSaveBtn">Guardar evento</button>
           <button type="button" class="btn btn-secondary" id="evAdminCancelBtn">Cancelar</button>
         </form>
+        </div>
       </div>
     </div>
 
