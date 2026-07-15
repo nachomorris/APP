@@ -185,7 +185,8 @@
     flex:0 0 auto;width:200px;background:var(--card);border-radius:18px;overflow:hidden;
     box-shadow:var(--shadow);scroll-snap-align:start;border:1px solid var(--border);
   }
-  .place-card .img{height:110px;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--primary);background:var(--ink);}
+  .place-card .img{height:110px;display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--primary);background:var(--ink);position:relative;overflow:hidden;}
+  .place-card .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
   .place-card .body{padding:10px 12px 14px;}
   .place-card .tag{font-size:10px;color:var(--primary-dark);font-weight:700;text-transform:uppercase;letter-spacing:.02em;}
   .place-card .name{font-size:13.5px;font-weight:700;margin:3px 0 4px;}
@@ -207,6 +208,21 @@
   .promo-card .promo-name{font-size:11px;opacity:.8;margin-bottom:3px;}
   .promo-card .promo-highlight{font-size:16px;font-weight:600;margin-bottom:2px;}
   .promo-card .promo-sub{font-size:11px;opacity:.9;}
+
+  /* Página completa "Destacado" (accesible desde el menú inferior, igual que Agenda/Novedades) */
+  .destacado-page-card{
+    border-radius:18px;overflow:hidden;background:var(--ink);color:#fff;
+    margin-bottom:12px;box-shadow:var(--shadow);cursor:pointer;
+  }
+  .destacado-page-card .img{
+    height:160px;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;font-size:44px;
+  }
+  .destacado-page-card .img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .destacado-page-card .body{padding:12px 16px 16px;}
+  .destacado-page-card .name{font-size:11px;opacity:.8;margin-bottom:3px;}
+  .destacado-page-card .title{font-size:17px;font-weight:700;margin-bottom:3px;}
+  .destacado-page-card .sub{font-size:12.5px;opacity:.9;}
 
   /* Business list */
   .biz-list{display:flex;flex-direction:column;gap:10px;}
@@ -410,55 +426,11 @@
 /* ============ DATOS ============
    CATEGORIES, SUBCATEGORIES y BUSINESSES ahora se cargan en vivo desde
    Supabase (ver loadData() al final del archivo) en vez de venir de un
-   data.js estático. PLACES/EVENTS/NOVEDADES todavía son contenido
-   editorial fijo (no lo carga cada comercio), igual que en el sitio viejo. */
-const PLACES = [
-  {
-    "id": "paseo-del-lago",
-    "name": "Paseo del Lago",
-    "type": "Peatonal",
-    "emoji": "🌉",
-    "desc": "Recorrido peatonal con miradores y rampas para personas con discapacidad, y un puente flotante que comunica con el Parque Nativo.",
-    "lat": -33.2293,
-    "lng": -66.271
-  },
-  {
-    "id": "paseo-artesanos",
-    "name": "Paseo de Artesanos Laura Amaya",
-    "type": "Paseo",
-    "emoji": "🎨",
-    "desc": "Feria de artesanos con productos regionales, tejidos y artesanías locales, en pleno centro de Potrero.",
-    "lat": -33.2353,
-    "lng": -66.262
-  },
-  {
-    "id": "parque-salagria",
-    "name": "Parque Recreativo La Salagria",
-    "type": "Parque recreativo",
-    "emoji": "🌳",
-    "desc": "Propuestas pensadas para el descanso, la recreación y los encuentros en familia o con amigos, a orillas del dique.",
-    "lat": -33.2243,
-    "lng": -66.257
-  },
-  {
-    "id": "quebrada-condores",
-    "name": "Quebrada de los Cóndores",
-    "type": "Fotográfico",
-    "emoji": "🦅",
-    "desc": "Ingreso y bienvenida al valle, con un mirador ideal para fotografía y contacto con las sierras.",
-    "lat": -33.2443,
-    "lng": -66.269
-  },
-  {
-    "id": "dique-potrero",
-    "name": "Dique Potrero de los Funes",
-    "type": "Naturaleza",
-    "emoji": "💧",
-    "desc": "El embalse que da nombre a la localidad. Apto para deportes náuticos, pesca y paseos en la costanera.",
-    "lat": -33.2323,
-    "lng": -66.276
-  }
-];
+   data.js estático. PLACES (Lugares para visitar) también se carga desde
+   Supabase (tabla places, administrable desde admin.html) — ver
+   loadPlaces(). EVENTS/NOVEDADES todavía son contenido editorial fijo
+   por su cuenta, igual que en el sitio viejo. */
+let PLACES = [];
 
 let EVENT_CATEGORIES = [];
 let EVENTS = [];
@@ -569,7 +541,30 @@ async function loadData(){
   hasSession = !!sessionData.session;
 
   await loadFeaturedCards();
+  await loadPlaces();
   await loadAgendaData();
+}
+
+/* ============ LUGARES PARA VISITAR (administrable desde admin) ============ */
+async function loadPlaces(){
+  const { data, error } = await supabaseClient
+    .from('places')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) { PLACES = []; return; }
+
+  PLACES = (data || []).map(p => ({
+    id: p.slug,
+    name: p.name,
+    type: p.type || '',
+    emoji: p.emoji || '📍',
+    desc: p.description || '',
+    image: p.image_url || '',
+    lat: p.lat,
+    lng: p.lng
+  }));
 }
 
 /* ============ SECCIÓN "DESTACADO" (antes "Descuentos imperdibles") ============ */
@@ -756,7 +751,7 @@ function promoCard(f, i){
 
 function placeCard(p, i){
   return `<div class="place-card reveal" style="transition-delay:${((i||0)%4)*70}ms" onclick="navigate('/lugares/${p.id}')">
-    <div class="img">${p.emoji}</div>
+    <div class="img">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : p.emoji}</div>
     <div class="body">
       <div class="tag">${p.type}</div>
       <div class="name">${p.name}</div>
@@ -870,6 +865,7 @@ function hideTopbar(){
 function setBottomnav(active){
   const items = [
     {key:'home', path:'/', ic:'🏠', label:'Inicio'},
+    {key:'destacado', path:'/destacado', ic:'⭐', label:'Destacado'},
     {key:'agenda', path:'/agenda', ic:'🎉', label:'Agenda'},
     {key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'},
   ];
@@ -888,6 +884,7 @@ function render(){
   if(parts[0]==='agenda') return renderAgenda();
   if(parts[0]==='evento') return renderEventoDetail(parts[1]);
   if(parts[0]==='novedades') return renderNovedades();
+  if(parts[0]==='destacado') return renderDestacado();
   if(parts[0]==='comercio') return renderComercio(parts[1]);
   if(parts[0]==='lugares') return renderLugar(parts[1]);
   return renderHome();
@@ -948,7 +945,6 @@ function setupHomePanelFade(){
 function renderHome(){
   hideTopbar();
   setBottomnav('home');
-  const highlights = FEATURED_CARDS;
   const view = document.getElementById('view');
   view.innerHTML = `
     <div class="home-panel">
@@ -971,10 +967,10 @@ function renderHome(){
       </div>
     </div>
 
-    ${highlights.length ? `<div class="section" style="margin-top:0;">
-      <div class="section-head"><h2>Destacado</h2></div>
+    ${FEATURED_CARDS.length ? `<div class="section" style="margin-top:0;">
+      <div class="section-head"><h2>Destacado</h2><span class="see-all" onclick="navigate('/destacado')">ver todo</span></div>
       <div class="hscroll-wrap">
-        <div class="hscroll" id="promoScroll">${highlights.map(promoCard).join('')}</div>
+        <div class="hscroll" id="promoScroll">${FEATURED_CARDS.map(promoCard).join('')}</div>
         <div class="edge-fade right" id="promoFadeRight"></div>
       </div>
     </div>` : ''}
@@ -1240,7 +1236,9 @@ function renderLugar(id){
   setTopbar({title:p.name, sub:p.type, back:true});
   setBottomnav('');
   document.getElementById('view').innerHTML = `
-    <div class="detail-hero">${p.emoji}</div>
+    <div class="detail-hero${p.image ? ' zoomable' : ''}"${p.image ? ` onclick="openImageLightbox('${p.image.replace(/'/g,"\\'")}', '${(p.name||'').replace(/'/g,"\\'")}')"` : ''}>
+      ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.emoji}
+    </div>
     <div class="detail-title">${p.name}</div>
     <div class="detail-cat">${p.type}</div>
     <div class="detail-block">
@@ -1250,6 +1248,11 @@ function renderLugar(id){
     <div class="cta-btns">
       <a class="map" style="flex:1" href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>
     </div>
+
+    ${p.image ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
+      <span class="img-lightbox-close" onclick="closeImageLightbox()">✕</span>
+      <img id="imgLightboxImg" src="${p.image}" alt="${p.name}" onclick="event.stopPropagation()">
+    </div>` : ''}
   `;
 }
 
@@ -1648,6 +1651,32 @@ function fmtNovedadDate(dateStr){
   if(!dateStr) return '';
   const d = parseYMD(dateStr);
   return `${String(d.getDate()).padStart(2,'0')} ${MESES_ES[d.getMonth()].slice(0,3)} ${d.getFullYear()}`;
+}
+
+/* ---- DESTACADO (página completa, accesible desde el menú inferior) ---- */
+function renderDestacado(){
+  setTopbar({title:'Destacado', sub:'Visit Potrero', back:true});
+  setBottomnav('destacado');
+  document.getElementById('view').innerHTML = `
+    <div class="section" style="margin-top:0;">
+      ${FEATURED_CARDS.length ? FEATURED_CARDS.map((f,i)=>destacadoPageCard(f,i)).join('') : '<div class="empty-state">Todavía no hay tarjetas destacadas cargadas.</div>'}
+    </div>
+  `;
+  initScrollReveal();
+}
+function destacadoPageCard(f, i){
+  const biz = f.business;
+  let onclick = '';
+  if (biz) onclick = `onclick="navigate('/comercio/${biz.id}')"`;
+  else if (f.externalUrl) onclick = `onclick="window.open('${f.externalUrl.replace(/'/g,"\\'")}', '_blank')"`;
+  return `<div class="destacado-page-card reveal" style="transition-delay:${(i%6)*60}ms" ${onclick}>
+    <div class="img">${f.image ? `<img src="${f.image}" alt="${f.title}" loading="lazy">` : '⭐'}</div>
+    <div class="body">
+      ${biz ? `<div class="name">${biz.name}</div>` : ''}
+      <div class="title">${f.title}</div>
+      ${f.subtitle ? `<div class="sub">${f.subtitle}</div>` : ''}
+    </div>
+  </div>`;
 }
 
 /* ============ INICIO ============ */

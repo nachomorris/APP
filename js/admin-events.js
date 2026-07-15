@@ -327,6 +327,119 @@ evadRecurrenceType.addEventListener('change', () => {
   document.getElementById('evad_recurrence_custom_wrap').classList.toggle('hidden', t !== 'custom');
 });
 
+// ---------- Galería adicional: colapsada por defecto, se abre con un click ----------
+const evadGalleryToggle = document.getElementById('evadGalleryToggle');
+const evadGalleryWrap = document.getElementById('evadGalleryWrap');
+evadGalleryToggle.addEventListener('click', () => {
+  const open = evadGalleryWrap.classList.toggle('hidden') === false;
+  evadGalleryToggle.classList.toggle('open', open);
+});
+
+// ---------- Foto de portada (subir + recortar), bucket "event-images" ----------
+// No depende de que el evento ya exista: si es nuevo se usa un id temporal
+// generado en el navegador como carpeta, y esa misma URL queda guardada en
+// el campo oculto evad_cover_image hasta que se guarda el formulario.
+let evadPhotoFolderId = null;
+let evadCropperInstance = null;
+
+const evadCoverImageInput = document.getElementById('evad_cover_image');
+const evadPhotoInput = document.getElementById('evadPhotoInput');
+const evadChoosePhotoBtn = document.getElementById('evadChoosePhotoBtn');
+const evadPhotoPreviewImg = document.getElementById('evadPhotoPreviewImg');
+const evadPhotoPreviewEmpty = document.getElementById('evadPhotoPreviewEmpty');
+
+const evadCropperModal = document.getElementById('evadCropperModal');
+const evadCropperImage = document.getElementById('evadCropperImage');
+const evadCropperCancelBtn = document.getElementById('evadCropperCancelBtn');
+const evadCropperConfirmBtn = document.getElementById('evadCropperConfirmBtn');
+
+function refreshEvadPhotoUploadState(currentPhotoUrl) {
+  evadCoverImageInput.value = currentPhotoUrl || '';
+  if (currentPhotoUrl) {
+    evadPhotoPreviewImg.src = currentPhotoUrl;
+    evadPhotoPreviewImg.style.display = 'block';
+    evadPhotoPreviewEmpty.style.display = 'none';
+  } else {
+    evadPhotoPreviewImg.style.display = 'none';
+    evadPhotoPreviewEmpty.style.display = 'block';
+  }
+}
+
+evadChoosePhotoBtn.addEventListener('click', () => {
+  evadPhotoInput.value = '';
+  evadPhotoInput.click();
+});
+
+evadPhotoInput.addEventListener('change', () => {
+  const file = evadPhotoInput.files && evadPhotoInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    evadCropperImage.src = reader.result;
+    evadCropperModal.classList.remove('hidden');
+
+    if (evadCropperInstance) evadCropperInstance.destroy();
+    evadCropperInstance = new Cropper(evadCropperImage, {
+      aspectRatio: 16 / 9,
+      viewMode: 1,
+      autoCropArea: 1,
+      background: false,
+      responsive: true,
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+function closeEvadCropperModal() {
+  if (evadCropperInstance) {
+    evadCropperInstance.destroy();
+    evadCropperInstance = null;
+  }
+  evadCropperModal.classList.add('hidden');
+  evadPhotoInput.value = '';
+}
+
+evadCropperCancelBtn.addEventListener('click', closeEvadCropperModal);
+
+evadCropperConfirmBtn.addEventListener('click', () => {
+  if (!evadCropperInstance) return;
+
+  evadCropperConfirmBtn.disabled = true;
+  evadCropperConfirmBtn.textContent = 'Subiendo...';
+
+  const canvas = evadCropperInstance.getCroppedCanvas({ width: 1200, height: 675 });
+  canvas.toBlob(async (blob) => {
+    if (!blob) {
+      evadCropperConfirmBtn.disabled = false;
+      evadCropperConfirmBtn.textContent = 'Guardar foto';
+      showAlert('No se pudo procesar la imagen.', 'error');
+      return;
+    }
+
+    if (!evadPhotoFolderId) evadPhotoFolderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    const path = `${evadPhotoFolderId}/cover-${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('event-images')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+
+    evadCropperConfirmBtn.disabled = false;
+    evadCropperConfirmBtn.textContent = 'Guardar foto';
+
+    if (uploadError) {
+      showAlert('No se pudo subir la foto: ' + uploadError.message, 'error');
+      return;
+    }
+
+    const { data: pub } = supabaseClient.storage.from('event-images').getPublicUrl(path);
+    refreshEvadPhotoUploadState(pub.publicUrl);
+    closeEvadCropperModal();
+    renderEvAdPreview();
+    showAlert('Foto lista. No te olvides de guardar el evento.', 'success');
+  }, 'image/jpeg', 0.85);
+});
+
 // ---------- Vista previa en vivo (réplica de la página de detalle real del evento) ----------
 // Mismas funciones de formato de fecha/hora/precio/links que usa index.html
 // (MESES_ES, fmtDay, fmtDateRange, fmtTimeRange, priceLabel, organizerName, websiteUrl,
@@ -445,9 +558,14 @@ function evAdResetForm() {
   document.getElementById('evad_registration_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_until_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_custom_wrap').classList.add('hidden');
+  document.getElementById('evad_recurrence_section').classList.remove('hidden'); // solo se oculta al editar
+  evadGalleryWrap.classList.add('hidden');
+  evadGalleryToggle.classList.remove('open');
   evadBusinessSearch.disabled = false;
   evAdSetBusinessSelection('', '');
   document.getElementById('evadOwnerInfo').classList.add('hidden');
+  evadPhotoFolderId = null;
+  refreshEvadPhotoUploadState('');
 }
 
 document.getElementById('newOfficialEventBtn').addEventListener('click', () => {
@@ -463,6 +581,8 @@ function openEvAdminForm(e) {
   evAdResetForm();
   document.getElementById('evAdminFormTitle').textContent = 'Editar evento';
   document.getElementById('evad_id').value = e.id;
+  document.getElementById('evad_recurrence_section').classList.add('hidden'); // editar una fila puntual no regenera la serie
+  evadPhotoFolderId = e.id;
   evadIsOfficial.checked = !!e.is_official;
   evadBusinessSearch.disabled = !!e.is_official;
   const org = e.businesses ? e.businesses.name : '';
@@ -471,8 +591,9 @@ function openEvAdminForm(e) {
   document.getElementById('evad_short_description').value = e.short_description || '';
   document.getElementById('evad_description').value = e.description || '';
   evadCategorySelect.value = e.category_id || '';
-  document.getElementById('evad_cover_image').value = e.cover_image || '';
+  refreshEvadPhotoUploadState(e.cover_image || '');
   document.getElementById('evad_gallery').value = (e.gallery || []).join(', ');
+  if ((e.gallery || []).length) { evadGalleryWrap.classList.remove('hidden'); evadGalleryToggle.classList.add('open'); }
   document.getElementById('evad_start_date').value = e.start_date || '';
   document.getElementById('evad_end_date').value = e.end_date || '';
   document.getElementById('evad_start_time').value = e.start_time ? e.start_time.slice(0, 5) : '';

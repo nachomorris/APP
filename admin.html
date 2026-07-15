@@ -67,6 +67,31 @@
   }
   .evad-owner-info b { font-weight: 800; }
   .evad-owner-info .tag { display: inline-block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--primary-dark); margin-bottom: 3px; }
+
+  /* Formulario de evento en secciones (en vez de una lista plana de ~25 campos) */
+  .form-section {
+    background: #fafaf9; border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px 18px 6px; margin-bottom: 18px;
+  }
+  .form-section h3 {
+    margin: 0 0 14px; font-size: 12.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--muted); display: flex; align-items: center; gap: 8px;
+  }
+  .form-section h3 .n { font-size: 16px; }
+  .form-section > label:first-of-type,
+  .form-section > .autocomplete-wrap:first-of-type { margin-top: 0; }
+  .form-toggle-row {
+    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+    font-size: 13px; font-weight: 700; color: var(--primary-dark); margin-bottom: 10px;
+  }
+  .form-toggle-row .arrow { transition: transform .15s ease; display: inline-block; }
+  .form-toggle-row.open .arrow { transform: rotate(90deg); }
+  .evad-photo-preview {
+    height: 150px; border-radius: 14px; overflow: hidden; position: relative;
+    background: var(--ink); display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 13px; margin-bottom: 10px;
+  }
+  .evad-photo-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 </style>
 </head>
 <body>
@@ -89,6 +114,7 @@
     <button id="mainTabEvents">🎉 Eventos</button>
     <button id="mainTabNovedades">📰 Novedades</button>
     <button id="mainTabFeatured">⭐ Destacado</button>
+    <button id="mainTabPlaces">📍 Lugares</button>
     <button id="mainTabUsuarios">👤 Usuarios</button>
   </div>
 
@@ -323,154 +349,188 @@
         <form id="evAdminForm">
           <input type="hidden" id="evad_id">
 
-          <label style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="evad_is_official" style="width:auto;">
-            <span style="font-weight:600; color:var(--muted); font-size:14px;">Evento oficial (municipal, sin ficha organizadora)</span>
-          </label>
+          <div class="form-section">
+            <h3><span class="n">📋</span> Información básica</h3>
 
-          <label for="evad_business_search">Ficha organizadora</label>
-          <div class="autocomplete-wrap">
-            <input type="text" id="evad_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
-            <input type="hidden" id="evad_business_id">
-            <div id="evad_business_results" class="autocomplete-results hidden"></div>
-          </div>
-          <p class="field-hint">Dejalo vacío si el evento no tiene una ficha organizadora.</p>
+            <label style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="evad_is_official" style="width:auto;">
+              <span style="font-weight:600; color:var(--muted); font-size:14px;">Evento oficial (municipal, sin ficha organizadora)</span>
+            </label>
 
-          <label for="evad_title">Título del evento *</label>
-          <input type="text" id="evad_title" required>
-
-          <label for="evad_short_description">Descripción corta</label>
-          <input type="text" id="evad_short_description" maxlength="140">
-
-          <label for="evad_description">Descripción completa</label>
-          <textarea id="evad_description"></textarea>
-
-          <label for="evad_category_id">Categoría *</label>
-          <select id="evad_category_id" required>
-            <option value="">Seleccioná una categoría</option>
-          </select>
-
-          <label for="evad_cover_image">Imagen de portada (URL)</label>
-          <input type="text" id="evad_cover_image">
-
-          <label for="evad_gallery">Galería (URLs separadas por coma)</label>
-          <input type="text" id="evad_gallery">
-
-          <div class="row-2">
-            <div>
-              <label for="evad_start_date">Fecha de inicio *</label>
-              <input type="date" id="evad_start_date" required>
+            <label for="evad_business_search">Ficha organizadora</label>
+            <div class="autocomplete-wrap">
+              <input type="text" id="evad_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
+              <input type="hidden" id="evad_business_id">
+              <div id="evad_business_results" class="autocomplete-results hidden"></div>
             </div>
-            <div>
-              <label for="evad_end_date">Fecha de finalización *</label>
-              <input type="date" id="evad_end_date" required>
-            </div>
+            <p class="field-hint">Dejalo vacío si el evento no tiene una ficha organizadora.</p>
+
+            <label for="evad_title">Título del evento *</label>
+            <input type="text" id="evad_title" required>
+
+            <label for="evad_category_id">Categoría *</label>
+            <select id="evad_category_id" required>
+              <option value="">Seleccioná una categoría</option>
+            </select>
+
+            <label for="evad_short_description">Descripción corta</label>
+            <input type="text" id="evad_short_description" maxlength="140">
+
+            <label for="evad_description">Descripción completa</label>
+            <textarea id="evad_description"></textarea>
           </div>
 
-          <div class="row-2">
-            <div>
-              <label for="evad_start_time">Horario de inicio</label>
-              <input type="time" id="evad_start_time">
+          <div class="form-section">
+            <h3><span class="n">🖼️</span> Foto de portada</h3>
+
+            <div class="evad-photo-preview" id="evadPhotoPreview">
+              <img id="evadPhotoPreviewImg" style="display:none;" alt="Foto del evento">
+              <span id="evadPhotoPreviewEmpty">Sin foto todavía</span>
             </div>
-            <div>
-              <label for="evad_end_time">Horario de finalización</label>
-              <input type="time" id="evad_end_time">
+            <input type="hidden" id="evad_cover_image">
+            <input type="file" id="evadPhotoInput" accept="image/*" class="hidden">
+            <button type="button" class="btn btn-secondary btn-small" id="evadChoosePhotoBtn">Elegir foto</button>
+            <p class="field-hint">Formato horizontal (16:9). Después de elegirla vas a poder ajustar el recorte.</p>
+
+            <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow">▸</span> Galería adicional (opcional)</div>
+            <div id="evadGalleryWrap" class="hidden">
+              <label for="evad_gallery">URLs separadas por coma</label>
+              <input type="text" id="evad_gallery">
             </div>
           </div>
 
-          <label for="evad_address">Dirección</label>
-          <input type="text" id="evad_address">
+          <div class="form-section">
+            <h3><span class="n">📅</span> Fecha y horario</h3>
 
-          <div class="row-2">
-            <div>
-              <label for="evad_lat">Latitud</label>
-              <input type="text" id="evad_lat">
+            <div class="row-2">
+              <div>
+                <label for="evad_start_date">Fecha de inicio *</label>
+                <input type="date" id="evad_start_date" required>
+              </div>
+              <div>
+                <label for="evad_end_date">Fecha de finalización *</label>
+                <input type="date" id="evad_end_date" required>
+              </div>
             </div>
-            <div>
-              <label for="evad_lng">Longitud</label>
-              <input type="text" id="evad_lng">
+
+            <div class="row-2">
+              <div>
+                <label for="evad_start_time">Horario de inicio</label>
+                <input type="time" id="evad_start_time">
+              </div>
+              <div>
+                <label for="evad_end_time">Horario de finalización</label>
+                <input type="time" id="evad_end_time">
+              </div>
+            </div>
+
+            <div id="evad_recurrence_section">
+              <label for="evad_recurrence_type">Repetición</label>
+              <select id="evad_recurrence_type">
+                <option value="none">No se repite</option>
+                <option value="weekly_fri">Todos los viernes</option>
+                <option value="weekly_sat">Todos los sábados</option>
+                <option value="weekend">Todos los fines de semana</option>
+                <option value="weekly">Una vez por semana</option>
+                <option value="custom">Fechas específicas</option>
+              </select>
+              <p class="field-hint">Genera un evento por cada fecha que coincida; se puede editar cada uno por separado después.</p>
+              <div id="evad_recurrence_until_wrap" class="hidden">
+                <label for="evad_recurrence_until">Repetir hasta</label>
+                <input type="date" id="evad_recurrence_until">
+              </div>
+              <div id="evad_recurrence_custom_wrap" class="hidden">
+                <label for="evad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
+                <textarea id="evad_recurrence_dates"></textarea>
+              </div>
             </div>
           </div>
 
-          <div class="row-2">
-            <div>
-              <label for="evad_phone">Teléfono</label>
-              <input type="tel" id="evad_phone">
+          <div class="form-section">
+            <h3><span class="n">📍</span> Ubicación y contacto</h3>
+
+            <label for="evad_address">Dirección</label>
+            <input type="text" id="evad_address">
+
+            <div class="row-2">
+              <div>
+                <label for="evad_lat">Latitud</label>
+                <input type="text" id="evad_lat">
+              </div>
+              <div>
+                <label for="evad_lng">Longitud</label>
+                <input type="text" id="evad_lng">
+              </div>
             </div>
-            <div>
-              <label for="evad_whatsapp">WhatsApp</label>
-              <input type="tel" id="evad_whatsapp">
+
+            <div class="row-2">
+              <div>
+                <label for="evad_phone">Teléfono</label>
+                <input type="tel" id="evad_phone">
+              </div>
+              <div>
+                <label for="evad_whatsapp">WhatsApp</label>
+                <input type="tel" id="evad_whatsapp">
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div>
+                <label for="evad_instagram">Instagram</label>
+                <input type="text" id="evad_instagram">
+              </div>
+              <div>
+                <label for="evad_website">Sitio web</label>
+                <input type="text" id="evad_website">
+              </div>
             </div>
           </div>
 
-          <div class="row-2">
-            <div>
-              <label for="evad_instagram">Instagram</label>
-              <input type="text" id="evad_instagram">
+          <div class="form-section">
+            <h3><span class="n">💰</span> Precio e inscripción</h3>
+
+            <label style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="evad_is_free" style="width:auto;">
+              <span style="font-weight:600; color:var(--muted); font-size:14px;">Entrada gratuita</span>
+            </label>
+            <div id="evad_price_wrap">
+              <label for="evad_price">Precio</label>
+              <input type="number" id="evad_price" min="0">
             </div>
-            <div>
-              <label for="evad_website">Sitio web</label>
-              <input type="text" id="evad_website">
+
+            <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+              <input type="checkbox" id="evad_requires_registration" style="width:auto;">
+              <span style="font-weight:600; color:var(--muted); font-size:14px;">Requiere inscripción</span>
+            </label>
+            <div id="evad_registration_wrap" class="hidden">
+              <label for="evad_registration_url">Enlace de inscripción</label>
+              <input type="text" id="evad_registration_url">
             </div>
           </div>
 
-          <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
-            <input type="checkbox" id="evad_is_free" style="width:auto;">
-            <span style="font-weight:600; color:var(--muted); font-size:14px;">Entrada gratuita</span>
-          </label>
-          <div id="evad_price_wrap">
-            <label for="evad_price">Precio</label>
-            <input type="number" id="evad_price" min="0">
-          </div>
+          <div class="form-section">
+            <h3><span class="n">⚙️</span> Estado y visibilidad</h3>
 
-          <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
-            <input type="checkbox" id="evad_requires_registration" style="width:auto;">
-            <span style="font-weight:600; color:var(--muted); font-size:14px;">Requiere inscripción</span>
-          </label>
-          <div id="evad_registration_wrap" class="hidden">
-            <label for="evad_registration_url">Enlace de inscripción</label>
-            <input type="text" id="evad_registration_url">
-          </div>
+            <label for="evad_status">Estado</label>
+            <select id="evad_status">
+              <option value="draft">Borrador</option>
+              <option value="pending">Pendiente de revisión</option>
+              <option value="approved">Aprobado</option>
+              <option value="published">Publicado</option>
+              <option value="needs_changes">Requiere modificaciones</option>
+              <option value="rejected">Rechazado</option>
+              <option value="finished">Finalizado</option>
+              <option value="hidden">Oculto</option>
+            </select>
 
-          <label for="evad_recurrence_type">Repetición</label>
-          <select id="evad_recurrence_type">
-            <option value="none">No se repite</option>
-            <option value="weekly_fri">Todos los viernes</option>
-            <option value="weekly_sat">Todos los sábados</option>
-            <option value="weekend">Todos los fines de semana</option>
-            <option value="weekly">Una vez por semana</option>
-            <option value="custom">Fechas específicas</option>
-          </select>
-          <div id="evad_recurrence_until_wrap" class="hidden">
-            <label for="evad_recurrence_until">Repetir hasta</label>
-            <input type="date" id="evad_recurrence_until">
-          </div>
-          <div id="evad_recurrence_custom_wrap" class="hidden">
-            <label for="evad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
-            <textarea id="evad_recurrence_dates"></textarea>
-          </div>
-
-          <hr style="border:none; border-top:1px solid var(--border); margin:22px 0;">
-
-          <label for="evad_status">Estado</label>
-          <select id="evad_status">
-            <option value="draft">Borrador</option>
-            <option value="pending">Pendiente de revisión</option>
-            <option value="approved">Aprobado</option>
-            <option value="published">Publicado</option>
-            <option value="needs_changes">Requiere modificaciones</option>
-            <option value="rejected">Rechazado</option>
-            <option value="finished">Finalizado</option>
-            <option value="hidden">Oculto</option>
-          </select>
-
-          <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
-            <input type="checkbox" id="evad_is_featured" style="width:auto;">
-            <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacado (aparece en el carrusel superior de la Agenda)</span>
-          </label>
-          <div id="evad_featured_order_wrap">
-            <label for="evad_featured_order">Orden entre destacados (menor = primero)</label>
-            <input type="number" id="evad_featured_order" value="0">
+            <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+              <input type="checkbox" id="evad_is_featured" style="width:auto;">
+              <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacado (aparece en el carrusel superior de la Agenda)</span>
+            </label>
+            <div id="evad_featured_order_wrap">
+              <label for="evad_featured_order">Orden entre destacados (menor = primero)</label>
+              <input type="number" id="evad_featured_order" value="0">
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary" id="evAdminSaveBtn">Guardar evento</button>
@@ -587,6 +647,73 @@
 
   </div>
   <!-- fin featuredAdminSection -->
+
+  <!-- ===== SECCIÓN LUGARES (admin) ===== -->
+  <div id="placesAdminSection" class="hidden">
+
+    <div id="placesListView">
+      <button class="btn btn-primary btn-small" id="newPlaceBtn" style="margin-bottom:14px;">+ Nuevo lugar</button>
+      <div id="placesList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+
+    <div id="placesFormView" class="hidden">
+      <div class="card">
+        <h2 id="placeFormTitle">Editar lugar</h2>
+
+        <form id="placeForm">
+          <input type="hidden" id="place_id">
+
+          <label>Foto</label>
+          <div class="photo-upload-wrap">
+            <div class="photo-preview" id="placePhotoPreview">
+              <img id="placePhotoPreviewImg" style="display:none;" alt="Foto del lugar">
+              <span id="placePhotoPreviewEmpty">Sin foto todavía</span>
+            </div>
+            <div>
+              <input type="file" id="placePhotoInput" accept="image/*" class="hidden">
+              <button type="button" class="btn btn-secondary btn-small" id="placeChoosePhotoBtn">Elegir foto</button>
+              <p class="field-hint">Formato horizontal. Después de elegirla vas a poder ajustar el recorte. Si no cargás foto, se muestra el emoji de respaldo.</p>
+            </div>
+          </div>
+
+          <label for="place_emoji">Emoji de respaldo (se usa si no hay foto)</label>
+          <input type="text" id="place_emoji" maxlength="4" placeholder="📍">
+
+          <label for="place_name">Nombre *</label>
+          <input type="text" id="place_name" required>
+
+          <label for="place_type">Tipo</label>
+          <input type="text" id="place_type" placeholder="Ej: Parque recreativo, Mirador, Paseo...">
+
+          <label for="place_description">Descripción</label>
+          <textarea id="place_description"></textarea>
+
+          <div class="row-2">
+            <div>
+              <label for="place_lat">Latitud</label>
+              <input type="text" id="place_lat">
+            </div>
+            <div>
+              <label for="place_lng">Longitud</label>
+              <input type="text" id="place_lng">
+            </div>
+          </div>
+
+          <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+            <input type="checkbox" id="place_is_active" style="width:auto;" checked>
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Activo (se muestra en la home)</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary" id="placeSaveBtn">Guardar lugar</button>
+          <button type="button" class="btn btn-secondary" id="placeCancelBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin placesAdminSection -->
 
   <div id="usuariosAdminSection" class="hidden">
 
@@ -743,6 +870,36 @@
   </div>
 </div>
 
+<!-- ===== Modal: ajustar recorte de la foto de un lugar ===== -->
+<div id="placeCropperModal" class="cropper-modal hidden">
+  <div class="cropper-modal-inner">
+    <h3>Ajustá la foto</h3>
+    <p class="field-hint" style="margin-top:0;">Arrastrá para mover y usá la rueda o pellizcá para acercar/alejar.</p>
+    <div class="cropper-container-box">
+      <img id="placeCropperImage">
+    </div>
+    <div class="cropper-actions">
+      <button type="button" class="btn btn-secondary" id="placeCropperCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="placeCropperConfirmBtn">Guardar foto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: ajustar recorte de la foto de portada de un evento ===== -->
+<div id="evadCropperModal" class="cropper-modal hidden">
+  <div class="cropper-modal-inner">
+    <h3>Ajustá la foto</h3>
+    <p class="field-hint" style="margin-top:0;">Arrastrá para mover y usá la rueda o pellizcá para acercar/alejar.</p>
+    <div class="cropper-container-box">
+      <img id="evadCropperImage">
+    </div>
+    <div class="cropper-actions">
+      <button type="button" class="btn btn-secondary" id="evadCropperCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="evadCropperConfirmBtn">Guardar foto</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
@@ -751,6 +908,7 @@
 <script src="js/admin-novedades.js"></script>
 <script src="js/admin-photo.js"></script>
 <script src="js/admin-featured.js"></script>
+<script src="js/admin-places.js"></script>
 <script src="js/admin-users.js"></script>
 
 </body>
