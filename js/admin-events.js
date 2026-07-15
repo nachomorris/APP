@@ -561,18 +561,20 @@ function renderEvAdPreview() {
   // precio/inscripción, descripción, dirección, teléfono, web e instagram.
   // La foto: tocar para elegir otra, arrastrar para ajustar el encuadre.
   preview.innerHTML = `
-    <div class="detail-hero editable-cover" data-ev-cover style="background:${cover ? (cat.color || '#111') : '#f0eee9'}">
-      ${cover
-        ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
-        : `<img src="images/logo-markk.png" alt="" class="evad-hero-placeholder">`}
-      <span class="edit-hint">${evadPhotoUploading ? '⏳ Subiendo...' : (cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto')}</span>
+    <div class="evad-top-card">
+      <div class="detail-hero editable-cover" data-ev-cover style="background:${cover ? (cat.color || '#111') : '#f0eee9'}">
+        ${cover
+          ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
+          : `<img src="images/logo-markk.png" alt="" class="evad-hero-placeholder">`}
+        <span class="edit-hint">${evadPhotoUploading ? '⏳ Subiendo...' : (cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto')}</span>
+      </div>
+
+      <div class="detail-title evad-editable" contenteditable="true" data-ev-field="title" data-placeholder="Título del evento">${escapeHtml(rawTitle)}</div>
+
+      <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
+
+      <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="✏️ Descripción corta">${escapeHtml(rawShortDesc)}</p>
     </div>
-
-    <div class="detail-title evad-editable" contenteditable="true" data-ev-field="title" data-placeholder="Título del evento">${escapeHtml(rawTitle)}</div>
-
-    <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
-
-    <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="✏️ Descripción corta">${escapeHtml(rawShortDesc)}</p>
 
     <div class="detail-block">
       <h3>Cuándo</h3>
