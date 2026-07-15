@@ -648,6 +648,7 @@ async function deleteBusiness(id) {
 const ADMIN_SECTION_TABS = {
   businessesSection: 'mainTabBusinesses',
   eventsAdminSection: 'mainTabEvents',
+  activitiesAdminSection: 'mainTabActivities',
   novedadesAdminSection: 'mainTabNovedades',
   usuariosAdminSection: 'mainTabUsuarios',
   featuredAdminSection: 'mainTabFeatured',

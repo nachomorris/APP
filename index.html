@@ -460,6 +460,20 @@ let hasSession = false;
 
 let NOVEDADES = [];
 
+/* ============ ACTIVIDADES (deportivas / culturales) ============
+   Calcado de la Agenda de eventos: misma tabla de estructura, mismo
+   diseño de tarjetas y detalle, pero con una sola etiqueta fija en
+   vez de una tabla de categorías, y sin ficha organizadora
+   obligatoria (las carga el municipio desde el admin). */
+const ACT_TAGS_PUBLIC = {
+  deportiva: { id: 'deportiva', label: 'Deportiva', icon: '🏅', color: '#ca8a04' },
+  cultural: { id: 'cultural', label: 'Cultural', icon: '🎭', color: '#7c3aed' },
+};
+function activityTag(id){
+  return ACT_TAGS_PUBLIC[id] || { id:'', label:'Actividad', icon:'🏅', color:'#111111' };
+}
+let ACTIVITIES = [];
+
 let CATEGORIES = [];
 let SUBCATEGORIES = {};
 let BUSINESSES = [];
@@ -587,6 +601,7 @@ async function loadData(){
   await loadFeaturedCards();
   await loadPlaces();
   await loadAgendaData();
+  await loadActivitiesData();
 }
 
 // Restringe BUSINESSES a los comercios (publicados) de la cámara pedida
@@ -734,6 +749,57 @@ async function loadNovedades(){
     title: n.title,
     desc: n.description || '',
     date: n.published_at
+  }));
+}
+
+/* ============ ACTIVIDADES: carga de datos ============ */
+async function loadActivitiesData(){
+  const { data: rows, error } = await supabaseClient
+    .from('activities')
+    .select('*, businesses(id, legacy_id, name, category_id)')
+    .eq('status', 'published')
+    .order('start_date', { ascending: true });
+
+  if (error) {
+    console.error('Error cargando actividades', error);
+    ACTIVITIES = [];
+    return;
+  }
+
+  ACTIVITIES = (rows || []).map((a) => ({
+    id: a.id,
+    title: a.title,
+    shortDesc: a.short_description || '',
+    desc: a.description || '',
+    cover: a.cover_image || '',
+    coverFocalX: a.cover_focal_x != null ? a.cover_focal_x : 50,
+    coverFocalY: a.cover_focal_y != null ? a.cover_focal_y : 50,
+    gallery: a.gallery || [],
+    tag: a.tag,
+    startDate: a.start_date,
+    endDate: a.end_date,
+    startTime: a.start_time,
+    endTime: a.end_time,
+    address: a.address || '',
+    lat: a.lat,
+    lng: a.lng,
+    contactName: a.contact_name || '',
+    phone: a.phone || '',
+    whatsapp: a.whatsapp || '',
+    instagram: a.instagram || '',
+    website: a.website || '',
+    price: a.price,
+    isFree: !!a.is_free,
+    requiresRegistration: !!a.requires_registration,
+    registrationUrl: a.registration_url || '',
+    capacity: a.capacity,
+    isFeatured: !!a.is_featured,
+    featuredOrder: a.featured_order || 0,
+    // Sin ficha organizadora vinculada: la organiza directamente el
+    // municipio (no hay flujo de comercios cargando actividades).
+    isOfficial: !a.businesses,
+    viewsCount: a.views_count || 0,
+    business: a.businesses || null
   }));
 }
 
@@ -931,6 +997,7 @@ function setBottomnav(active){
     {key:'home', path:'/', ic:'🏠', label:'Inicio'},
     {key:'destacado', path:'/destacado', ic:'⭐', label:'Destacado'},
     {key:'agenda', path:'/agenda', ic:'🎉', label:'Agenda'},
+    {key:'actividades', path:'/actividades', ic:'🏅', label:'Actividades'},
     {key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'},
   ];
   document.getElementById('bottomnav').innerHTML = items.map(i=>
@@ -947,6 +1014,9 @@ function render(){
   if(parts[0]==='agenda' && parts[1]==='anteriores') return renderAgendaAnteriores();
   if(parts[0]==='agenda') return renderAgenda();
   if(parts[0]==='evento') return renderEventoDetail(parts[1]);
+  if(parts[0]==='actividades' && parts[1]==='anteriores') return renderActividadesAnteriores();
+  if(parts[0]==='actividades') return renderActividades();
+  if(parts[0]==='actividad') return renderActividadDetail(parts[1]);
   if(parts[0]==='novedades') return renderNovedades();
   if(parts[0]==='destacado') return renderDestacado();
   if(parts[0]==='comercio') return renderComercio(parts[1]);
@@ -1774,6 +1844,292 @@ function openImageLightbox(src, alt){
 function closeImageLightbox(){
   const lb = document.getElementById('imgLightbox');
   if(lb) lb.classList.add('hidden');
+}
+
+/* ============ ACTIVIDADES (deportivas / culturales) ============
+   Misma pinta que la Agenda (reutiliza las clases .agenda-card,
+   .featured-card, .home-panel, etc. y helpers genéricos ya definidos
+   para eventos: fmtDay/fmtDateRange/fmtTimeRange, priceLabel,
+   organizerName, isEventFinished/isEventThisWeek/isEventThisMonth,
+   waLink, isAddressUrl, eventIcsHref). Ruta: /actividades y
+   /actividad/:id, con su propio ícono en la barra inferior. */
+let activitiesState = { q:'', quick:'todos', tag:'todas' };
+
+function activityCard(a, i){
+  const t = activityTag(a.tag);
+  const org = organizerName(a);
+  const d = parseYMD(a.startDate);
+  return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/actividad/${a.id}')">
+    <div class="cover" style="background:${t.color || '#111'}">
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
+      <div class="date-badge"><span class="day">${d.getDate()}</span><span class="mon">${MESES_ES[d.getMonth()].slice(0,3)}</span></div>
+      ${a.isFree ? `<span class="free-tag">Gratis</span>` : ''}
+    </div>
+    <div class="body">
+      <div class="when">🗓️ ${fmtDateRange(a)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
+      <h3>${a.title}</h3>
+      ${(a.address && !isAddressUrl(a.address)) ? `<div class="meta-row">📍 ${a.address}</div>` : ''}
+      ${a.desc || a.shortDesc ? `<div class="desc">${a.shortDesc || a.desc}</div>` : ''}
+      ${org ? `<div class="org"><span>Organiza:</span> ${org}</div>` : ''}
+      <span class="more-btn">Ver más →</span>
+    </div>
+  </div>`;
+}
+
+function activityFeaturedCard(a){
+  const t = activityTag(a.tag);
+  return `<div class="featured-card" onclick="navigate('/actividad/${a.id}')">
+    <div class="cover" style="background:${t.color || '#111'}">
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
+      <span class="star">★ Destacada</span>
+    </div>
+    <div class="cap">
+      <div class="when">${fmtDateRange(a)}</div>
+      <h3>${a.title}</h3>
+      <div class="sub">${t.label}${(a.address && !isAddressUrl(a.address)) ? ' · ' + a.address : ''}</div>
+    </div>
+  </div>`;
+}
+
+function activeUpcomingActivities(){
+  return ACTIVITIES.filter(a=>!isEventFinished(a)).sort((a,b)=>{
+    const d = a.startDate.localeCompare(b.startDate);
+    if(d !== 0) return d;
+    return (a.startTime||'00:00').localeCompare(b.startTime||'00:00');
+  });
+}
+
+function matchesActivitiesFilters(a){
+  if(activitiesState.quick === 'semana' && !isEventThisWeek(a)) return false;
+  if(activitiesState.quick === 'mes' && !isEventThisMonth(a)) return false;
+  if(activitiesState.tag !== 'todas' && a.tag !== activitiesState.tag) return false;
+  const q = activitiesState.q.trim();
+  if(q){
+    const org = organizerName(a);
+    if(!fuzzyMatch(q, a.title) && !fuzzyMatch(q, a.address) && !fuzzyMatch(q, org)) return false;
+  }
+  return true;
+}
+
+function renderActividades(){
+  hideTopbar();
+  setBottomnav('actividades');
+  const view = document.getElementById('view');
+
+  const featured = activeUpcomingActivities().filter(a=>a.isFeatured).sort((a,b)=>a.featuredOrder-b.featuredOrder);
+
+  view.innerHTML = `
+    <div class="home-panel">
+      <div class="panel-topbar">
+        <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
+        <div class="searchbar">
+          <span>🔎</span>
+          <input id="activitiesSearch" placeholder="Buscar actividad..." value="${activitiesState.q}">
+        </div>
+      </div>
+      <div class="filter-row" id="activitiesTagRow"></div>
+      <div class="filter-row" id="activitiesQuickRow"></div>
+    </div>
+
+    ${featured.length ? `
+    <div class="section" style="margin-top:0;">
+      <div class="section-head"><h2>Destacadas</h2></div>
+      <div class="featured-scroll">${featured.map(activityFeaturedCard).join('')}</div>
+    </div>` : ''}
+
+    <div class="section" style="margin-top:${featured.length?'32px':'0'};">
+      <div class="section-head"><h2>Próximamente</h2></div>
+      <div id="activitiesList"></div>
+      <div class="agenda-archive-link"><a onclick="navigate('/actividades/anteriores')">Ver actividades anteriores →</a></div>
+    </div>
+  `;
+
+  document.getElementById('activitiesTagRow').innerHTML = [
+    {k:'todas', l:'Todas'}, {k:'deportiva', l:'🏅 Deportivas'}, {k:'cultural', l:'🎭 Culturales'}
+  ].map(f=>`<button class="filter-pill ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${f.l}</button>`).join('');
+
+  document.getElementById('activitiesQuickRow').innerHTML = [
+    {k:'semana', l:'Esta semana'}, {k:'mes', l:'Este mes'}, {k:'todos', l:'Todos'}
+  ].map(f=>`<button class="filter-pill ${activitiesState.quick===f.k?'active':''}" onclick="setActividadesQuick('${f.k}')">${f.l}</button>`).join('');
+
+  document.getElementById('activitiesSearch').addEventListener('input', e=>{
+    activitiesState.q = e.target.value;
+    renderActividadesList();
+  });
+
+  setupHomePanelFade();
+  renderActividadesList();
+  initScrollReveal();
+}
+
+function setActividadesQuick(k){ activitiesState.quick = k; renderActividades(); }
+function setActividadesTag(k){ activitiesState.tag = k; renderActividades(); }
+
+function renderActividadesList(){
+  const items = activeUpcomingActivities().filter(matchesActivitiesFilters);
+  const list = document.getElementById('activitiesList');
+  if(!list) return;
+
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty-state agenda-search-empty">No encontramos actividades con ese filtro. Probá con otra búsqueda o mirá "Todas".</div>`;
+    return;
+  }
+
+  const today = todayYMD();
+  const tomorrow = (()=>{ const d=parseYMD(today); d.setDate(d.getDate()+1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+  const in7 = (()=>{ const d=parseYMD(today); d.setDate(d.getDate()+7); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
+
+  const buckets = { hoy:[], manana:[], semana:[], despues:[] };
+  items.forEach(a=>{
+    if(a.startDate === today) buckets.hoy.push(a);
+    else if(a.startDate === tomorrow) buckets.manana.push(a);
+    else if(a.startDate < in7) buckets.semana.push(a);
+    else buckets.despues.push(a);
+  });
+
+  let html = '';
+  let counter = 0;
+  const section = (title, arr) => {
+    if(!arr.length) return;
+    html += `<div class="agenda-group-title">${title}</div>`;
+    arr.forEach(a=>{ html += activityCard(a, counter++); });
+  };
+  section('Hoy', buckets.hoy);
+  section('Mañana', buckets.manana);
+  section('Esta semana', buckets.semana);
+  section('Próximas actividades', buckets.despues);
+
+  list.innerHTML = html;
+  initScrollReveal();
+}
+
+function renderActividadesAnteriores(){
+  setTopbar({title:'Actividades anteriores', sub:'Visit Potrero', back:true});
+  setBottomnav('actividades');
+  const items = ACTIVITIES.filter(isEventFinished).sort((a,b)=>b.startDate.localeCompare(a.startDate));
+  document.getElementById('view').innerHTML = `
+    <div class="section" style="margin-top:0;">
+      ${items.length ? items.map((a,i)=>activityCard(a,i)).join('') : '<div class="empty-state">Todavía no hay actividades archivadas.</div>'}
+    </div>
+  `;
+  initScrollReveal();
+}
+
+async function shareActivity(id){
+  const a = ACTIVITIES.find(x=>x.id===id);
+  if(!a) return;
+  const url = location.origin + location.pathname + '#/actividad/' + id;
+  const shareData = { title: a.title, text: a.shortDesc || a.title, url };
+
+  if(navigator.share){
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch(err){
+      if(err && err.name === 'AbortError') return;
+    }
+  }
+
+  try {
+    if(!navigator.clipboard) throw new Error('Clipboard no disponible');
+    await navigator.clipboard.writeText(url);
+    alert('Enlace copiado: ' + url);
+  } catch(err){
+    window.prompt('Copiá el enlace de la actividad:', url);
+  }
+}
+
+function renderActividadDetail(id){
+  const a = ACTIVITIES.find(x=>x.id===id);
+  if(!a){
+    setTopbar({title:'No encontrada', back:true});
+    setBottomnav('');
+    document.getElementById('view').innerHTML = `<div class="empty-state">Actividad no encontrada o todavía no está publicada.</div>`;
+    return;
+  }
+  const t = activityTag(a.tag);
+  setTopbar({title:a.title, sub:t.label, back:true});
+  setBottomnav('');
+
+  supabaseClient.rpc('increment_activity_views', { p_activity_id: id }).then(()=>{}).catch(()=>{});
+
+  supabaseClient
+    .from('activity_schedule_items')
+    .select('*')
+    .eq('activity_id', id)
+    .order('item_date', { ascending: true })
+    .order('start_time', { ascending: true })
+    .then(({ data }) => {
+      const schedule = data || [];
+      if(!schedule.length) return;
+      const block = document.getElementById('actScheduleBlock');
+      if(!block) return;
+      block.classList.remove('hidden');
+      block.querySelector('.list').innerHTML = schedule.map(s=>`
+        <div class="schedule-item">
+          <div class="d">${fmtDay(s.item_date)}</div>
+          ${(s.start_time||s.end_time) ? `<div class="t">${s.start_time ? s.start_time.slice(0,5) : ''}${s.end_time ? ' a ' + s.end_time.slice(0,5) : ''} hs</div>` : ''}
+          <div class="desc">${s.description}</div>
+        </div>`).join('');
+    });
+
+  const igUrl = instagramUrl(a.instagram);
+  const webUrl = websiteUrl(a.website);
+  const orgBiz = a.business;
+  const orgLink = orgBiz ? `navigate('/comercio/${orgBiz.legacy_id || orgBiz.id}')` : '';
+
+  document.getElementById('view').innerHTML = `
+    <div class="detail-hero${a.cover ? ' zoomable' : ''}" style="background:${t.color||'#111'}"${a.cover ? ` onclick="openImageLightbox('${a.cover.replace(/'/g,"\\'")}', '${(a.title||'').replace(/'/g,"\\'")}')"` : ''}>
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
+      ${a.cover ? `<span class="zoom-hint">🔍 Ver flyer</span>` : ''}
+    </div>
+    <div class="detail-title">${a.title}</div>
+    <div class="detail-cat">${t.icon||''} ${t.label}</div>
+    <div class="event-badges">
+      <span class="badge ${a.isFree ? 'free' : 'price'}">${a.isFree ? '● Entrada gratuita' : (priceLabel(a) ? '● ' + priceLabel(a) : '● Consultar precio')}</span>
+      ${a.requiresRegistration ? '<span class="badge price">● Requiere inscripción</span>' : ''}
+    </div>
+
+    <div class="detail-block">
+      <h3>Cuándo</h3>
+      <p>${fmtDateRange(a)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</p>
+    </div>
+
+    <div class="detail-block hidden" id="actScheduleBlock">
+      <h3>Cronograma</h3>
+      <div class="list"></div>
+    </div>
+
+    ${(a.desc || a.shortDesc) ? `<div class="detail-block">
+      <h3>Descripción</h3>
+      <p>${a.desc || a.shortDesc}</p>
+    </div>` : ''}
+
+    <div class="detail-block">
+      <h3>Lugar y contacto</h3>
+      ${a.address ? `<div class="detail-row"><span class="ic">📍</span>${isAddressUrl(a.address) ? `<a href="${a.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : a.address}</div>` : ''}
+      ${orgBiz || a.isOfficial || a.contactName ? `<div class="detail-row"><span class="ic">🏪</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(a))}</div>` : ''}
+      ${a.phone ? `<div class="detail-row"><span class="ic">📞</span>${a.phone}</div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${a.website}</a></div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span><a href="${igUrl}" target="_blank" rel="noopener">${a.instagram}</a></div>` : ''}
+      ${a.capacity ? `<div class="detail-row"><span class="ic">👥</span>Cupo limitado: ${a.capacity} personas</div>` : ''}
+    </div>
+
+    <div class="cta-btns">
+      ${a.whatsapp ? `<a class="wsp" href="${waLink(a.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+      ${isAddressUrl(a.address) ? `<a class="map" href="${a.address}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ((a.lat && a.lng) ? `<a class="map" href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (a.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(a.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''))}
+    </div>
+    <div class="cta-btns" style="margin-top:10px;">
+      <a class="map" style="flex:1;" onclick="shareActivity('${a.id}')">📤 Compartir</a>
+      <a class="map" style="flex:1;" href="${eventIcsHref(a)}" download="${(a.title||'actividad').replace(/[^a-z0-9]+/gi,'-')}.ics">📅 Agendar</a>
+    </div>
+    ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${a.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
+
+    ${a.cover ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
+      <span class="img-lightbox-close" onclick="closeImageLightbox()">✕</span>
+      <img id="imgLightboxImg" src="${a.cover}" alt="${a.title}" onclick="event.stopPropagation()">
+    </div>` : ''}
+  `;
 }
 
 function renderNovedades(){

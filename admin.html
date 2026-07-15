@@ -158,6 +158,11 @@
   <h1 id="evAdminFormTitle">Nuevo evento</h1>
 </div>
 
+<div id="actAdminFullHeader" class="evad-full-header hidden">
+  <button type="button" class="evad-back-btn" id="actAdminBackBtn" aria-label="Volver">←</button>
+  <h1 id="actAdminFormTitle">Nueva actividad</h1>
+</div>
+
 <div class="container">
 
   <div id="alert" class="alert"></div>
@@ -165,6 +170,7 @@
   <div class="section-tabs">
     <button id="mainTabBusinesses" class="active">🏪 Comercios</button>
     <button id="mainTabEvents">🎉 Eventos</button>
+    <button id="mainTabActivities">🏅 Actividades</button>
     <button id="mainTabNovedades">📰 Novedades</button>
     <button id="mainTabFeatured">⭐ Destacado</button>
     <button id="mainTabPlaces">📍 Lugares</button>
@@ -578,6 +584,240 @@
   </div>
   <!-- fin eventsAdminSection -->
 
+  <!-- ===== SECCIÓN ACTIVIDADES (admin) =====
+       Calcada de la sección Eventos de arriba (mismo formulario completo:
+       portada con foco, secciones colapsables, preview editable en vivo,
+       recurrencia, cronograma, precio/inscripción, destacados). Solo el
+       municipio carga actividades, así que no hay "evento oficial" ni
+       ficha organizadora obligatoria — la categoría es una sola etiqueta
+       fija (Deportiva / Cultural) en vez de la tabla de categorías. -->
+  <div id="activitiesAdminSection" class="hidden">
+
+    <div id="activitiesAdminListView">
+      <div class="tabs" id="actAdminStatusTabs">
+        <button class="tab active" data-actstatus="published">Publicadas <span class="tab-count" data-count-for="published">0</span></button>
+        <button class="tab" data-actstatus="pending">Pendientes <span class="tab-count" data-count-for="pending">0</span></button>
+        <button class="tab" data-actstatus="featured">Destacadas <span class="tab-count" data-count-for="featured">0</span></button>
+        <button class="tab" data-actstatus="finished">Finalizadas <span class="tab-count" data-count-for="finished">0</span></button>
+        <button class="tab" data-actstatus="hidden">Ocultas <span class="tab-count" data-count-for="hidden">0</span></button>
+        <button class="tab" data-actstatus="rejected">Rechazadas <span class="tab-count" data-count-for="rejected">0</span></button>
+        <button class="tab" data-actstatus="all">Todas <span class="tab-count" data-count-for="all">0</span></button>
+      </div>
+
+      <div class="row-2" style="margin-bottom:10px;">
+        <select id="actAdminTagFilter">
+          <option value="">Todas las etiquetas</option>
+          <option value="deportiva">🏅 Deportiva</option>
+          <option value="cultural">🎭 Cultural</option>
+        </select>
+        <input type="text" id="actAdminOrgSearch" placeholder="Buscar por organizador o título...">
+      </div>
+      <input type="date" id="actAdminDateFilter" style="margin-bottom:14px;">
+
+      <button class="btn btn-primary btn-small" id="newActivityBtn" style="margin-bottom:14px;">+ Crear actividad</button>
+
+      <div id="actAdminList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+
+    <div id="activitiesAdminFormView" class="hidden">
+      <div class="evad-form-page">
+        <div class="card">
+        <form id="actAdminForm">
+          <input type="hidden" id="actad_id">
+
+          <div class="evad-preview-wrap">
+            <span class="evad-preview-status hidden" id="actadPreviewStatus"></span>
+            <div id="actadPreview" class="evad-preview"></div>
+          </div>
+
+          <div id="actadOwnerInfo" class="evad-owner-info hidden"></div>
+
+          <div class="form-section">
+            <div class="form-toggle-row" id="actadBasicToggle"><span class="arrow">▸</span> <span class="n">📋</span> Información básica</div>
+            <div id="actadBasicWrap" class="hidden">
+              <label for="actad_business_search">Ficha organizadora (opcional)</label>
+              <div class="autocomplete-wrap">
+                <input type="text" id="actad_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
+                <input type="hidden" id="actad_business_id">
+                <div id="actad_business_results" class="autocomplete-results hidden"></div>
+              </div>
+              <p class="field-hint">Dejalo vacío si la organiza directamente el municipio.</p>
+
+              <label for="actad_title">Título de la actividad *</label>
+              <input type="text" id="actad_title" required>
+
+              <label for="actad_tag">Etiqueta *</label>
+              <select id="actad_tag" required>
+                <option value="">Seleccioná una etiqueta</option>
+                <option value="deportiva">🏅 Deportiva</option>
+                <option value="cultural">🎭 Cultural</option>
+              </select>
+
+              <label for="actad_short_description">Descripción corta</label>
+              <input type="text" id="actad_short_description" maxlength="140">
+
+              <label for="actad_description">Descripción completa</label>
+              <textarea id="actad_description"></textarea>
+            </div>
+          </div>
+
+          <!-- La foto de portada se elige y encuadra directamente desde la previsualización de arriba. -->
+          <input type="hidden" id="actad_cover_image">
+          <input type="hidden" id="actad_cover_focal_x" value="50">
+          <input type="hidden" id="actad_cover_focal_y" value="50">
+          <input type="file" id="actadPhotoInput" accept="image/*" class="hidden">
+
+          <div class="form-section">
+            <div class="form-toggle-row" id="actadGalleryToggle"><span class="arrow">▸</span> <span class="n">🖼️</span> Galería adicional (opcional)</div>
+            <div id="actadGalleryWrap" class="hidden">
+              <label for="actad_gallery">URLs separadas por coma</label>
+              <input type="text" id="actad_gallery">
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-toggle-row" id="actadWhenToggle"><span class="arrow">▸</span> <span class="n">📅</span> Fecha y horario</div>
+            <div id="actadWhenWrap" class="hidden">
+              <div class="row-2">
+                <div>
+                  <label for="actad_start_date">Fecha *</label>
+                  <input type="date" id="actad_start_date" required>
+                </div>
+                <div>
+                  <label for="actad_start_time">Horario</label>
+                  <input type="time" id="actad_start_time">
+                </div>
+              </div>
+
+              <div class="form-toggle-row" id="actadDateToggle"><span class="arrow">▸</span> Personalizar fecha de fin, horario de fin y repetición</div>
+              <div id="actadDateAdvancedWrap" class="hidden">
+                <div class="row-2">
+                  <div>
+                    <label for="actad_end_date">Fecha de finalización</label>
+                    <input type="date" id="actad_end_date">
+                  </div>
+                  <div>
+                    <label for="actad_end_time">Horario de finalización</label>
+                    <input type="time" id="actad_end_time">
+                  </div>
+                </div>
+
+                <div id="actad_recurrence_section">
+                  <label for="actad_recurrence_type">Repetición</label>
+                  <select id="actad_recurrence_type">
+                    <option value="none">No se repite</option>
+                    <option value="weekly_fri">Todos los viernes</option>
+                    <option value="weekly_sat">Todos los sábados</option>
+                    <option value="weekend">Todos los fines de semana</option>
+                    <option value="weekly">Una vez por semana</option>
+                    <option value="custom">Fechas específicas</option>
+                  </select>
+                  <p class="field-hint">Genera una actividad por cada fecha que coincida; se puede editar cada una por separado después.</p>
+                  <div id="actad_recurrence_until_wrap" class="hidden">
+                    <label for="actad_recurrence_until">Repetir hasta</label>
+                    <input type="date" id="actad_recurrence_until">
+                  </div>
+                  <div id="actad_recurrence_custom_wrap" class="hidden">
+                    <label for="actad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
+                    <textarea id="actad_recurrence_dates"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-toggle-row" id="actadLocationToggle"><span class="arrow">▸</span> <span class="n">📍</span> Ubicación y contacto</div>
+            <div id="actadLocationWrap" class="hidden">
+              <label for="actad_address">Dirección o link de Google Maps</label>
+              <input type="text" id="actad_address" placeholder="Av. Costanera 123, o pegá un link de Google Maps">
+              <p class="field-hint">Podés escribir la dirección o directamente pegar el link que te da Google Maps al compartir la ubicación.</p>
+
+              <div class="row-2">
+                <div>
+                  <label for="actad_phone">Teléfono</label>
+                  <input type="tel" id="actad_phone">
+                </div>
+                <div>
+                  <label for="actad_whatsapp">WhatsApp</label>
+                  <input type="tel" id="actad_whatsapp">
+                </div>
+              </div>
+
+              <div class="row-2">
+                <div>
+                  <label for="actad_instagram">Instagram</label>
+                  <input type="text" id="actad_instagram">
+                </div>
+                <div>
+                  <label for="actad_website">Sitio web</label>
+                  <input type="text" id="actad_website">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-toggle-row" id="actadPriceToggle"><span class="arrow">▸</span> <span class="n">💰</span> Precio e inscripción</div>
+            <div id="actadPriceWrap" class="hidden">
+              <label style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="actad_is_free" style="width:auto;">
+                <span style="font-weight:600; color:var(--muted); font-size:14px;">Entrada gratuita</span>
+              </label>
+              <div id="actad_price_wrap">
+                <label for="actad_price">Precio</label>
+                <input type="number" id="actad_price" min="0">
+              </div>
+
+              <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+                <input type="checkbox" id="actad_requires_registration" style="width:auto;">
+                <span style="font-weight:600; color:var(--muted); font-size:14px;">Requiere inscripción</span>
+              </label>
+              <div id="actad_registration_wrap" class="hidden">
+                <label for="actad_registration_url">Enlace de inscripción</label>
+                <input type="text" id="actad_registration_url">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-toggle-row" id="actadStatusToggle"><span class="arrow">▸</span> <span class="n">⚙️</span> Estado y visibilidad</div>
+            <div id="actadStatusWrap" class="hidden">
+              <label for="actad_status">Estado</label>
+              <select id="actad_status">
+                <option value="draft">Borrador</option>
+                <option value="pending">Pendiente de revisión</option>
+                <option value="approved">Aprobado</option>
+                <option value="published">Publicado</option>
+                <option value="needs_changes">Requiere modificaciones</option>
+                <option value="rejected">Rechazado</option>
+                <option value="finished">Finalizado</option>
+                <option value="hidden">Oculto</option>
+              </select>
+
+              <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+                <input type="checkbox" id="actad_is_featured" style="width:auto;">
+                <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacada (aparece en el carrusel superior de Actividades)</span>
+              </label>
+              <div id="actad_featured_order_wrap">
+                <label for="actad_featured_order">Orden entre destacadas (menor = primero)</label>
+                <input type="number" id="actad_featured_order" value="0">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="actAdminSaveBtn">Guardar actividad</button>
+          <button type="button" class="btn btn-secondary" id="actAdminCancelBtn">Cancelar</button>
+        </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin activitiesAdminSection -->
+
   <!-- ===== SECCIÓN NOVEDADES (admin) ===== -->
   <div id="novedadesAdminSection" class="hidden">
 
@@ -926,6 +1166,7 @@
 <script src="js/supabaseClient.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-events.js"></script>
+<script src="js/admin-activities.js"></script>
 <script src="js/admin-novedades.js"></script>
 <script src="js/admin-photo.js"></script>
 <script src="js/admin-featured.js"></script>
