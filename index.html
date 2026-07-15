@@ -568,7 +568,30 @@ async function loadData(){
   const { data: sessionData } = await supabaseClient.auth.getSession();
   hasSession = !!sessionData.session;
 
+  await loadFeaturedCards();
   await loadAgendaData();
+}
+
+/* ============ SECCIÓN "DESTACADO" (antes "Descuentos imperdibles") ============ */
+let FEATURED_CARDS = [];
+
+async function loadFeaturedCards(){
+  const { data, error } = await supabaseClient
+    .from('featured_cards')
+    .select('*, businesses(id, legacy_id, name, category_id)')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (error) { FEATURED_CARDS = []; return; }
+
+  FEATURED_CARDS = (data || []).map(f => ({
+    id: f.id,
+    title: f.title,
+    subtitle: f.subtitle || '',
+    image: f.image_url || '',
+    business: f.businesses ? { id: f.businesses.legacy_id || f.businesses.id, name: f.businesses.name, category: f.businesses.category_id } : null,
+    externalUrl: f.external_url || ''
+  }));
 }
 
 /* ============ AGENDA DE EVENTOS: carga de datos ============ */
@@ -712,19 +735,19 @@ function bizCard(b, i){
   </div>`;
 }
 
-function promoCard(b, i){
-  const c = cat(b.category);
-  const highlight = b.top ? '★ Top de Potrero' : (b.featured ? '☆ Recomendado' : c.label);
-  const photo = photoForBusiness(b);
-  const isLogo = isLogoPlaceholder(photo);
-  return `<div class="promo-card reveal" style="transition-delay:${(i%4)*70}ms" onclick="navigate('/comercio/${b.id}')">
-    <div class="promo-img${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
-      ${photo ? `<img src="${photo}" alt="${b.name}" loading="lazy"${isLogo ? ' class="logo-fit"' : ''}>` : c.emoji}
+function promoCard(f, i){
+  const biz = f.business;
+  let onclick = '';
+  if (biz) onclick = `onclick="navigate('/comercio/${biz.id}')"`;
+  else if (f.externalUrl) onclick = `onclick="window.open('${f.externalUrl.replace(/'/g,"\\'")}', '_blank')"`;
+  return `<div class="promo-card reveal" style="transition-delay:${(i%4)*70}ms" ${onclick}>
+    <div class="promo-img" style="background:var(--ink)">
+      ${f.image ? `<img src="${f.image}" alt="${f.title}" loading="lazy">` : '⭐'}
     </div>
     <div class="promo-caption">
-      <div class="promo-name">${b.name}</div>
-      <div class="promo-highlight">${highlight}</div>
-      <div class="promo-sub">${c.label} · ${b.open ? 'Abierto ahora' : b.hours}</div>
+      ${biz ? `<div class="promo-name">${biz.name}</div>` : ''}
+      <div class="promo-highlight">${f.title}</div>
+      ${f.subtitle ? `<div class="promo-sub">${f.subtitle}</div>` : ''}
     </div>
   </div>`;
 }
@@ -925,7 +948,7 @@ function setupHomePanelFade(){
 function renderHome(){
   hideTopbar();
   setBottomnav('home');
-  const highlights = BUSINESSES.filter(b=>b.top || b.featured);
+  const highlights = FEATURED_CARDS;
   const view = document.getElementById('view');
   view.innerHTML = `
     <div class="home-panel">
@@ -948,13 +971,13 @@ function renderHome(){
       </div>
     </div>
 
-    <div class="section" style="margin-top:0;">
-      <div class="section-head"><h2>Descuentos imperdibles</h2><span class="see-all" onclick="navigate('/buscar')">ver todos</span></div>
+    ${highlights.length ? `<div class="section" style="margin-top:0;">
+      <div class="section-head"><h2>Destacado</h2></div>
       <div class="hscroll-wrap">
         <div class="hscroll" id="promoScroll">${highlights.map(promoCard).join('')}</div>
         <div class="edge-fade right" id="promoFadeRight"></div>
       </div>
-    </div>
+    </div>` : ''}
 
     <div class="section">
       <div class="section-head"><h2>Lugares para visitar</h2></div>

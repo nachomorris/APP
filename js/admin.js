@@ -92,7 +92,7 @@ async function requireAdmin() {
 
   if (isMasterEventos && !isFullAdmin) {
     // Master Eventos: solo puede ver/administrar la pestaña Eventos.
-    ['mainTabBusinesses', 'mainTabNovedades', 'mainTabUsuarios'].forEach((id) => {
+    ['mainTabBusinesses', 'mainTabNovedades', 'mainTabUsuarios', 'mainTabFeatured'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');
     });
@@ -649,6 +649,7 @@ const ADMIN_SECTION_TABS = {
   eventsAdminSection: 'mainTabEvents',
   novedadesAdminSection: 'mainTabNovedades',
   usuariosAdminSection: 'mainTabUsuarios',
+  featuredAdminSection: 'mainTabFeatured',
 };
 
 function showAdminSection(sectionId) {

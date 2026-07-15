@@ -88,6 +88,7 @@
     <button id="mainTabBusinesses" class="active">🏪 Comercios</button>
     <button id="mainTabEvents">🎉 Eventos</button>
     <button id="mainTabNovedades">📰 Novedades</button>
+    <button id="mainTabFeatured">⭐ Destacado</button>
     <button id="mainTabUsuarios">👤 Usuarios</button>
   </div>
 
@@ -526,6 +527,67 @@
   </div>
   <!-- fin novedadesAdminSection -->
 
+  <!-- ===== SECCIÓN DESTACADO (admin) ===== -->
+  <div id="featuredAdminSection" class="hidden">
+
+    <div id="featuredListView">
+      <button class="btn btn-primary btn-small" id="newFeaturedBtn" style="margin-bottom:14px;">+ Nueva tarjeta</button>
+      <div id="featuredList">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+
+    <div id="featuredFormView" class="hidden">
+      <div class="card">
+        <h2 id="featFormTitle">Editar tarjeta</h2>
+
+        <form id="featForm">
+          <input type="hidden" id="feat_id">
+
+          <label>Foto</label>
+          <div class="photo-upload-wrap">
+            <div class="photo-preview" id="featPhotoPreview">
+              <img id="featPhotoPreviewImg" style="display:none;" alt="Foto de la tarjeta">
+              <span id="featPhotoPreviewEmpty">Sin foto todavía</span>
+            </div>
+            <div>
+              <input type="file" id="featPhotoInput" accept="image/*" class="hidden">
+              <button type="button" class="btn btn-secondary btn-small" id="featChoosePhotoBtn">Elegir foto</button>
+              <p class="field-hint">Formato horizontal apaisado. Después de elegirla vas a poder ajustar el recorte.</p>
+            </div>
+          </div>
+
+          <label for="feat_title">Título *</label>
+          <input type="text" id="feat_title" required placeholder="Ej: Hasta 20% OFF">
+
+          <label for="feat_subtitle">Subtítulo (opcional)</label>
+          <input type="text" id="feat_subtitle" placeholder="Ej: Válido de lunes a jueves">
+
+          <label for="feat_business_search">Vincular a un comercio (opcional)</label>
+          <div class="autocomplete-wrap">
+            <input type="text" id="feat_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
+            <input type="hidden" id="feat_business_id">
+            <div id="feat_business_results" class="autocomplete-results hidden"></div>
+          </div>
+          <p class="field-hint">Si elegís un comercio, al tocar la tarjeta se abre su ficha.</p>
+
+          <label for="feat_external_url">O enlace externo (si no vinculaste un comercio)</label>
+          <input type="text" id="feat_external_url" placeholder="https://...">
+
+          <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+            <input type="checkbox" id="feat_is_active" style="width:auto;" checked>
+            <span style="font-weight:600; color:var(--muted); font-size:14px;">Activa (se muestra en la home)</span>
+          </label>
+
+          <button type="submit" class="btn btn-primary" id="featSaveBtn">Guardar tarjeta</button>
+          <button type="button" class="btn btn-secondary" id="featCancelBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin featuredAdminSection -->
+
   <div id="usuariosAdminSection" class="hidden">
 
     <div id="usuariosListView">
@@ -666,6 +728,21 @@
   </div>
 </div>
 
+<!-- ===== Modal: ajustar recorte de la foto de una tarjeta destacada ===== -->
+<div id="featCropperModal" class="cropper-modal hidden">
+  <div class="cropper-modal-inner">
+    <h3>Ajustá la foto</h3>
+    <p class="field-hint" style="margin-top:0;">Arrastrá para mover y usá la rueda o pellizcá para acercar/alejar.</p>
+    <div class="cropper-container-box">
+      <img id="featCropperImage">
+    </div>
+    <div class="cropper-actions">
+      <button type="button" class="btn btn-secondary" id="featCropperCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="featCropperConfirmBtn">Guardar foto</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
@@ -673,6 +750,7 @@
 <script src="js/admin-events.js"></script>
 <script src="js/admin-novedades.js"></script>
 <script src="js/admin-photo.js"></script>
+<script src="js/admin-featured.js"></script>
 <script src="js/admin-users.js"></script>
 
 </body>
