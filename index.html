@@ -1853,7 +1853,7 @@ function closeImageLightbox(){
    organizerName, isEventFinished/isEventThisWeek/isEventThisMonth,
    waLink, isAddressUrl, eventIcsHref). Ruta: /actividades y
    /actividad/:id, con su propio ícono en la barra inferior. */
-let activitiesState = { q:'', quick:'todos', tag:'todas' };
+let activitiesState = { q:'', tag:'todas' };
 
 function activityCard(a, i){
   const t = activityTag(a.tag);
@@ -1900,8 +1900,6 @@ function activeUpcomingActivities(){
 }
 
 function matchesActivitiesFilters(a){
-  if(activitiesState.quick === 'semana' && !isEventThisWeek(a)) return false;
-  if(activitiesState.quick === 'mes' && !isEventThisMonth(a)) return false;
   if(activitiesState.tag !== 'todas' && a.tag !== activitiesState.tag) return false;
   const q = activitiesState.q.trim();
   if(q){
@@ -1928,7 +1926,6 @@ function renderActividades(){
         </div>
       </div>
       <div class="filter-row" id="activitiesTagRow"></div>
-      <div class="filter-row" id="activitiesQuickRow"></div>
     </div>
 
     ${featured.length ? `
@@ -1948,10 +1945,6 @@ function renderActividades(){
     {k:'todas', l:'Todas'}, {k:'deportiva', l:'🏅 Deportivas'}, {k:'cultural', l:'🎭 Culturales'}
   ].map(f=>`<button class="filter-pill ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${f.l}</button>`).join('');
 
-  document.getElementById('activitiesQuickRow').innerHTML = [
-    {k:'semana', l:'Esta semana'}, {k:'mes', l:'Este mes'}, {k:'todos', l:'Todos'}
-  ].map(f=>`<button class="filter-pill ${activitiesState.quick===f.k?'active':''}" onclick="setActividadesQuick('${f.k}')">${f.l}</button>`).join('');
-
   document.getElementById('activitiesSearch').addEventListener('input', e=>{
     activitiesState.q = e.target.value;
     renderActividadesList();
@@ -1962,7 +1955,6 @@ function renderActividades(){
   initScrollReveal();
 }
 
-function setActividadesQuick(k){ activitiesState.quick = k; renderActividades(); }
 function setActividadesTag(k){ activitiesState.tag = k; renderActividades(); }
 
 function renderActividadesList(){
