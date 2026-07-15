@@ -559,7 +559,7 @@ function renderEvAdPreview() {
 
     <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
 
-    <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="Descripción corta (aparece en las tarjetas de la Agenda)">${escapeHtml(rawShortDesc)}</p>
+    <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="✏️ Descripción corta (aparece en las tarjetas de la Agenda)">${escapeHtml(rawShortDesc)}</p>
 
     <div class="detail-block">
       <h3>Cuándo</h3>

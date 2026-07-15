@@ -51,8 +51,9 @@
   .evad-preview-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; }
   .evad-preview-label .evad-preview-status { text-transform: none; letter-spacing: 0; color: var(--primary-dark); font-weight: 700; }
   .evad-preview-wrap {
-    max-width: 420px; margin: 0 auto 22px; padding: 16px 16px 4px; border-radius: 20px;
+    max-width: 420px; margin: 0 auto 36px; padding: 16px 16px 4px; border-radius: 20px;
     background: #f7f7f5; border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(17, 17, 17, .1);
   }
   .evad-preview { cursor: default; }
 
@@ -62,7 +63,8 @@
   .evad-preview .detail-hero .zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(17,17,17,.72); color: #fff; font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 20px; }
   .evad-preview .detail-title { font-size: 21px; font-weight: 800; margin: 0 0 4px; }
   .evad-preview .detail-cat { font-size: 13px; color: var(--primary-dark); font-weight: 700; margin-bottom: 10px; }
-  .evad-preview .evad-short-desc { font-size: 13.5px; color: var(--muted); line-height: 1.4; margin: -2px 0 14px; }
+  .evad-preview .evad-short-desc { font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.4; margin: -2px 0 20px; }
+  .evad-preview .evad-short-desc:empty::before { color: var(--primary-dark); opacity: 1; }
   .evad-preview .event-badges { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .evad-preview .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; display: inline-flex; align-items: center; gap: 3px; }
   .evad-preview .badge.free { background: var(--primary-light); color: var(--primary-dark); }
@@ -84,7 +86,7 @@
   .evad-preview .evad-editable:hover { background: rgba(0,0,0,.045); }
   .evad-preview .evad-editable:focus { background: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-light); }
   .evad-preview .evad-editable:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .75; }
-  .evad-quick-datetime { display: flex; gap: 8px; flex-wrap: wrap; }
+  .evad-quick-datetime { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
   .evad-qd-field { position: relative; }
   /* El ícono nativo de calendario/reloj (::-webkit-calendar-picker-indicator) solo existe en
      Chrome/desktop; en Safari/celular el input se ve como un cuadrado vacío. Se agrega un
