@@ -550,7 +550,7 @@ function renderEvAdPreview() {
     <div class="detail-hero editable-cover" data-ev-cover style="background:${cat.color || '#111'}">
       ${cover
         ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
-        : `<span class="evad-hero-empty">🖼️<br>Tocá para subir una foto</span>`}
+        : `<img src="images/logo-markk.png" alt="" class="evad-hero-placeholder">`}
       <span class="edit-hint">${evadPhotoUploading ? '⏳ Subiendo...' : (cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto')}</span>
     </div>
 
@@ -678,21 +678,27 @@ function evadSetupPreviewEditing() {
   });
 
   // Al salir del campo se re-renderiza una vez para normalizar (formato de
-  // precio, placeholder si quedó vacío, etc.)
+  // precio, placeholder si quedó vacío, etc.) — y también para los inputs de
+  // fecha/hora: en varios navegadores de celular 'change' se dispara MIENTRAS
+  // el selector nativo sigue abierto (por ejemplo en cada vuelta de la rueda
+  // de fecha/hora), y si ahí mismo se reconstruye el DOM el selector se
+  // cierra solo a mitad de la interacción. Por eso el re-render se posterga
+  // siempre hasta 'focusout' (cuando el selector ya se cerró de verdad).
   preview.addEventListener('focusout', (e) => {
-    const el = e.target.closest('[data-ev-field]');
-    if (!el || !el.isContentEditable) return;
-    renderEvAdPreview();
+    const editableEl = e.target.closest('[data-ev-field]');
+    if (editableEl && editableEl.isContentEditable) { renderEvAdPreview(); return; }
+    const quickEl = e.target.closest('[data-ev-quickfield]');
+    if (quickEl) { renderEvAdPreview(); }
   });
 
   // Fecha/hora de inicio: inputs nativos embebidos en la previsualización.
+  // Acá solo se sincroniza el valor real; el re-render queda para 'focusout'.
   preview.addEventListener('change', (e) => {
     const el = e.target.closest('[data-ev-quickfield]');
     if (!el) return;
     e.stopPropagation();
     const inputId = EVAD_PREVIEW_QUICK_FIELDS[el.getAttribute('data-ev-quickfield')];
     if (inputId) document.getElementById(inputId).value = el.value;
-    renderEvAdPreview();
   });
 
   // Clicks: gratis/pago, requiere inscripción, categoría, foto.

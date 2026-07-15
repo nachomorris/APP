@@ -37,8 +37,8 @@
   .admin-card dd { margin: 2px 0 0; }
   .admin-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 
-  /* Página de carga de evento: sin topbar/section-tabs, header propio y centrada */
-  .evad-form-page { max-width: 640px; margin: 28px auto 60px; }
+  /* Página de carga de evento: sin topbar/section-tabs, header propio, ancho completo */
+  .evad-form-page { max-width: 100%; margin: 28px 0 60px; }
   .evad-form-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
   .evad-back-btn {
     width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border);
@@ -77,6 +77,7 @@
   .evad-preview .detail-hero.editable-cover { cursor: pointer; touch-action: none; }
   .evad-preview .detail-hero .edit-hint { position: absolute; top: 10px; left: 10px; background: rgba(17,17,17,.72); color: #fff; font-size: 10.5px; font-weight: 700; padding: 5px 10px; border-radius: 20px; }
   .evad-preview .evad-hero-empty { font-size: 13px; font-weight: 700; text-align: center; line-height: 1.6; }
+  .evad-preview .detail-hero img.evad-hero-placeholder { object-fit: contain; padding: 34px; box-sizing: border-box; opacity: .5; }
   .evad-preview .detail-cat.clickable, .evad-preview .badge.clickable { cursor: pointer; }
   .evad-preview .evad-editable { outline: none; border-radius: 6px; padding: 1px 4px; margin: -1px -4px; cursor: text; transition: background .1s ease; }
   .evad-preview .evad-editable:hover { background: rgba(0,0,0,.045); }
