@@ -344,6 +344,7 @@ function evAdSetupToggle(toggleId, wrapId) {
 
 const evadGalleryToggleCtl = evAdSetupToggle('evadGalleryToggle', 'evadGalleryWrap');
 const evadDateToggleCtl = evAdSetupToggle('evadDateToggle', 'evadDateAdvancedWrap');
+const evadLocationToggleCtl = evAdSetupToggle('evadLocationToggle', 'evadLocationWrap');
 const evadPriceToggleCtl = evAdSetupToggle('evadPriceToggle', 'evadPriceWrap');
 const evadStatusToggleCtl = evAdSetupToggle('evadStatusToggle', 'evadStatusWrap');
 // Se mantienen estos nombres para no romper referencias existentes.
@@ -365,6 +366,11 @@ const evadPhotoInput = document.getElementById('evadPhotoInput');
 const evadChoosePhotoBtn = document.getElementById('evadChoosePhotoBtn');
 const evadPhotoPreviewImg = document.getElementById('evadPhotoPreviewImg');
 const evadPhotoPreviewEmpty = document.getElementById('evadPhotoPreviewEmpty');
+const evadPhotoPreview = document.getElementById('evadPhotoPreview');
+const evadFocalMarker = document.getElementById('evadFocalMarker');
+const evadFocalXInput = document.getElementById('evad_cover_focal_x');
+const evadFocalYInput = document.getElementById('evad_cover_focal_y');
+const evadCenterFocalBtn = document.getElementById('evadCenterFocalBtn');
 
 function refreshEvadPhotoUploadState(currentPhotoUrl) {
   evadCoverImageInput.value = currentPhotoUrl || '';
@@ -372,11 +378,51 @@ function refreshEvadPhotoUploadState(currentPhotoUrl) {
     evadPhotoPreviewImg.src = currentPhotoUrl;
     evadPhotoPreviewImg.style.display = 'block';
     evadPhotoPreviewEmpty.style.display = 'none';
+    evadPhotoPreview.classList.add('pickable');
+    evadCenterFocalBtn.classList.remove('hidden');
   } else {
     evadPhotoPreviewImg.style.display = 'none';
     evadPhotoPreviewEmpty.style.display = 'block';
+    evadPhotoPreview.classList.remove('pickable');
+    evadCenterFocalBtn.classList.add('hidden');
   }
 }
+
+// ---------- Punto de encuadre de la portada ----------
+// La foto se guarda siempre completa (sin recorte destructivo); este punto
+// solo controla qué parte queda visible en el recorte de la tarjeta
+// (object-position), tocando o arrastrando sobre la vista previa.
+function evadApplyFocalPoint(xPct, yPct) {
+  const x = Math.max(0, Math.min(100, xPct));
+  const y = Math.max(0, Math.min(100, yPct));
+  evadFocalXInput.value = x.toFixed(1);
+  evadFocalYInput.value = y.toFixed(1);
+  evadPhotoPreviewImg.style.objectPosition = `${x}% ${y}%`;
+  evadFocalMarker.style.left = x + '%';
+  evadFocalMarker.style.top = y + '%';
+  renderEvAdPreview();
+}
+function evadFocalPointFromEvent(evt) {
+  const rect = evadPhotoPreview.getBoundingClientRect();
+  const point = evt.touches && evt.touches[0] ? evt.touches[0] : evt;
+  const x = ((point.clientX - rect.left) / rect.width) * 100;
+  const y = ((point.clientY - rect.top) / rect.height) * 100;
+  return { x, y };
+}
+let evadFocalDragging = false;
+evadPhotoPreview.addEventListener('pointerdown', (evt) => {
+  if (!evadPhotoPreview.classList.contains('pickable')) return;
+  evadFocalDragging = true;
+  const p = evadFocalPointFromEvent(evt);
+  evadApplyFocalPoint(p.x, p.y);
+});
+evadPhotoPreview.addEventListener('pointermove', (evt) => {
+  if (!evadFocalDragging) return;
+  const p = evadFocalPointFromEvent(evt);
+  evadApplyFocalPoint(p.x, p.y);
+});
+window.addEventListener('pointerup', () => { evadFocalDragging = false; });
+evadCenterFocalBtn.addEventListener('click', () => evadApplyFocalPoint(50, 50));
 
 evadChoosePhotoBtn.addEventListener('click', () => {
   evadPhotoInput.value = '';
@@ -426,8 +472,8 @@ evadPhotoInput.addEventListener('change', async () => {
 
     const { data: pub } = supabaseClient.storage.from('event-images').getPublicUrl(path);
     refreshEvadPhotoUploadState(pub.publicUrl);
-    renderEvAdPreview();
-    showAlert('Foto lista. No te olvides de guardar el evento.', 'success');
+    evadApplyFocalPoint(50, 50); // foto nueva: arranca centrada, se puede ajustar tocando la preview
+    showAlert('Foto lista. Tocá la preview para elegir el encuadre y no te olvides de guardar el evento.', 'success');
   } catch (err) {
     showAlert('No se pudo subir la foto: ' + err.message, 'error');
   } finally {
@@ -515,9 +561,12 @@ function renderEvAdPreview() {
   const statusEl = document.getElementById('evadPreviewStatus');
   if (statusEl) statusEl.textContent = evStatusLabel(status).text;
 
+  const focalX = parseFloat(evadFocalXInput.value) || 50;
+  const focalY = parseFloat(evadFocalYInput.value) || 50;
+
   preview.innerHTML = `
     <div class="detail-hero" style="background:${cat.color || '#111'}">
-      ${cover ? `<img src="${escapeHtml(cover)}" alt="">` : (cat.icon || '🎉')}
+      ${cover ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">` : (cat.icon || '🎉')}
       ${cover ? '<span class="zoom-hint">🔍 Ver flyer</span>' : ''}
     </div>
     <div class="detail-title">${escapeHtml(title)}</div>
@@ -561,6 +610,7 @@ function evAdResetForm() {
   document.getElementById('evad_recurrence_section').classList.remove('hidden'); // solo se oculta al editar
   evadGalleryToggleCtl.setOpen(false);
   evadDateToggleCtl.setOpen(false);
+  evadLocationToggleCtl.setOpen(false);
   evadPriceToggleCtl.setOpen(false);
   evadStatusToggleCtl.setOpen(false);
   evadBusinessSearch.disabled = false;
@@ -568,6 +618,7 @@ function evAdResetForm() {
   document.getElementById('evadOwnerInfo').classList.add('hidden');
   evadPhotoFolderId = null;
   refreshEvadPhotoUploadState('');
+  evadApplyFocalPoint(50, 50);
 }
 
 document.getElementById('newOfficialEventBtn').addEventListener('click', () => {
@@ -594,6 +645,7 @@ function openEvAdminForm(e) {
   document.getElementById('evad_description').value = e.description || '';
   evadCategorySelect.value = e.category_id || '';
   refreshEvadPhotoUploadState(e.cover_image || '');
+  evadApplyFocalPoint(e.cover_focal_x != null ? e.cover_focal_x : 50, e.cover_focal_y != null ? e.cover_focal_y : 50);
   document.getElementById('evad_gallery').value = (e.gallery || []).join(', ');
   if ((e.gallery || []).length) { evadGalleryWrap.classList.remove('hidden'); evadGalleryToggle.classList.add('open'); }
   document.getElementById('evad_start_date').value = e.start_date || '';
@@ -621,6 +673,7 @@ function openEvAdminForm(e) {
   // para no esconder información relevante al editar un evento existente.
   const hasCustomDate = !!(e.end_date && e.end_date !== e.start_date) || !!e.end_time || !!e.recurrence_group_id;
   evadDateToggleCtl.setOpen(hasCustomDate);
+  evadLocationToggleCtl.setOpen(!!(e.address || e.phone || e.whatsapp || e.instagram || e.website));
   evadPriceToggleCtl.setOpen(!e.is_free || !!e.requires_registration);
   evadStatusToggleCtl.setOpen(true); // al editar siempre conviene ver estado/destacado
 
@@ -701,6 +754,8 @@ evAdminForm.addEventListener('submit', async (e) => {
     description: document.getElementById('evad_description').value.trim(),
     category_id: evadCategorySelect.value,
     cover_image: document.getElementById('evad_cover_image').value.trim(),
+    cover_focal_x: parseFloat(evadFocalXInput.value) || 50,
+    cover_focal_y: parseFloat(evadFocalYInput.value) || 50,
     gallery: document.getElementById('evad_gallery').value.split(',').map((s) => s.trim()).filter(Boolean),
     start_time: document.getElementById('evad_start_time').value || null,
     end_time: document.getElementById('evad_end_time').value || null,

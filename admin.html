@@ -92,6 +92,14 @@
     color: var(--muted); font-size: 13px; margin-bottom: 10px;
   }
   .evad-photo-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .evad-photo-preview.pickable { cursor: crosshair; touch-action: none; }
+  .evad-focal-marker {
+    position: absolute; width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.55), 0 3px 8px rgba(0,0,0,.35);
+    transform: translate(-50%, -50%); pointer-events: none; display: none;
+  }
+  .evad-photo-preview.pickable .evad-focal-marker { display: block; }
+  .evad-focal-hint { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 </style>
 </head>
 <body>
@@ -379,11 +387,17 @@
             <div class="evad-photo-preview" id="evadPhotoPreview">
               <img id="evadPhotoPreviewImg" style="display:none;" alt="Foto del evento">
               <span id="evadPhotoPreviewEmpty">Sin foto todavía</span>
+              <div class="evad-focal-marker" id="evadFocalMarker"></div>
             </div>
             <input type="hidden" id="evad_cover_image">
+            <input type="hidden" id="evad_cover_focal_x" value="50">
+            <input type="hidden" id="evad_cover_focal_y" value="50">
             <input type="file" id="evadPhotoInput" accept="image/*" class="hidden">
-            <button type="button" class="btn btn-secondary btn-small" id="evadChoosePhotoBtn">Elegir foto</button>
-            <p class="field-hint">En la tarjeta se ve recortada, pero al entrar a verla se muestra completa, sin recortar.</p>
+            <div class="evad-focal-hint">
+              <button type="button" class="btn btn-secondary btn-small" id="evadChoosePhotoBtn">Elegir foto</button>
+              <button type="button" class="btn btn-secondary btn-small hidden" id="evadCenterFocalBtn">Centrar encuadre</button>
+            </div>
+            <p class="field-hint">Tocá o arrastrá sobre la foto para elegir qué parte se ve en la tarjeta. En la tarjeta se ve recortada, pero al entrar a verla se muestra siempre completa, sin recortar.</p>
 
             <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow">▸</span> Galería adicional (opcional)</div>
             <div id="evadGalleryWrap" class="hidden">
@@ -443,31 +457,32 @@
           </div>
 
           <div class="form-section">
-            <h3><span class="n">📍</span> Ubicación y contacto</h3>
+            <div class="form-toggle-row" id="evadLocationToggle"><span class="arrow">▸</span> <span class="n">📍</span> Ubicación y contacto</div>
+            <div id="evadLocationWrap" class="hidden">
+              <label for="evad_address">Dirección o link de Google Maps</label>
+              <input type="text" id="evad_address" placeholder="Av. Costanera 123, o pegá un link de Google Maps">
+              <p class="field-hint">Podés escribir la dirección o directamente pegar el link que te da Google Maps al compartir la ubicación.</p>
 
-            <label for="evad_address">Dirección o link de Google Maps</label>
-            <input type="text" id="evad_address" placeholder="Av. Costanera 123, o pegá un link de Google Maps">
-            <p class="field-hint">Podés escribir la dirección o directamente pegar el link que te da Google Maps al compartir la ubicación.</p>
+              <div class="row-2">
+                <div>
+                  <label for="evad_phone">Teléfono</label>
+                  <input type="tel" id="evad_phone">
+                </div>
+                <div>
+                  <label for="evad_whatsapp">WhatsApp</label>
+                  <input type="tel" id="evad_whatsapp">
+                </div>
+              </div>
 
-            <div class="row-2">
-              <div>
-                <label for="evad_phone">Teléfono</label>
-                <input type="tel" id="evad_phone">
-              </div>
-              <div>
-                <label for="evad_whatsapp">WhatsApp</label>
-                <input type="tel" id="evad_whatsapp">
-              </div>
-            </div>
-
-            <div class="row-2">
-              <div>
-                <label for="evad_instagram">Instagram</label>
-                <input type="text" id="evad_instagram">
-              </div>
-              <div>
-                <label for="evad_website">Sitio web</label>
-                <input type="text" id="evad_website">
+              <div class="row-2">
+                <div>
+                  <label for="evad_instagram">Instagram</label>
+                  <input type="text" id="evad_instagram">
+                </div>
+                <div>
+                  <label for="evad_website">Sitio web</label>
+                  <input type="text" id="evad_website">
+                </div>
               </div>
             </div>
           </div>

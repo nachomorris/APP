@@ -616,6 +616,8 @@ async function loadAgendaData(){
     shortDesc: e.short_description || '',
     desc: e.description || '',
     cover: e.cover_image || '',
+    coverFocalX: e.cover_focal_x != null ? e.cover_focal_x : 50,
+    coverFocalY: e.cover_focal_y != null ? e.cover_focal_y : 50,
     gallery: e.gallery || [],
     category: e.category_id,
     tags: e.tags || [],
@@ -1350,7 +1352,7 @@ function agendaCard(e, i){
   const d = parseYMD(e.startDate);
   return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/evento/${e.id}')">
     <div class="cover" style="background:${c.color || '#111'}">
-      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy">` : (c.icon||'🎉')}
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : (c.icon||'🎉')}
       <div class="date-badge"><span class="day">${d.getDate()}</span><span class="mon">${MESES_ES[d.getMonth()].slice(0,3)}</span></div>
       ${e.isFree ? `<span class="free-tag">Gratis</span>` : ''}
     </div>
@@ -1369,7 +1371,7 @@ function featuredCard(e){
   const c = eventCat(e.category);
   return `<div class="featured-card" onclick="navigate('/evento/${e.id}')">
     <div class="cover" style="background:${c.color || '#111'}">
-      ${e.cover ? `<img src="${e.cover}" alt="${e.title}">` : (c.icon||'🎉')}
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : (c.icon||'🎉')}
       <span class="star">★ Destacado</span>
     </div>
     <div class="cap">
@@ -1575,7 +1577,7 @@ function renderEventoDetail(id){
 
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${e.cover ? ' zoomable' : ''}" style="background:${c.color||'#111'}"${e.cover ? ` onclick="openImageLightbox('${e.cover.replace(/'/g,"\\'")}', '${(e.title||'').replace(/'/g,"\\'")}')"` : ''}>
-      ${e.cover ? `<img src="${e.cover}" alt="${e.title}">` : (c.icon||'🎉')}
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : (c.icon||'🎉')}
       ${e.cover ? `<span class="zoom-hint">🔍 Ver flyer</span>` : ''}
     </div>
     <div class="detail-title">${e.title}</div>
