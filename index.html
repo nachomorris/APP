@@ -988,13 +988,31 @@ function renderChamberHome(){
     <div class="home-panel">
       <div class="panel-topbar">
         <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
+        <div class="searchbar" style="cursor:pointer;" onclick="navigate('/buscar')">
+          <span>🔎</span><span style="color:var(--muted);font-size:12px;">Buscá tu comercio</span>
+        </div>
+      </div>
+      <div class="cat-grid-wrap">
+        <div class="edge-fade on-panel left is-hidden" id="catFadeLeft"></div>
+        <button class="scroll-chevron left is-hidden" id="catChevronLeft" onclick="scrollCatGrid(-1)" aria-label="Categorías anteriores"></button>
+        <div class="cat-grid" id="catGrid">
+          ${CATEGORIES.map(c=>`<div class="cat-chip" onclick="navigate('/categoria/${c.slug}')">
+            <div class="emoji">${c.emoji}</div><span class="label">${c.label}</span>
+          </div>`).join('')}
+        </div>
+        <div class="edge-fade on-panel right" id="catFadeRight"></div>
+        <button class="scroll-chevron right" id="catChevronRight" onclick="scrollCatGrid(1)" aria-label="Más categorías"></button>
       </div>
     </div>
+
     <div class="section" style="margin-top:0;">
       <div class="section-head"><h2>${info.label}</h2></div>
       <div class="biz-list">${BUSINESSES.length ? BUSINESSES.map(bizCard).join('') : '<div class="empty-state">Todavía no hay comercios cargados en esta cámara.</div>'}</div>
     </div>
   `;
+  setupHomePanelFade();
+  setupCatChevrons();
+  lockHorizontalSwipe('catGrid');
   initScrollReveal();
 }
 
