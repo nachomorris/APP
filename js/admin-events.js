@@ -902,6 +902,15 @@ evAdminForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearAlert();
 
+  // Si la foto todavía se está subiendo, no dejar guardar: si el formulario
+  // se envía antes de que termine, el evento se guarda sin la portada (el
+  // campo cover_image todavía está vacío) y recién después aparece el
+  // aviso de "Foto lista", lo que resulta confuso.
+  if (evadPhotoUploading) {
+    showAlert('Esperá a que termine de subir la foto antes de guardar.', 'error');
+    return;
+  }
+
   const id = document.getElementById('evad_id').value;
   const startDate = document.getElementById('evad_start_date').value;
   // Si no se personalizó la fecha de fin (sección oculta por defecto), el evento dura un solo día.
