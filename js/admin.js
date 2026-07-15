@@ -522,8 +522,7 @@ function openEditForm(b) {
   document.getElementById('website').value = b.website || '';
   document.getElementById('email').value = b.email || '';
   document.getElementById('facebook').value = b.facebook || '';
-  document.getElementById('lat').value = (b.lat !== null && b.lat !== undefined) ? b.lat : '';
-  document.getElementById('lng').value = (b.lng !== null && b.lng !== undefined) ? b.lng : '';
+  document.getElementById('maps_link').value = b.maps_link || '';
   document.getElementById('open_now').checked = b.open !== false;
   document.getElementById('featured').checked = !!b.featured;
   chamberSelect.value = getChamber(b);
@@ -569,8 +568,7 @@ businessForm.addEventListener('submit', async (e) => {
     website: document.getElementById('website').value.trim(),
     email: document.getElementById('email').value.trim(),
     facebook: document.getElementById('facebook').value.trim(),
-    lat: document.getElementById('lat').value.trim() ? parseFloat(document.getElementById('lat').value.trim()) : null,
-    lng: document.getElementById('lng').value.trim() ? parseFloat(document.getElementById('lng').value.trim()) : null,
+    maps_link: document.getElementById('maps_link').value.trim() || null,
     open: document.getElementById('open_now').checked,
     featured: document.getElementById('featured').checked,
     amenities: Array.from(document.querySelectorAll('.amenity-check:checked, .gastro-tag-check:checked')).map((cb) => cb.value),

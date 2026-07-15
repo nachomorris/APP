@@ -376,8 +376,7 @@ async function openForm(businessId) {
   document.getElementById('whatsapp').value = data.whatsapp || '';
   document.getElementById('instagram').value = data.instagram || '';
   document.getElementById('website').value = data.website || '';
-  document.getElementById('lat').value = (data.lat !== null && data.lat !== undefined) ? data.lat : '';
-  document.getElementById('lng').value = (data.lng !== null && data.lng !== undefined) ? data.lng : '';
+  document.getElementById('maps_link').value = data.maps_link || '';
   document.getElementById('open_now').checked = data.open !== false;
   categorySelect.value = data.category_id || '';
   refreshSubcategoryOptions(data.category_id, data.subcategory_id);
@@ -414,8 +413,7 @@ businessForm.addEventListener('submit', async (e) => {
     whatsapp: document.getElementById('whatsapp').value.trim(),
     instagram: document.getElementById('instagram').value.trim(),
     website: document.getElementById('website').value.trim(),
-    lat: document.getElementById('lat').value.trim() ? parseFloat(document.getElementById('lat').value.trim()) : null,
-    lng: document.getElementById('lng').value.trim() ? parseFloat(document.getElementById('lng').value.trim()) : null,
+    maps_link: document.getElementById('maps_link').value.trim() || null,
     open: document.getElementById('open_now').checked,
     amenities: Array.from(document.querySelectorAll('.amenity-check:checked, .gastro-tag-check:checked')).map((cb) => cb.value),
   };

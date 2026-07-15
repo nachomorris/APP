@@ -438,11 +438,6 @@ let hasSession = false;
 
 let NOVEDADES = [];
 
-const SAMPLE_PHOTOS = [
-  "https://images.pexels.com/photos/1639562/pexels-photo-1639562.jpeg?auto=compress&cs=tinysrgb&w=800",
-  "https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=800"
-];
-
 let CATEGORIES = [];
 let SUBCATEGORIES = {};
 let BUSINESSES = [];
@@ -533,6 +528,7 @@ async function loadData(){
     featured: !!b.featured,
     lat: b.lat,
     lng: b.lng,
+    mapsLink: b.maps_link || '',
     photo: (b.images && b.images[0]) ? b.images[0] : null,
     amenities: Array.isArray(b.amenities) ? b.amenities : []
   }));
@@ -677,16 +673,11 @@ function allItems(){
 function getBusiness(id){ return BUSINESSES.find(b=>b.id===id); }
 function getPlace(id){ return PLACES.find(p=>p.id===id); }
 
-// Elige siempre la misma foto de ejemplo para un mismo comercio (según su id),
-// sin importar en qué lista/orden aparezca — así la card y la ficha coinciden.
+// Mientras el dueño no cargue una foto propia desde el panel, se muestra
+// el logo como placeholder (igual que en la carga de eventos).
 function photoForBusiness(b){
   if(b.photo) return b.photo;
-  // Alojamiento todavía no tiene fotos reales cargadas: mostramos el logo
-  // como placeholder hasta que se suba una foto propia desde el panel del comercio.
-  if(b.category === 'alojamiento') return 'images/logo.png';
-  let hash = 0;
-  for(let i=0;i<b.id.length;i++){ hash = (hash*31 + b.id.charCodeAt(i)) >>> 0; }
-  return SAMPLE_PHOTOS[hash % SAMPLE_PHOTOS.length];
+  return 'images/logo-markk.png';
 }
 
 // Devuelve las subcategorías de un comercio como array, sin importar si
@@ -699,7 +690,7 @@ function subcatsOf(b){
 
 // El placeholder (logo) no debe recortarse como una foto real: se ve
 // completo y con fondo blanco en vez de "cover" sobre el color de la categoría.
-function isLogoPlaceholder(photo){ return photo === 'images/logo.png'; }
+function isLogoPlaceholder(photo){ return photo === 'images/logo-markk.png'; }
 
 function bizThumb(b){
   const c = cat(b.category);
@@ -1207,9 +1198,19 @@ function renderComercio(id){
 
     <div class="cta-btns">
       ${b.phone ? `<a class="wsp" href="https://wa.me/${b.phone.replace(/[^0-9]/g,'')}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
-      <a class="map" href="https://www.google.com/maps?q=${b.lat},${b.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>
+      ${mapsUrlFor(b) ? `<a class="map" href="${mapsUrlFor(b)}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''}
     </div>
   `;
+}
+
+// Botón "Cómo llegar": prioriza el link de Google Maps cargado en la
+// ficha; si no hay, usa lat/lng viejas (fichas cargadas antes de este
+// cambio); si no hay nada, busca por la dirección de texto.
+function mapsUrlFor(b){
+  if(b.mapsLink) return b.mapsLink;
+  if(b.lat && b.lng) return `https://www.google.com/maps?q=${b.lat},${b.lng}`;
+  if(b.address) return `https://www.google.com/maps?q=${encodeURIComponent(b.address + ', Potrero de los Funes')}`;
+  return '';
 }
 
 function instagramUrl(v){
