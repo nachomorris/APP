@@ -259,9 +259,6 @@
         <label for="address">Dirección</label>
         <input type="text" id="address">
 
-        <label for="hours">Horarios</label>
-        <input type="text" id="hours">
-
         <div class="row-2">
           <div>
             <label for="phone">Teléfono</label>
@@ -317,16 +314,17 @@
           <label style="margin-top:20px;">Etiquetas</label>
           <div class="amenities-check-grid">
             <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> 🏔️ Menú Serrano</label>
-            <label><input type="checkbox" class="gastro-tag-check" value="bna"> 🏷️ BNA</label>
+          </div>
+        </div>
+
+        <div id="benefitsWrap" class="hidden">
+          <label style="margin-top:20px;">Beneficios</label>
+          <div class="amenities-check-grid">
+            <label><input type="checkbox" class="benefit-check" value="bna"> 🏷️ Promo BNA</label>
           </div>
         </div>
 
         <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
-          <input type="checkbox" id="open_now" style="width:auto;" checked>
-          <span style="font-weight:600; color:var(--muted); font-size:14px;">Actualmente abierto</span>
-        </label>
-
-        <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
           <input type="checkbox" id="featured" style="width:auto;">
           <span style="font-weight:600; color:var(--muted); font-size:14px;">Destacado</span>
         </label>

@@ -133,9 +133,6 @@
         <label for="address">Dirección</label>
         <input type="text" id="address" placeholder="Calle y número, Potrero de los Funes">
 
-        <label for="hours">Horarios</label>
-        <input type="text" id="hours" placeholder="Ej: Lun a vie 9 a 18, sáb 9 a 13">
-
         <div class="row-2">
           <div>
             <label for="phone">Teléfono</label>
@@ -181,14 +178,15 @@
           <label style="margin-top:20px;">Etiquetas</label>
           <div class="amenities-check-grid">
             <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> 🏔️ Menú Serrano</label>
-            <label><input type="checkbox" class="gastro-tag-check" value="bna"> 🏷️ BNA</label>
           </div>
         </div>
 
-        <label style="display:flex; align-items:center; gap:8px; margin-top:20px;">
-          <input type="checkbox" id="open_now" style="width:auto;" checked>
-          <span style="font-weight:600; color:var(--muted); font-size:14px;">Actualmente abierto</span>
-        </label>
+        <div id="benefitsWrap" class="hidden">
+          <label style="margin-top:20px;">Beneficios</label>
+          <div class="amenities-check-grid">
+            <label><input type="checkbox" class="benefit-check" value="bna"> 🏷️ Promo BNA</label>
+          </div>
+        </div>
 
         <p class="field-hint" style="margin-top:16px;">Las fotos se agregan en un paso siguiente.</p>
 
@@ -201,7 +199,6 @@
       <div class="preview-label">Así se va a ver en el catálogo</div>
       <div class="preview-card">
         <div class="preview-info">
-          <div class="preview-badges" id="previewBadges"></div>
           <div class="preview-name" id="previewName">Nombre del comercio</div>
           <div class="preview-cat" id="previewCat">Categoría</div>
           <div class="preview-addr" id="previewAddr">📍 Dirección</div>

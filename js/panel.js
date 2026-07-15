@@ -117,15 +117,20 @@ function refreshSubcategoryOptions(categoryId, selectedSubcatId) {
 
 const amenitiesWrap = document.getElementById('amenitiesWrap');
 const gastroTagsWrap = document.getElementById('gastroTagsWrap');
+const benefitsWrap = document.getElementById('benefitsWrap');
 function updateAmenitiesVisibility() {
   const isAlojamiento = categorySelect.value === 'alojamiento';
   const isGastronomia = categorySelect.value === 'gastronomia';
   amenitiesWrap.classList.toggle('hidden', !isAlojamiento);
   gastroTagsWrap.classList.toggle('hidden', !isGastronomia);
+  // Beneficios (ej. Promo BNA) aplica tanto a alojamiento como a
+  // gastronomía, es una categoría aparte de servicios/etiquetas.
+  benefitsWrap.classList.toggle('hidden', !isAlojamiento && !isGastronomia);
   // limpia los checks del grupo que queda oculto, para no arrastrar
   // selecciones de una categoría a otra
   if (!isAlojamiento) document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
   if (!isGastronomia) document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
+  if (!isAlojamiento && !isGastronomia) document.querySelectorAll('.benefit-check').forEach((cb) => { cb.checked = false; });
 }
 
 categorySelect.addEventListener('change', () => {
@@ -138,7 +143,6 @@ categorySelect.addEventListener('change', () => {
 function updatePreview() {
   const name = document.getElementById('name').value.trim() || 'Nombre del comercio';
   const address = document.getElementById('address').value.trim();
-  const isOpen = document.getElementById('open_now').checked;
   const categoryMeta = allCategories.find((c) => c.id === categorySelect.value);
   const subcatLabel = subcategorySelect.options[subcategorySelect.selectedIndex]
     ? subcategorySelect.options[subcategorySelect.selectedIndex].textContent
@@ -154,18 +158,12 @@ function updatePreview() {
   const thumb = document.getElementById('previewThumb');
   thumb.textContent = categoryMeta ? (categoryMeta.icon || '🏪') : '🏪';
   thumb.style.background = categoryMeta ? (categoryMeta.color || '#111111') : '#111111';
-
-  const badges = document.getElementById('previewBadges');
-  badges.innerHTML = isOpen
-    ? '<span class="badge badge-published">● Abierto</span>'
-    : '<span class="badge badge-rejected">● Cerrado</span>';
 }
 
 ['name', 'address'].forEach((id) => {
   document.getElementById(id).addEventListener('input', updatePreview);
 });
 subcategorySelect.addEventListener('change', updatePreview);
-document.getElementById('open_now').addEventListener('change', updatePreview);
 
 // ---------- Listado de fichas ----------
 let myBusinesses = [];
@@ -344,6 +342,7 @@ async function openForm(businessId) {
   subcategorySelect.innerHTML = '<option value="">(opcional)</option>';
   document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
   document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
+  document.querySelectorAll('.benefit-check').forEach((cb) => { cb.checked = false; });
   updateAmenitiesVisibility();
 
   if (!businessId) {
@@ -371,13 +370,11 @@ async function openForm(businessId) {
   document.getElementById('name').value = data.name || '';
   document.getElementById('description').value = data.description || '';
   document.getElementById('address').value = data.address || '';
-  document.getElementById('hours').value = (data.hours && data.hours.texto) || '';
   document.getElementById('phone').value = data.phone || '';
   document.getElementById('whatsapp').value = data.whatsapp || '';
   document.getElementById('instagram').value = data.instagram || '';
   document.getElementById('website').value = data.website || '';
   document.getElementById('maps_link').value = data.maps_link || '';
-  document.getElementById('open_now').checked = data.open !== false;
   categorySelect.value = data.category_id || '';
   refreshSubcategoryOptions(data.category_id, data.subcategory_id);
   updateAmenitiesVisibility();
@@ -386,6 +383,9 @@ async function openForm(businessId) {
     cb.checked = savedAmenities.includes(cb.value);
   });
   document.querySelectorAll('.gastro-tag-check').forEach((cb) => {
+    cb.checked = savedAmenities.includes(cb.value);
+  });
+  document.querySelectorAll('.benefit-check').forEach((cb) => {
     cb.checked = savedAmenities.includes(cb.value);
   });
   if (typeof refreshPhotoUploadState === 'function') {
@@ -408,14 +408,12 @@ businessForm.addEventListener('submit', async (e) => {
     subcategory_id: subcategorySelect.value || null,
     description: document.getElementById('description').value.trim(),
     address: document.getElementById('address').value.trim(),
-    hours: { texto: document.getElementById('hours').value.trim() },
     phone: document.getElementById('phone').value.trim(),
     whatsapp: document.getElementById('whatsapp').value.trim(),
     instagram: document.getElementById('instagram').value.trim(),
     website: document.getElementById('website').value.trim(),
     maps_link: document.getElementById('maps_link').value.trim() || null,
-    open: document.getElementById('open_now').checked,
-    amenities: Array.from(document.querySelectorAll('.amenity-check:checked, .gastro-tag-check:checked')).map((cb) => cb.value),
+    amenities: Array.from(document.querySelectorAll('.amenity-check:checked, .gastro-tag-check:checked, .benefit-check:checked')).map((cb) => cb.value),
   };
 
   if (!payload.category_id) {
