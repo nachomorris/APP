@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cargar evento — Visit Potrero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .loading { text-align: center; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!--
+  Acceso directo para gente que solo tiene que cargar un evento: te
+  logueás (si hace falta) y entrás derecho al formulario de carga, sin
+  pasar por el listado ni las demás secciones del panel de admin.
+  Reutiliza admin.html?quick=evento (login + permisos + el formulario
+  ya están resueltos ahí), esto es solo la puerta de entrada.
+-->
+<div class="loading">Entrando…</div>
+
+<script>
+  window.location.replace('admin.html?quick=evento');
+</script>
+
+</body>
+</html>

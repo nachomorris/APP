@@ -49,7 +49,11 @@ function showAlert(message, type) {
   alertBox.className = 'alert show alert-' + type;
 }
 
-// Si ya hay sesión activa, mandar directo al panel (salvo que la
+// Si vino desde un link con destino propio (ej. cargar-evento.html), lo
+// respetamos; si no, el destino de siempre es panel.html.
+const redirectTo = new URLSearchParams(window.location.search).get('redirect') || 'panel.html';
+
+// Si ya hay sesión activa, mandar directo al destino (salvo que la
 // cuenta esté bloqueada, ahí se cierra la sesión).
 (async () => {
   const { data } = await supabaseClient.auth.getSession();
@@ -66,7 +70,7 @@ function showAlert(message, type) {
     return;
   }
 
-  window.location.href = 'panel.html';
+  window.location.href = redirectTo;
 })();
 
 form.addEventListener('submit', async (e) => {
@@ -109,7 +113,7 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  window.location.href = 'panel.html';
+  window.location.href = redirectTo;
 });
 </script>
 

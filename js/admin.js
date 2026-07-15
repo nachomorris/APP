@@ -66,7 +66,10 @@ let currentAdminRole = null;
 async function requireAdmin() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if (!sessionData.session) {
-    window.location.href = 'login.html';
+    // Conserva el destino (ej. admin.html?quick=evento) para volver ahí
+    // mismo después de loguearse, en vez de mandar siempre a panel.html.
+    const dest = window.location.pathname.split('/').pop() + window.location.search;
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(dest);
     return null;
   }
 
@@ -670,11 +673,25 @@ let currentAdminUser = null;
   currentAdminUser = await requireAdmin();
   if (!currentAdminUser) return;
 
-  if (currentAdminRole === 'master_eventos') {
+  // Acceso rápido (ej. desde cargar-evento.html → admin.html?quick=evento):
+  // salta el listado y cualquier otra sección, va directo al formulario de
+  // carga. Pensado para gente que solo tiene que cargar un evento ya.
+  const quickEvento = new URLSearchParams(window.location.search).get('quick') === 'evento';
+
+  if (currentAdminRole === 'master_eventos' || quickEvento) {
     // Solo administra eventos: no hace falta cargar comercios/categorías
     // de comercio, va directo a la pestaña Eventos.
     const eventsTab = document.getElementById('mainTabEvents');
     if (eventsTab) eventsTab.click();
+    if (quickEvento) {
+      // Pequeño margen para que terminen de cargar categorías/organizadores
+      // antes de abrir el formulario (si no, el desplegable de categoría
+      // aparece vacío un instante).
+      setTimeout(() => {
+        const btn = document.getElementById('newOfficialEventBtn');
+        if (btn) btn.click();
+      }, 500);
+    }
     return;
   }
 

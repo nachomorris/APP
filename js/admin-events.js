@@ -561,18 +561,18 @@ function renderEvAdPreview() {
 
     <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
 
-    <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="✏️ Descripción corta (aparece en las tarjetas de la Agenda)">${escapeHtml(rawShortDesc)}</p>
+    <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="✏️ Descripción corta">${escapeHtml(rawShortDesc)}</p>
 
     <div class="detail-block">
       <h3>Cuándo</h3>
       <div class="evad-quick-datetime">
         <div class="evad-qd-field">
+          <span class="evad-qd-label">Fecha</span>
           <input type="date" data-ev-quickfield="start_date" value="${startDate || ''}">
-          <span class="evad-qd-icon" aria-hidden="true">📅</span>
         </div>
         <div class="evad-qd-field">
+          <span class="evad-qd-label">Hora</span>
           <input type="time" data-ev-quickfield="start_time" value="${startTime ? startTime.slice(0, 5) : ''}">
-          <span class="evad-qd-icon" aria-hidden="true">🕐</span>
         </div>
       </div>
       ${endHint ? `<p class="field-hint" style="margin:6px 0 0;">${endHint}</p>` : ''}
