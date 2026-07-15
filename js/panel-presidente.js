@@ -1,8 +1,12 @@
 // ============================================================
 // Panel — sección "Mis socios" (rol presidente de cámara).
-// Solo lectura: comercios adheridos a la cámara del usuario logueado
-// (currentUserChamber, seteado en panel.js). Se carga después de
-// js/panel.js (reutiliza showAlert, clearAlert, escapeHtml, statusLabel).
+// Comercios adheridos a la cámara del usuario logueado
+// (currentUserChamber, seteado en panel.js). Se puede ver y también
+// editar la ficha completa de cada socio (reutiliza el formulario de
+// "Mis fichas" de panel.js: openForm, fichasSection). Se carga después
+// de js/panel.js y js/panel-events.js (reutiliza showAlert, clearAlert,
+// escapeHtml, statusLabel, openForm, switchMainTab, fichasSection,
+// sociosSection, mainTabFichas, mainTabSocios, returnToSocios).
 // ============================================================
 
 let sociosSectionLoaded = false;
@@ -73,7 +77,22 @@ function renderSociosList() {
           <div class="meta">${escapeHtml(b.categories ? b.categories.label : '')}${escapeHtml(subLabel)} · <span class="badge ${st.cls}">${st.text}</span></div>
           <div class="meta">${escapeHtml(b.address) || 'Sin dirección cargada'}${b.phone ? ' · ' + escapeHtml(b.phone) : ''}</div>
         </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-secondary btn-small" onclick="openSocioEditForm('${b.id}')">Editar</button>
+        </div>
       </div>
     `;
   }).join('');
+}
+
+// Abre la ficha completa de un socio en el formulario de "Mis fichas"
+// (reutiliza openForm de panel.js). Al guardar o cancelar, vuelve acá
+// en vez de al listado de fichas propias (returnToSocios, en panel.js).
+function openSocioEditForm(businessId) {
+  returnToSocios = true;
+  sociosSection.classList.add('hidden');
+  fichasSection.classList.remove('hidden');
+  mainTabSocios.classList.remove('active');
+  mainTabFichas.classList.add('active');
+  openForm(businessId);
 }

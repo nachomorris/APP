@@ -314,8 +314,21 @@ async function deleteBusiness(id) {
 document.getElementById('newBusinessBtn').addEventListener('click', () => openForm(null));
 document.getElementById('cancelBtn').addEventListener('click', () => showListView());
 
+// Cuando un presidente de cámara edita la ficha de un socio (desde
+// "Mis socios"), al guardar/cancelar tiene que volver a esa pestaña
+// en vez de al listado de "Mis fichas" (que para él está vacío).
+// Lo activa openSocioEditForm() en panel-presidente.js.
+let returnToSocios = false;
+
 function showListView() {
   formView.classList.add('hidden');
+  if (returnToSocios) {
+    returnToSocios = false;
+    if (typeof switchMainTab === 'function') switchMainTab('socios');
+    if (typeof loadSocios === 'function') loadSocios();
+    clearAlert();
+    return;
+  }
   listView.classList.remove('hidden');
   clearAlert();
 }
