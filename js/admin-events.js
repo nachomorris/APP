@@ -25,6 +25,17 @@ const evadIsOfficial = document.getElementById('evad_is_official');
 const evadIsFree = document.getElementById('evad_is_free');
 const evadRequiresRegistration = document.getElementById('evad_requires_registration');
 const evadRecurrenceType = document.getElementById('evad_recurrence_type');
+const evadTitleInput = document.getElementById('evad_title');
+
+// El título del evento se guarda siempre en mayúscula (no es solo un
+// estilo visual): se fuerza en el input del formulario a medida que se
+// escribe, conservando la posición del cursor.
+evadTitleInput.addEventListener('input', () => {
+  const start = evadTitleInput.selectionStart;
+  const end = evadTitleInput.selectionEnd;
+  evadTitleInput.value = evadTitleInput.value.toUpperCase();
+  if (start != null && end != null) evadTitleInput.setSelectionRange(start, end);
+});
 
 let evAdminSectionLoaded = false;
 
@@ -679,7 +690,11 @@ function evadSetupPreviewEditing() {
       return;
     }
     const inputId = EVAD_PREVIEW_TEXT_FIELDS[field];
-    if (inputId) document.getElementById(inputId).value = (el.innerText || el.textContent).trim();
+    if (inputId) {
+      let val = (el.innerText || el.textContent).trim();
+      if (field === 'title') val = val.toUpperCase();
+      document.getElementById(inputId).value = val;
+    }
   });
 
   // Al salir del campo se re-renderiza una vez para normalizar (formato de
@@ -929,7 +944,7 @@ evAdminForm.addEventListener('submit', async (e) => {
   const basePayload = {
     business_id: isOfficial ? null : (evadBusinessIdInput.value || null),
     is_official: isOfficial,
-    title: document.getElementById('evad_title').value.trim(),
+    title: document.getElementById('evad_title').value.trim().toUpperCase(),
     short_description: document.getElementById('evad_short_description').value.trim(),
     description: document.getElementById('evad_description').value.trim(),
     category_id: evadCategorySelect.value,
