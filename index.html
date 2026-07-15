@@ -1228,6 +1228,9 @@ function facebookUrl(v){
   if(/^https?:\/\//i.test(v)) return v;
   return 'https://facebook.com/' + v.replace(/^\//,'');
 }
+function isAddressUrl(v){
+  return /^https?:\/\//i.test((v||'').trim());
+}
 
 /* ---- LUGAR DETAIL ---- */
 function renderLugar(id){
@@ -1354,7 +1357,7 @@ function agendaCard(e, i){
     <div class="body">
       <div class="when">🗓️ ${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
       <h3>${e.title}</h3>
-      ${e.address ? `<div class="meta-row">📍 ${e.address}</div>` : ''}
+      ${(e.address && !isAddressUrl(e.address)) ? `<div class="meta-row">📍 ${e.address}</div>` : ''}
       ${e.desc || e.shortDesc ? `<div class="desc">${e.shortDesc || e.desc}</div>` : ''}
       ${org ? `<div class="org"><span>Organiza:</span> ${org}</div>` : ''}
       <span class="more-btn">Ver más →</span>
@@ -1372,7 +1375,7 @@ function featuredCard(e){
     <div class="cap">
       <div class="when">${fmtDateRange(e)}</div>
       <h3>${e.title}</h3>
-      <div class="sub">${c.label}${e.address ? ' · ' + e.address : ''}</div>
+      <div class="sub">${c.label}${(e.address && !isAddressUrl(e.address)) ? ' · ' + e.address : ''}</div>
     </div>
   </div>`;
 }
@@ -1599,7 +1602,7 @@ function renderEventoDetail(id){
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      ${e.address ? `<div class="detail-row"><span class="ic">📍</span>${e.address}</div>` : ''}
+      ${e.address ? `<div class="detail-row"><span class="ic">📍</span>${isAddressUrl(e.address) ? `<a href="${e.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : e.address}</div>` : ''}
       ${orgBiz || e.isOfficial || e.contactName ? `<div class="detail-row"><span class="ic">🏪</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(e))}</div>` : ''}
       ${e.phone ? `<div class="detail-row"><span class="ic">📞</span>${e.phone}</div>` : ''}
       ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${e.website}</a></div>` : ''}
@@ -1609,7 +1612,7 @@ function renderEventoDetail(id){
 
     <div class="cta-btns">
       ${e.whatsapp ? `<a class="wsp" href="${waLink(e.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
-      ${(e.lat && e.lng) ? `<a class="map" href="https://www.google.com/maps?q=${e.lat},${e.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (e.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(e.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : '')}
+      ${isAddressUrl(e.address) ? `<a class="map" href="${e.address}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ((e.lat && e.lng) ? `<a class="map" href="https://www.google.com/maps?q=${e.lat},${e.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (e.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(e.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''))}
     </div>
     <div class="cta-btns" style="margin-top:10px;">
       <a class="map" style="flex:1;" onclick="shareEvent('${e.id}')">📤 Compartir</a>

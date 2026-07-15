@@ -327,31 +327,44 @@ evadRecurrenceType.addEventListener('change', () => {
   document.getElementById('evad_recurrence_custom_wrap').classList.toggle('hidden', t !== 'custom');
 });
 
-// ---------- Galería adicional: colapsada por defecto, se abre con un click ----------
+// ---------- Secciones colapsables: colapsadas por defecto, se abren con un click ----------
+// Reutilizado para: galería adicional, personalizar fecha (fin/hora fin/repetición),
+// precio e inscripción, y estado y visibilidad. La idea es poder cargar un evento
+// rápido con lo mínimo, y solo entrar a estos detalles si hace falta.
+function evAdSetupToggle(toggleId, wrapId) {
+  const toggle = document.getElementById(toggleId);
+  const wrap = document.getElementById(wrapId);
+  function setOpen(open) {
+    wrap.classList.toggle('hidden', !open);
+    toggle.classList.toggle('open', open);
+  }
+  toggle.addEventListener('click', () => setOpen(wrap.classList.contains('hidden')));
+  return { setOpen, isOpen: () => !wrap.classList.contains('hidden') };
+}
+
+const evadGalleryToggleCtl = evAdSetupToggle('evadGalleryToggle', 'evadGalleryWrap');
+const evadDateToggleCtl = evAdSetupToggle('evadDateToggle', 'evadDateAdvancedWrap');
+const evadPriceToggleCtl = evAdSetupToggle('evadPriceToggle', 'evadPriceWrap');
+const evadStatusToggleCtl = evAdSetupToggle('evadStatusToggle', 'evadStatusWrap');
+// Se mantienen estos nombres para no romper referencias existentes.
 const evadGalleryToggle = document.getElementById('evadGalleryToggle');
 const evadGalleryWrap = document.getElementById('evadGalleryWrap');
-evadGalleryToggle.addEventListener('click', () => {
-  const open = evadGalleryWrap.classList.toggle('hidden') === false;
-  evadGalleryToggle.classList.toggle('open', open);
-});
 
-// ---------- Foto de portada (subir + recortar), bucket "event-images" ----------
+// ---------- Foto de portada (subir, SIN recortar), bucket "event-images" ----------
 // No depende de que el evento ya exista: si es nuevo se usa un id temporal
 // generado en el navegador como carpeta, y esa misma URL queda guardada en
 // el campo oculto evad_cover_image hasta que se guarda el formulario.
+// A diferencia de comercios/destacados/lugares, acá NO se recorta la imagen:
+// se sube completa (solo redimensionada si es muy grande) para que en la
+// tarjeta se vea recortada por CSS (object-fit:cover) pero al entrar a
+// verla en grande se vea siempre entera, sin recorte.
 let evadPhotoFolderId = null;
-let evadCropperInstance = null;
 
 const evadCoverImageInput = document.getElementById('evad_cover_image');
 const evadPhotoInput = document.getElementById('evadPhotoInput');
 const evadChoosePhotoBtn = document.getElementById('evadChoosePhotoBtn');
 const evadPhotoPreviewImg = document.getElementById('evadPhotoPreviewImg');
 const evadPhotoPreviewEmpty = document.getElementById('evadPhotoPreviewEmpty');
-
-const evadCropperModal = document.getElementById('evadCropperModal');
-const evadCropperImage = document.getElementById('evadCropperImage');
-const evadCropperCancelBtn = document.getElementById('evadCropperCancelBtn');
-const evadCropperConfirmBtn = document.getElementById('evadCropperConfirmBtn');
 
 function refreshEvadPhotoUploadState(currentPhotoUrl) {
   evadCoverImageInput.value = currentPhotoUrl || '';
@@ -370,74 +383,58 @@ evadChoosePhotoBtn.addEventListener('click', () => {
   evadPhotoInput.click();
 });
 
-evadPhotoInput.addEventListener('change', () => {
+function evadResizeImageToBlob(file, maxSide) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSide || height > maxSide) {
+          if (width >= height) { height = Math.round(height * (maxSide / width)); width = maxSide; }
+          else { width = Math.round(width * (maxSide / height)); height = maxSide; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen.')), 'image/jpeg', 0.88);
+      };
+      img.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+evadPhotoInput.addEventListener('change', async () => {
   const file = evadPhotoInput.files && evadPhotoInput.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    evadCropperImage.src = reader.result;
-    evadCropperModal.classList.remove('hidden');
+  evadChoosePhotoBtn.disabled = true;
+  evadChoosePhotoBtn.textContent = 'Subiendo...';
 
-    if (evadCropperInstance) evadCropperInstance.destroy();
-    evadCropperInstance = new Cropper(evadCropperImage, {
-      aspectRatio: 16 / 9,
-      viewMode: 1,
-      autoCropArea: 1,
-      background: false,
-      responsive: true,
-    });
-  };
-  reader.readAsDataURL(file);
-});
-
-function closeEvadCropperModal() {
-  if (evadCropperInstance) {
-    evadCropperInstance.destroy();
-    evadCropperInstance = null;
-  }
-  evadCropperModal.classList.add('hidden');
-  evadPhotoInput.value = '';
-}
-
-evadCropperCancelBtn.addEventListener('click', closeEvadCropperModal);
-
-evadCropperConfirmBtn.addEventListener('click', () => {
-  if (!evadCropperInstance) return;
-
-  evadCropperConfirmBtn.disabled = true;
-  evadCropperConfirmBtn.textContent = 'Subiendo...';
-
-  const canvas = evadCropperInstance.getCroppedCanvas({ width: 1200, height: 675 });
-  canvas.toBlob(async (blob) => {
-    if (!blob) {
-      evadCropperConfirmBtn.disabled = false;
-      evadCropperConfirmBtn.textContent = 'Guardar foto';
-      showAlert('No se pudo procesar la imagen.', 'error');
-      return;
-    }
-
+  try {
+    const blob = await evadResizeImageToBlob(file, 1800);
     if (!evadPhotoFolderId) evadPhotoFolderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
     const path = `${evadPhotoFolderId}/cover-${Date.now()}.jpg`;
 
     const { error: uploadError } = await supabaseClient.storage
       .from('event-images')
       .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
-
-    evadCropperConfirmBtn.disabled = false;
-    evadCropperConfirmBtn.textContent = 'Guardar foto';
-
-    if (uploadError) {
-      showAlert('No se pudo subir la foto: ' + uploadError.message, 'error');
-      return;
-    }
+    if (uploadError) throw uploadError;
 
     const { data: pub } = supabaseClient.storage.from('event-images').getPublicUrl(path);
     refreshEvadPhotoUploadState(pub.publicUrl);
-    closeEvadCropperModal();
     renderEvAdPreview();
     showAlert('Foto lista. No te olvides de guardar el evento.', 'success');
-  }, 'image/jpeg', 0.85);
+  } catch (err) {
+    showAlert('No se pudo subir la foto: ' + err.message, 'error');
+  } finally {
+    evadChoosePhotoBtn.disabled = false;
+    evadChoosePhotoBtn.textContent = 'Elegir foto';
+    evadPhotoInput.value = '';
+  }
 });
 
 // ---------- Vista previa en vivo (réplica de la página de detalle real del evento) ----------
@@ -479,6 +476,9 @@ function evAdInstagramUrl(v) {
   v = v.trim();
   if (/^https?:\/\//i.test(v)) return v;
   return 'https://instagram.com/' + v.replace(/^@/, '');
+}
+function evAdIsUrl(v) {
+  return /^https?:\/\//i.test((v || '').trim());
 }
 
 function renderEvAdPreview() {
@@ -539,7 +539,7 @@ function renderEvAdPreview() {
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      ${address ? `<div class="detail-row"><span class="ic">📍</span>${escapeHtml(address)}</div>` : ''}
+      ${address ? `<div class="detail-row"><span class="ic">📍</span>${evAdIsUrl(address) ? '<a href="' + escapeHtml(address) + '" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>' : escapeHtml(address)}</div>` : ''}
       ${org ? `<div class="detail-row"><span class="ic">🏪</span>${escapeHtml(org)}</div>` : ''}
       ${phone ? `<div class="detail-row"><span class="ic">📞</span>${escapeHtml(phone)}</div>` : ''}
       ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span>${escapeHtml(website)}</div>` : ''}
@@ -559,8 +559,10 @@ function evAdResetForm() {
   document.getElementById('evad_recurrence_until_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_custom_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_section').classList.remove('hidden'); // solo se oculta al editar
-  evadGalleryWrap.classList.add('hidden');
-  evadGalleryToggle.classList.remove('open');
+  evadGalleryToggleCtl.setOpen(false);
+  evadDateToggleCtl.setOpen(false);
+  evadPriceToggleCtl.setOpen(false);
+  evadStatusToggleCtl.setOpen(false);
   evadBusinessSearch.disabled = false;
   evAdSetBusinessSelection('', '');
   document.getElementById('evadOwnerInfo').classList.add('hidden');
@@ -599,8 +601,6 @@ function openEvAdminForm(e) {
   document.getElementById('evad_start_time').value = e.start_time ? e.start_time.slice(0, 5) : '';
   document.getElementById('evad_end_time').value = e.end_time ? e.end_time.slice(0, 5) : '';
   document.getElementById('evad_address').value = e.address || '';
-  document.getElementById('evad_lat').value = e.lat != null ? e.lat : '';
-  document.getElementById('evad_lng').value = e.lng != null ? e.lng : '';
   document.getElementById('evad_phone').value = e.phone || '';
   document.getElementById('evad_whatsapp').value = e.whatsapp || '';
   document.getElementById('evad_instagram').value = e.instagram || '';
@@ -616,6 +616,14 @@ function openEvAdminForm(e) {
   document.getElementById('evad_is_featured').checked = !!e.is_featured;
   document.getElementById('evad_featured_order').value = e.featured_order || 0;
   evAdRenderOwnerInfo(e);
+
+  // Auto-abrir las secciones colapsadas que tengan datos no-default cargados,
+  // para no esconder información relevante al editar un evento existente.
+  const hasCustomDate = !!(e.end_date && e.end_date !== e.start_date) || !!e.end_time || !!e.recurrence_group_id;
+  evadDateToggleCtl.setOpen(hasCustomDate);
+  evadPriceToggleCtl.setOpen(!e.is_free || !!e.requires_registration);
+  evadStatusToggleCtl.setOpen(true); // al editar siempre conviene ver estado/destacado
+
   evAdShowForm();
 }
 
@@ -672,10 +680,11 @@ evAdminForm.addEventListener('submit', async (e) => {
 
   const id = document.getElementById('evad_id').value;
   const startDate = document.getElementById('evad_start_date').value;
-  const endDate = document.getElementById('evad_end_date').value;
+  // Si no se personalizó la fecha de fin (sección oculta por defecto), el evento dura un solo día.
+  const endDate = document.getElementById('evad_end_date').value || startDate;
   if (!document.getElementById('evad_title').value.trim()) { showAlert('El título es obligatorio.', 'error'); return; }
   if (!evadCategorySelect.value) { showAlert('Elegí una categoría.', 'error'); return; }
-  if (!startDate || !endDate) { showAlert('Completá las fechas.', 'error'); return; }
+  if (!startDate) { showAlert('Completá la fecha.', 'error'); return; }
   if (endDate < startDate) { showAlert('La fecha de finalización no puede ser anterior a la de inicio.', 'error'); return; }
 
   const isFree = evadIsFree.checked;
@@ -696,8 +705,6 @@ evAdminForm.addEventListener('submit', async (e) => {
     start_time: document.getElementById('evad_start_time').value || null,
     end_time: document.getElementById('evad_end_time').value || null,
     address: document.getElementById('evad_address').value.trim(),
-    lat: document.getElementById('evad_lat').value.trim() ? parseFloat(document.getElementById('evad_lat').value.trim()) : null,
-    lng: document.getElementById('evad_lng').value.trim() ? parseFloat(document.getElementById('evad_lng').value.trim()) : null,
     phone: document.getElementById('evad_phone').value.trim(),
     whatsapp: document.getElementById('evad_whatsapp').value.trim(),
     instagram: document.getElementById('evad_instagram').value.trim(),
