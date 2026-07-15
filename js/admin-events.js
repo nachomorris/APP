@@ -511,6 +511,7 @@ function renderEvAdPreview() {
   if (!preview) return;
 
   const rawTitle = document.getElementById('evad_title').value.trim();
+  const rawShortDesc = document.getElementById('evad_short_description').value.trim();
   const rawDesc = document.getElementById('evad_description').value.trim();
   const cover = document.getElementById('evad_cover_image').value.trim();
   const rawAddress = document.getElementById('evad_address').value.trim();
@@ -547,7 +548,7 @@ function renderEvAdPreview() {
   // precio/inscripción, descripción, dirección, teléfono, web e instagram.
   // La foto: tocar para elegir otra, arrastrar para ajustar el encuadre.
   preview.innerHTML = `
-    <div class="detail-hero editable-cover" data-ev-cover style="background:${cat.color || '#111'}">
+    <div class="detail-hero editable-cover" data-ev-cover style="background:${cover ? (cat.color || '#111') : '#f0eee9'}">
       ${cover
         ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
         : `<img src="images/logo-markk.png" alt="" class="evad-hero-placeholder">`}
@@ -558,18 +559,19 @@ function renderEvAdPreview() {
 
     <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
 
-    <div class="event-badges">
-      <span class="badge ${isFree ? 'free' : 'price'} clickable" data-ev-toggle="is_free">${isFree
-        ? '● Entrada gratuita'
-        : `● $<span class="evad-editable" contenteditable="true" data-ev-field="price" data-placeholder="precio">${rawPrice ? escapeHtml(String(rawPrice)) : ''}</span>`}</span>
-      <span class="badge price clickable" data-ev-toggle="requires_registration">${requiresReg ? '● Requiere inscripción' : '+ Requiere inscripción'}</span>
-    </div>
+    <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="Descripción corta (aparece en las tarjetas de la Agenda)">${escapeHtml(rawShortDesc)}</p>
 
     <div class="detail-block">
       <h3>Cuándo</h3>
       <div class="evad-quick-datetime">
-        <input type="date" data-ev-quickfield="start_date" value="${startDate || ''}">
-        <input type="time" data-ev-quickfield="start_time" value="${startTime ? startTime.slice(0, 5) : ''}">
+        <div class="evad-qd-field">
+          <input type="date" data-ev-quickfield="start_date" value="${startDate || ''}">
+          <span class="evad-qd-icon" aria-hidden="true">📅</span>
+        </div>
+        <div class="evad-qd-field">
+          <input type="time" data-ev-quickfield="start_time" value="${startTime ? startTime.slice(0, 5) : ''}">
+          <span class="evad-qd-icon" aria-hidden="true">🕐</span>
+        </div>
       </div>
       ${endHint ? `<p class="field-hint" style="margin:6px 0 0;">${endHint}</p>` : ''}
     </div>
@@ -599,6 +601,7 @@ evAdminForm.addEventListener('change', renderEvAdPreview);
 // vez de reatarse en cada renderEvAdPreview().
 const EVAD_PREVIEW_TEXT_FIELDS = {
   title: 'evad_title',
+  short_description: 'evad_short_description',
   description: 'evad_description',
   address: 'evad_address',
   phone: 'evad_phone',
