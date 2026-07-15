@@ -23,11 +23,16 @@ function refreshPhotoUploadState(businessId, currentPhotoUrl) {
 
   if (currentPhotoUrl) {
     photoPreviewImg.src = currentPhotoUrl;
+    photoPreviewImg.classList.remove('photo-preview-placeholder');
     photoPreviewImg.style.display = 'block';
     photoPreviewEmpty.style.display = 'none';
   } else {
-    photoPreviewImg.style.display = 'none';
-    photoPreviewEmpty.style.display = 'block';
+    // Sin foto propia todavía: se muestra el logo como placeholder
+    // (igual que en la carga de eventos), en vez de una cover vacía.
+    photoPreviewImg.src = 'images/logo-markk.png';
+    photoPreviewImg.classList.add('photo-preview-placeholder');
+    photoPreviewImg.style.display = 'block';
+    photoPreviewEmpty.style.display = 'none';
   }
 
   if (businessId) {
@@ -122,6 +127,7 @@ cropperConfirmBtn.addEventListener('click', () => {
     }
 
     photoPreviewImg.src = publicUrl;
+    photoPreviewImg.classList.remove('photo-preview-placeholder');
     photoPreviewImg.style.display = 'block';
     photoPreviewEmpty.style.display = 'none';
     closeCropperModal();

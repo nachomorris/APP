@@ -299,6 +299,9 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
 .photo-preview span { font-size: 12px; color: var(--muted); padding: 8px; text-align: center; }
+/* Mientras no haya foto propia cargada: se ve el logo como placeholder
+   (igual que en la carga de eventos), en vez de una cover recortada. */
+.photo-preview img.photo-preview-placeholder { object-fit: contain; padding: 18px; box-sizing: border-box; opacity: .38; }
 
 .cropper-modal {
   position: fixed; inset: 0; background: rgba(17,17,17,.72); z-index: 200;
