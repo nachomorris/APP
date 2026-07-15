@@ -531,18 +531,18 @@ function renderEvAdPreview() {
   const preview = document.getElementById('evadPreview');
   if (!preview) return;
 
-  const title = document.getElementById('evad_title').value.trim() || 'Título del evento';
-  const shortDesc = document.getElementById('evad_short_description').value.trim();
-  const desc = document.getElementById('evad_description').value.trim();
+  const rawTitle = document.getElementById('evad_title').value.trim();
+  const rawDesc = document.getElementById('evad_description').value.trim();
   const cover = document.getElementById('evad_cover_image').value.trim();
-  const address = document.getElementById('evad_address').value.trim();
+  const rawAddress = document.getElementById('evad_address').value.trim();
   const startDate = document.getElementById('evad_start_date').value;
   const endDate = document.getElementById('evad_end_date').value;
   const startTime = document.getElementById('evad_start_time').value;
   const endTime = document.getElementById('evad_end_time').value;
-  const phone = document.getElementById('evad_phone').value.trim();
-  const instagram = document.getElementById('evad_instagram').value.trim();
-  const website = document.getElementById('evad_website').value.trim();
+  const rawPhone = document.getElementById('evad_phone').value.trim();
+  const rawInstagram = document.getElementById('evad_instagram').value.trim();
+  const rawWebsite = document.getElementById('evad_website').value.trim();
+  const rawPrice = document.getElementById('evad_price').value;
   const isFree = evadIsFree.checked;
   const requiresReg = evadRequiresRegistration.checked;
   const isOfficial = evadIsOfficial.checked;
@@ -552,53 +552,221 @@ function renderEvAdPreview() {
   const cat = evAdminCategories.find((c) => c.id === evadCategorySelect.value) || {};
   const org = businessName ? businessName : (isOfficial ? 'Municipalidad de Potrero de los Funes' : '');
 
-  const dateLabel = startDate ? evAdFmtDateRange(startDate, endDate) : '';
-  const timeLabel = evAdFmtTimeRange(startTime, endTime);
-  const price = evAdPriceLabel(isFree, document.getElementById('evad_price').value);
-  const igUrl = evAdInstagramUrl(instagram);
-  const webUrl = evAdWebsiteUrl(website);
-
   const statusEl = document.getElementById('evadPreviewStatus');
   if (statusEl) statusEl.textContent = evStatusLabel(status).text;
 
   const focalX = parseFloat(evadFocalXInput.value) || 50;
   const focalY = parseFloat(evadFocalYInput.value) || 50;
 
+  const hasCustomEnd = !!((endDate && endDate !== startDate) || endTime);
+  const endHint = hasCustomEnd
+    ? `Hasta ${endDate ? escapeHtml(evAdFmtDay(endDate)) : ''}${endTime ? ' · ' + escapeHtml(endTime.slice(0, 5)) + ' hs' : ''} <span style="opacity:.6;">(desde "Personalizar" arriba)</span>`
+    : '';
+
+  // Los campos "básicos" se pueden editar tocando directamente acá (además de
+  // en el formulario de arriba): título, categoría, fecha/hora de inicio,
+  // precio/inscripción, descripción, dirección, teléfono, web e instagram.
+  // La foto: tocar para elegir otra, arrastrar para ajustar el encuadre.
   preview.innerHTML = `
-    <div class="detail-hero" style="background:${cat.color || '#111'}">
-      ${cover ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">` : (cat.icon || '🎉')}
-      ${cover ? '<span class="zoom-hint">🔍 Ver flyer</span>' : ''}
+    <div class="detail-hero editable-cover" data-ev-cover style="background:${cat.color || '#111'}">
+      ${cover
+        ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
+        : `<span class="evad-hero-empty">🖼️<br>Tocá para subir una foto</span>`}
+      <span class="edit-hint">${cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto'}</span>
     </div>
-    <div class="detail-title">${escapeHtml(title)}</div>
-    <div class="detail-cat">${cat.icon || ''} ${escapeHtml(cat.label || 'Sin categoría')}</div>
+
+    <div class="detail-title evad-editable" contenteditable="true" data-ev-field="title" data-placeholder="Título del evento">${escapeHtml(rawTitle)}</div>
+
+    <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
+
     <div class="event-badges">
-      <span class="badge ${isFree ? 'free' : 'price'}">${isFree ? '● Entrada gratuita' : (price ? '● ' + escapeHtml(price) : '● Consultar precio')}</span>
-      ${requiresReg ? '<span class="badge price">● Requiere inscripción</span>' : ''}
+      <span class="badge ${isFree ? 'free' : 'price'} clickable" data-ev-toggle="is_free">${isFree
+        ? '● Entrada gratuita'
+        : `● $<span class="evad-editable" contenteditable="true" data-ev-field="price" data-placeholder="precio">${rawPrice ? escapeHtml(String(rawPrice)) : ''}</span>`}</span>
+      <span class="badge price clickable" data-ev-toggle="requires_registration">${requiresReg ? '● Requiere inscripción' : '+ Requiere inscripción'}</span>
     </div>
 
     <div class="detail-block">
       <h3>Cuándo</h3>
-      <p>${dateLabel ? escapeHtml(dateLabel) : '(sin fecha cargada)'}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</p>
+      <div class="evad-quick-datetime">
+        <input type="date" data-ev-quickfield="start_date" value="${startDate || ''}">
+        <input type="time" data-ev-quickfield="start_time" value="${startTime ? startTime.slice(0, 5) : ''}">
+      </div>
+      ${endHint ? `<p class="field-hint" style="margin:6px 0 0;">${endHint}</p>` : ''}
     </div>
 
-    ${(desc || shortDesc) ? `<div class="detail-block">
+    <div class="detail-block">
       <h3>Descripción</h3>
-      <p>${escapeHtml(desc || shortDesc)}</p>
-    </div>` : ''}
+      <p class="evad-editable" contenteditable="true" data-ev-field="description" data-placeholder="Agregá una descripción del evento...">${escapeHtml(rawDesc)}</p>
+    </div>
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      ${address ? `<div class="detail-row"><span class="ic">📍</span>${evAdIsUrl(address) ? '<a href="' + escapeHtml(address) + '" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>' : escapeHtml(address)}</div>` : ''}
+      <div class="detail-row"><span class="ic">📍</span><span class="evad-editable" contenteditable="true" data-ev-field="address" data-placeholder="Dirección o link de Maps">${escapeHtml(rawAddress)}</span></div>
       ${org ? `<div class="detail-row"><span class="ic">🏪</span>${escapeHtml(org)}</div>` : ''}
-      ${phone ? `<div class="detail-row"><span class="ic">📞</span>${escapeHtml(phone)}</div>` : ''}
-      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span>${escapeHtml(website)}</div>` : ''}
-      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span>${escapeHtml(instagram)}</div>` : ''}
+      <div class="detail-row"><span class="ic">📞</span><span class="evad-editable" contenteditable="true" data-ev-field="phone" data-placeholder="Teléfono">${escapeHtml(rawPhone)}</span></div>
+      <div class="detail-row"><span class="ic">🌐</span><span class="evad-editable" contenteditable="true" data-ev-field="website" data-placeholder="Sitio web">${escapeHtml(rawWebsite)}</span></div>
+      <div class="detail-row"><span class="ic">📷</span><span class="evad-editable" contenteditable="true" data-ev-field="instagram" data-placeholder="Instagram">${escapeHtml(rawInstagram)}</span></div>
     </div>
   `;
 }
 
 evAdminForm.addEventListener('input', renderEvAdPreview);
 evAdminForm.addEventListener('change', renderEvAdPreview);
+
+// ---------- Edición directa sobre la previsualización ----------
+// #evadPreview es un contenedor fijo (solo se reemplaza su innerHTML en cada
+// render), así que los listeners se atan una sola vez acá con delegación en
+// vez de reatarse en cada renderEvAdPreview().
+const EVAD_PREVIEW_TEXT_FIELDS = {
+  title: 'evad_title',
+  description: 'evad_description',
+  address: 'evad_address',
+  phone: 'evad_phone',
+  website: 'evad_website',
+  instagram: 'evad_instagram',
+};
+const EVAD_PREVIEW_QUICK_FIELDS = {
+  start_date: 'evad_start_date',
+  start_time: 'evad_start_time',
+};
+
+let evadCoverDragMoved = false;
+
+function evadPreviewPointFromEvent(evt, el) {
+  const rect = el.getBoundingClientRect();
+  const point = (evt.touches && evt.touches[0]) ? evt.touches[0] : evt;
+  return {
+    x: ((point.clientX - rect.left) / rect.width) * 100,
+    y: ((point.clientY - rect.top) / rect.height) * 100,
+  };
+}
+
+function evadCloseCategoryPicker() {
+  const el = document.getElementById('evadCatDropdown');
+  if (el) el.remove();
+}
+function evadOpenCategoryPicker(anchorEl) {
+  evadCloseCategoryPicker();
+  const dd = document.createElement('div');
+  dd.className = 'evad-cat-dropdown';
+  dd.id = 'evadCatDropdown';
+  dd.innerHTML = evAdminCategories.length
+    ? evAdminCategories.map((c) => `<div class="opt" data-cat-id="${c.id}">${c.icon || ''} ${escapeHtml(c.label)}</div>`).join('')
+    : '<div class="opt" style="opacity:.6;">No hay categorías</div>';
+  document.body.appendChild(dd);
+  const rect = anchorEl.getBoundingClientRect();
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.left = rect.left + 'px';
+  dd.querySelectorAll('[data-cat-id]').forEach((opt) => {
+    opt.addEventListener('click', (evt) => {
+      evt.stopPropagation();
+      evadCategorySelect.value = opt.getAttribute('data-cat-id');
+      evadCategorySelect.dispatchEvent(new Event('change', { bubbles: true }));
+      evadCloseCategoryPicker();
+    });
+  });
+  setTimeout(() => document.addEventListener('click', evadCloseCategoryPicker, { once: true }), 0);
+}
+
+function evadSetupPreviewEditing() {
+  const preview = document.getElementById('evadPreview');
+  if (!preview) return;
+
+  // Texto (título, descripción, dirección, teléfono, web, instagram, precio):
+  // se sincroniza el valor real en cada tecla, pero SIN re-renderizar todo
+  // (perdería el cursor); se corta la burbuja para que el listener global del
+  // form no dispare un render completo mientras se está escribiendo.
+  preview.addEventListener('input', (e) => {
+    const el = e.target.closest('[data-ev-field]');
+    if (!el || !el.isContentEditable) return;
+    e.stopPropagation();
+    const field = el.getAttribute('data-ev-field');
+    if (field === 'price') {
+      document.getElementById('evad_price').value = el.textContent.replace(/[^0-9.]/g, '');
+      return;
+    }
+    const inputId = EVAD_PREVIEW_TEXT_FIELDS[field];
+    if (inputId) document.getElementById(inputId).value = (el.innerText || el.textContent).trim();
+  });
+
+  // Al salir del campo se re-renderiza una vez para normalizar (formato de
+  // precio, placeholder si quedó vacío, etc.)
+  preview.addEventListener('focusout', (e) => {
+    const el = e.target.closest('[data-ev-field]');
+    if (!el || !el.isContentEditable) return;
+    renderEvAdPreview();
+  });
+
+  // Fecha/hora de inicio: inputs nativos embebidos en la previsualización.
+  preview.addEventListener('change', (e) => {
+    const el = e.target.closest('[data-ev-quickfield]');
+    if (!el) return;
+    e.stopPropagation();
+    const inputId = EVAD_PREVIEW_QUICK_FIELDS[el.getAttribute('data-ev-quickfield')];
+    if (inputId) document.getElementById(inputId).value = el.value;
+    renderEvAdPreview();
+  });
+
+  // Clicks: gratis/pago, requiere inscripción, categoría, foto.
+  preview.addEventListener('click', (e) => {
+    if (e.target.closest('[data-ev-field="price"]')) return; // dejar que se edite el número, no togglear
+
+    const freeToggle = e.target.closest('[data-ev-toggle="is_free"]');
+    if (freeToggle) {
+      e.stopPropagation();
+      evadIsFree.checked = !evadIsFree.checked;
+      evadIsFree.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    const regToggle = e.target.closest('[data-ev-toggle="requires_registration"]');
+    if (regToggle) {
+      e.stopPropagation();
+      evadRequiresRegistration.checked = !evadRequiresRegistration.checked;
+      evadRequiresRegistration.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    const catToggle = e.target.closest('[data-ev-toggle="category"]');
+    if (catToggle) {
+      e.stopPropagation();
+      evadOpenCategoryPicker(catToggle);
+      return;
+    }
+    const coverEl = e.target.closest('[data-ev-cover]');
+    if (coverEl && !evadCoverDragMoved) {
+      e.stopPropagation();
+      evadPhotoInput.click();
+    }
+  });
+
+  // Portada: arrastrar para elegir qué parte se ve (mismo mecanismo que la
+  // vista previa chica de arriba, aplicado acá también).
+  let dragging = false, startX = 0, startY = 0, moved = false;
+  preview.addEventListener('pointerdown', (e) => {
+    const coverEl = e.target.closest('[data-ev-cover]');
+    if (!coverEl || !evadCoverImageInput.value) return;
+    dragging = true; moved = false;
+    startX = e.clientX; startY = e.clientY;
+    const p = evadPreviewPointFromEvent(e, coverEl);
+    evadApplyFocalPoint(p.x, p.y);
+  });
+  preview.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const coverEl = preview.querySelector('[data-ev-cover]');
+    if (!coverEl) return;
+    if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) moved = true;
+    const p = evadPreviewPointFromEvent(e, coverEl);
+    evadApplyFocalPoint(p.x, p.y);
+  });
+  window.addEventListener('pointerup', () => {
+    if (dragging) {
+      evadCoverDragMoved = moved;
+      setTimeout(() => { evadCoverDragMoved = false; }, 0);
+    }
+    dragging = false;
+  });
+}
+evadSetupPreviewEditing();
 
 function evAdResetForm() {
   evAdminForm.reset();
