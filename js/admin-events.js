@@ -343,6 +343,8 @@ function evAdSetupToggle(toggleId, wrapId) {
 }
 
 const evadGalleryToggleCtl = evAdSetupToggle('evadGalleryToggle', 'evadGalleryWrap');
+const evadBasicToggleCtl = evAdSetupToggle('evadBasicToggle', 'evadBasicWrap');
+const evadWhenToggleCtl = evAdSetupToggle('evadWhenToggle', 'evadWhenWrap');
 const evadDateToggleCtl = evAdSetupToggle('evadDateToggle', 'evadDateAdvancedWrap');
 const evadLocationToggleCtl = evAdSetupToggle('evadLocationToggle', 'evadLocationWrap');
 const evadPriceToggleCtl = evAdSetupToggle('evadPriceToggle', 'evadPriceWrap');
@@ -359,75 +361,32 @@ const evadGalleryWrap = document.getElementById('evadGalleryWrap');
 // se sube completa (solo redimensionada si es muy grande) para que en la
 // tarjeta se vea recortada por CSS (object-fit:cover) pero al entrar a
 // verla en grande se vea siempre entera, sin recorte.
+// Elegir foto y ajustar el encuadre se hace directamente desde la
+// previsualización de arriba (evadPreview); acá solo quedan los campos
+// ocultos (evad_cover_image, evad_cover_focal_x/y) y el <input type=file>.
 let evadPhotoFolderId = null;
+let evadPhotoUploading = false;
 
 const evadCoverImageInput = document.getElementById('evad_cover_image');
 const evadPhotoInput = document.getElementById('evadPhotoInput');
-const evadChoosePhotoBtn = document.getElementById('evadChoosePhotoBtn');
-const evadPhotoPreviewImg = document.getElementById('evadPhotoPreviewImg');
-const evadPhotoPreviewEmpty = document.getElementById('evadPhotoPreviewEmpty');
-const evadPhotoPreview = document.getElementById('evadPhotoPreview');
-const evadFocalMarker = document.getElementById('evadFocalMarker');
 const evadFocalXInput = document.getElementById('evad_cover_focal_x');
 const evadFocalYInput = document.getElementById('evad_cover_focal_y');
-const evadCenterFocalBtn = document.getElementById('evadCenterFocalBtn');
 
 function refreshEvadPhotoUploadState(currentPhotoUrl) {
   evadCoverImageInput.value = currentPhotoUrl || '';
-  if (currentPhotoUrl) {
-    evadPhotoPreviewImg.src = currentPhotoUrl;
-    evadPhotoPreviewImg.style.display = 'block';
-    evadPhotoPreviewEmpty.style.display = 'none';
-    evadPhotoPreview.classList.add('pickable');
-    evadCenterFocalBtn.classList.remove('hidden');
-  } else {
-    evadPhotoPreviewImg.style.display = 'none';
-    evadPhotoPreviewEmpty.style.display = 'block';
-    evadPhotoPreview.classList.remove('pickable');
-    evadCenterFocalBtn.classList.add('hidden');
-  }
 }
 
 // ---------- Punto de encuadre de la portada ----------
 // La foto se guarda siempre completa (sin recorte destructivo); este punto
 // solo controla qué parte queda visible en el recorte de la tarjeta
-// (object-position), tocando o arrastrando sobre la vista previa.
+// (object-position), tocando o arrastrando sobre la previsualización.
 function evadApplyFocalPoint(xPct, yPct) {
   const x = Math.max(0, Math.min(100, xPct));
   const y = Math.max(0, Math.min(100, yPct));
   evadFocalXInput.value = x.toFixed(1);
   evadFocalYInput.value = y.toFixed(1);
-  evadPhotoPreviewImg.style.objectPosition = `${x}% ${y}%`;
-  evadFocalMarker.style.left = x + '%';
-  evadFocalMarker.style.top = y + '%';
   renderEvAdPreview();
 }
-function evadFocalPointFromEvent(evt) {
-  const rect = evadPhotoPreview.getBoundingClientRect();
-  const point = evt.touches && evt.touches[0] ? evt.touches[0] : evt;
-  const x = ((point.clientX - rect.left) / rect.width) * 100;
-  const y = ((point.clientY - rect.top) / rect.height) * 100;
-  return { x, y };
-}
-let evadFocalDragging = false;
-evadPhotoPreview.addEventListener('pointerdown', (evt) => {
-  if (!evadPhotoPreview.classList.contains('pickable')) return;
-  evadFocalDragging = true;
-  const p = evadFocalPointFromEvent(evt);
-  evadApplyFocalPoint(p.x, p.y);
-});
-evadPhotoPreview.addEventListener('pointermove', (evt) => {
-  if (!evadFocalDragging) return;
-  const p = evadFocalPointFromEvent(evt);
-  evadApplyFocalPoint(p.x, p.y);
-});
-window.addEventListener('pointerup', () => { evadFocalDragging = false; });
-evadCenterFocalBtn.addEventListener('click', () => evadApplyFocalPoint(50, 50));
-
-evadChoosePhotoBtn.addEventListener('click', () => {
-  evadPhotoInput.value = '';
-  evadPhotoInput.click();
-});
 
 function evadResizeImageToBlob(file, maxSide) {
   return new Promise((resolve, reject) => {
@@ -457,8 +416,8 @@ evadPhotoInput.addEventListener('change', async () => {
   const file = evadPhotoInput.files && evadPhotoInput.files[0];
   if (!file) return;
 
-  evadChoosePhotoBtn.disabled = true;
-  evadChoosePhotoBtn.textContent = 'Subiendo...';
+  evadPhotoUploading = true;
+  renderEvAdPreview(); // muestra "Subiendo..." en la previsualización
 
   try {
     const blob = await evadResizeImageToBlob(file, 1800);
@@ -472,14 +431,14 @@ evadPhotoInput.addEventListener('change', async () => {
 
     const { data: pub } = supabaseClient.storage.from('event-images').getPublicUrl(path);
     refreshEvadPhotoUploadState(pub.publicUrl);
-    evadApplyFocalPoint(50, 50); // foto nueva: arranca centrada, se puede ajustar tocando la preview
-    showAlert('Foto lista. Tocá la preview para elegir el encuadre y no te olvides de guardar el evento.', 'success');
+    evadApplyFocalPoint(50, 50); // foto nueva: arranca centrada, se puede ajustar arrastrando en la preview
+    showAlert('Foto lista. Arrastrá sobre la foto para elegir el encuadre y no te olvides de guardar el evento.', 'success');
   } catch (err) {
     showAlert('No se pudo subir la foto: ' + err.message, 'error');
   } finally {
-    evadChoosePhotoBtn.disabled = false;
-    evadChoosePhotoBtn.textContent = 'Elegir foto';
+    evadPhotoUploading = false;
     evadPhotoInput.value = '';
+    renderEvAdPreview();
   }
 });
 
@@ -572,7 +531,7 @@ function renderEvAdPreview() {
       ${cover
         ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
         : `<span class="evad-hero-empty">🖼️<br>Tocá para subir una foto</span>`}
-      <span class="edit-hint">${cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto'}</span>
+      <span class="edit-hint">${evadPhotoUploading ? '⏳ Subiendo...' : (cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto')}</span>
     </div>
 
     <div class="detail-title evad-editable" contenteditable="true" data-ev-field="title" data-placeholder="Título del evento">${escapeHtml(rawTitle)}</div>
@@ -741,8 +700,9 @@ function evadSetupPreviewEditing() {
       return;
     }
     const coverEl = e.target.closest('[data-ev-cover]');
-    if (coverEl && !evadCoverDragMoved) {
+    if (coverEl && !evadCoverDragMoved && !evadPhotoUploading) {
       e.stopPropagation();
+      evadPhotoInput.value = '';
       evadPhotoInput.click();
     }
   });
@@ -752,7 +712,7 @@ function evadSetupPreviewEditing() {
   let dragging = false, startX = 0, startY = 0, moved = false;
   preview.addEventListener('pointerdown', (e) => {
     const coverEl = e.target.closest('[data-ev-cover]');
-    if (!coverEl || !evadCoverImageInput.value) return;
+    if (!coverEl || !evadCoverImageInput.value || evadPhotoUploading) return;
     dragging = true; moved = false;
     startX = e.clientX; startY = e.clientY;
     const p = evadPreviewPointFromEvent(e, coverEl);
@@ -785,6 +745,8 @@ function evAdResetForm() {
   document.getElementById('evad_recurrence_custom_wrap').classList.add('hidden');
   document.getElementById('evad_recurrence_section').classList.remove('hidden'); // solo se oculta al editar
   evadGalleryToggleCtl.setOpen(false);
+  evadBasicToggleCtl.setOpen(false);
+  evadWhenToggleCtl.setOpen(false);
   evadDateToggleCtl.setOpen(false);
   evadLocationToggleCtl.setOpen(false);
   evadPriceToggleCtl.setOpen(false);
@@ -848,6 +810,8 @@ function openEvAdminForm(e) {
   // Auto-abrir las secciones colapsadas que tengan datos no-default cargados,
   // para no esconder información relevante al editar un evento existente.
   const hasCustomDate = !!(e.end_date && e.end_date !== e.start_date) || !!e.end_time || !!e.recurrence_group_id;
+  evadBasicToggleCtl.setOpen(true); // al editar conviene ver organizador/descripción corta
+  evadWhenToggleCtl.setOpen(hasCustomDate);
   evadDateToggleCtl.setOpen(hasCustomDate);
   evadLocationToggleCtl.setOpen(!!(e.address || e.phone || e.whatsapp || e.instagram || e.website));
   evadPriceToggleCtl.setOpen(!e.is_free || !!e.requires_registration);
@@ -911,9 +875,9 @@ evAdminForm.addEventListener('submit', async (e) => {
   const startDate = document.getElementById('evad_start_date').value;
   // Si no se personalizó la fecha de fin (sección oculta por defecto), el evento dura un solo día.
   const endDate = document.getElementById('evad_end_date').value || startDate;
-  if (!document.getElementById('evad_title').value.trim()) { showAlert('El título es obligatorio.', 'error'); return; }
-  if (!evadCategorySelect.value) { showAlert('Elegí una categoría.', 'error'); return; }
-  if (!startDate) { showAlert('Completá la fecha.', 'error'); return; }
+  if (!document.getElementById('evad_title').value.trim()) { evadBasicToggleCtl.setOpen(true); showAlert('El título es obligatorio.', 'error'); return; }
+  if (!evadCategorySelect.value) { evadBasicToggleCtl.setOpen(true); showAlert('Elegí una categoría.', 'error'); return; }
+  if (!startDate) { evadWhenToggleCtl.setOpen(true); showAlert('Completá la fecha.', 'error'); return; }
   if (endDate < startDate) { showAlert('La fecha de finalización no puede ser anterior a la de inicio.', 'error'); return; }
 
   const isFree = evadIsFree.checked;

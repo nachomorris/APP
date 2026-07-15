@@ -375,55 +375,45 @@
           <div id="evadOwnerInfo" class="evad-owner-info hidden"></div>
 
           <div class="form-section">
-            <h3><span class="n">📋</span> Información básica</h3>
+            <div class="form-toggle-row" id="evadBasicToggle"><span class="arrow">▸</span> <span class="n">📋</span> Información básica</div>
+            <div id="evadBasicWrap" class="hidden">
+              <label style="display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="evad_is_official" style="width:auto;">
+                <span style="font-weight:600; color:var(--muted); font-size:14px;">Evento oficial (municipal, sin ficha organizadora)</span>
+              </label>
 
-            <label style="display:flex; align-items:center; gap:8px;">
-              <input type="checkbox" id="evad_is_official" style="width:auto;">
-              <span style="font-weight:600; color:var(--muted); font-size:14px;">Evento oficial (municipal, sin ficha organizadora)</span>
-            </label>
+              <label for="evad_business_search">Ficha organizadora</label>
+              <div class="autocomplete-wrap">
+                <input type="text" id="evad_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
+                <input type="hidden" id="evad_business_id">
+                <div id="evad_business_results" class="autocomplete-results hidden"></div>
+              </div>
+              <p class="field-hint">Dejalo vacío si el evento no tiene una ficha organizadora.</p>
 
-            <label for="evad_business_search">Ficha organizadora</label>
-            <div class="autocomplete-wrap">
-              <input type="text" id="evad_business_search" placeholder="Buscá el comercio por nombre..." autocomplete="off">
-              <input type="hidden" id="evad_business_id">
-              <div id="evad_business_results" class="autocomplete-results hidden"></div>
+              <label for="evad_title">Título del evento *</label>
+              <input type="text" id="evad_title" required>
+
+              <label for="evad_category_id">Categoría *</label>
+              <select id="evad_category_id" required>
+                <option value="">Seleccioná una categoría</option>
+              </select>
+
+              <label for="evad_short_description">Descripción corta</label>
+              <input type="text" id="evad_short_description" maxlength="140">
+
+              <label for="evad_description">Descripción completa</label>
+              <textarea id="evad_description"></textarea>
             </div>
-            <p class="field-hint">Dejalo vacío si el evento no tiene una ficha organizadora.</p>
-
-            <label for="evad_title">Título del evento *</label>
-            <input type="text" id="evad_title" required>
-
-            <label for="evad_category_id">Categoría *</label>
-            <select id="evad_category_id" required>
-              <option value="">Seleccioná una categoría</option>
-            </select>
-
-            <label for="evad_short_description">Descripción corta</label>
-            <input type="text" id="evad_short_description" maxlength="140">
-
-            <label for="evad_description">Descripción completa</label>
-            <textarea id="evad_description"></textarea>
           </div>
 
+          <!-- La foto de portada se elige y encuadra directamente desde la previsualización de arriba. -->
+          <input type="hidden" id="evad_cover_image">
+          <input type="hidden" id="evad_cover_focal_x" value="50">
+          <input type="hidden" id="evad_cover_focal_y" value="50">
+          <input type="file" id="evadPhotoInput" accept="image/*" class="hidden">
+
           <div class="form-section">
-            <h3><span class="n">🖼️</span> Foto de portada</h3>
-
-            <div class="evad-photo-preview" id="evadPhotoPreview">
-              <img id="evadPhotoPreviewImg" style="display:none;" alt="Foto del evento">
-              <span id="evadPhotoPreviewEmpty">Sin foto todavía</span>
-              <div class="evad-focal-marker" id="evadFocalMarker"></div>
-            </div>
-            <input type="hidden" id="evad_cover_image">
-            <input type="hidden" id="evad_cover_focal_x" value="50">
-            <input type="hidden" id="evad_cover_focal_y" value="50">
-            <input type="file" id="evadPhotoInput" accept="image/*" class="hidden">
-            <div class="evad-focal-hint">
-              <button type="button" class="btn btn-secondary btn-small" id="evadChoosePhotoBtn">Elegir foto</button>
-              <button type="button" class="btn btn-secondary btn-small hidden" id="evadCenterFocalBtn">Centrar encuadre</button>
-            </div>
-            <p class="field-hint">Tocá o arrastrá sobre la foto para elegir qué parte se ve en la tarjeta. En la tarjeta se ve recortada, pero al entrar a verla se muestra siempre completa, sin recortar.</p>
-
-            <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow">▸</span> Galería adicional (opcional)</div>
+            <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow">▸</span> <span class="n">🖼️</span> Galería adicional (opcional)</div>
             <div id="evadGalleryWrap" class="hidden">
               <label for="evad_gallery">URLs separadas por coma</label>
               <input type="text" id="evad_gallery">
@@ -431,50 +421,51 @@
           </div>
 
           <div class="form-section">
-            <h3><span class="n">📅</span> Fecha y horario</h3>
-
-            <div class="row-2">
-              <div>
-                <label for="evad_start_date">Fecha *</label>
-                <input type="date" id="evad_start_date" required>
-              </div>
-              <div>
-                <label for="evad_start_time">Horario</label>
-                <input type="time" id="evad_start_time">
-              </div>
-            </div>
-
-            <div class="form-toggle-row" id="evadDateToggle"><span class="arrow">▸</span> Personalizar fecha de fin, horario de fin y repetición</div>
-            <div id="evadDateAdvancedWrap" class="hidden">
+            <div class="form-toggle-row" id="evadWhenToggle"><span class="arrow">▸</span> <span class="n">📅</span> Fecha y horario</div>
+            <div id="evadWhenWrap" class="hidden">
               <div class="row-2">
                 <div>
-                  <label for="evad_end_date">Fecha de finalización</label>
-                  <input type="date" id="evad_end_date">
+                  <label for="evad_start_date">Fecha *</label>
+                  <input type="date" id="evad_start_date" required>
                 </div>
                 <div>
-                  <label for="evad_end_time">Horario de finalización</label>
-                  <input type="time" id="evad_end_time">
+                  <label for="evad_start_time">Horario</label>
+                  <input type="time" id="evad_start_time">
                 </div>
               </div>
 
-              <div id="evad_recurrence_section">
-                <label for="evad_recurrence_type">Repetición</label>
-                <select id="evad_recurrence_type">
-                  <option value="none">No se repite</option>
-                  <option value="weekly_fri">Todos los viernes</option>
-                  <option value="weekly_sat">Todos los sábados</option>
-                  <option value="weekend">Todos los fines de semana</option>
-                  <option value="weekly">Una vez por semana</option>
-                  <option value="custom">Fechas específicas</option>
-                </select>
-                <p class="field-hint">Genera un evento por cada fecha que coincida; se puede editar cada uno por separado después.</p>
-                <div id="evad_recurrence_until_wrap" class="hidden">
-                  <label for="evad_recurrence_until">Repetir hasta</label>
-                  <input type="date" id="evad_recurrence_until">
+              <div class="form-toggle-row" id="evadDateToggle"><span class="arrow">▸</span> Personalizar fecha de fin, horario de fin y repetición</div>
+              <div id="evadDateAdvancedWrap" class="hidden">
+                <div class="row-2">
+                  <div>
+                    <label for="evad_end_date">Fecha de finalización</label>
+                    <input type="date" id="evad_end_date">
+                  </div>
+                  <div>
+                    <label for="evad_end_time">Horario de finalización</label>
+                    <input type="time" id="evad_end_time">
+                  </div>
                 </div>
-                <div id="evad_recurrence_custom_wrap" class="hidden">
-                  <label for="evad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
-                  <textarea id="evad_recurrence_dates"></textarea>
+
+                <div id="evad_recurrence_section">
+                  <label for="evad_recurrence_type">Repetición</label>
+                  <select id="evad_recurrence_type">
+                    <option value="none">No se repite</option>
+                    <option value="weekly_fri">Todos los viernes</option>
+                    <option value="weekly_sat">Todos los sábados</option>
+                    <option value="weekend">Todos los fines de semana</option>
+                    <option value="weekly">Una vez por semana</option>
+                    <option value="custom">Fechas específicas</option>
+                  </select>
+                  <p class="field-hint">Genera un evento por cada fecha que coincida; se puede editar cada uno por separado después.</p>
+                  <div id="evad_recurrence_until_wrap" class="hidden">
+                    <label for="evad_recurrence_until">Repetir hasta</label>
+                    <input type="date" id="evad_recurrence_until">
+                  </div>
+                  <div id="evad_recurrence_custom_wrap" class="hidden">
+                    <label for="evad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
+                    <textarea id="evad_recurrence_dates"></textarea>
+                  </div>
                 </div>
               </div>
             </div>
