@@ -1058,14 +1058,14 @@ function renderHome(){
       </div>
     </div>` : ''}
 
-    <div class="section">
+    ${PLACES.length ? `<div class="section">
       <div class="section-head"><h2>Lugares para visitar</h2></div>
       <div class="section-desc">Los rincones más lindos de Potrero</div>
       <div class="hscroll-wrap">
         <div class="hscroll" id="placeScroll">${PLACES.map(placeCard).join('')}</div>
         <div class="edge-fade right" id="placeFadeRight"></div>
       </div>
-    </div>
+    </div>` : ''}
 
     <div class="section">
       <div class="section-head"><h2>Todos los comercios</h2><span class="see-all" onclick="navigate('/buscar')">Ver todos</span></div>
