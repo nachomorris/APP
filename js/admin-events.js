@@ -315,8 +315,10 @@ async function deleteEvAdmin(id) {
 function evAdSetChromeVisible(visible) {
   const topbar = document.querySelector('.topbar');
   const tabs = document.querySelector('.section-tabs');
+  const fullHeader = document.getElementById('evAdminFullHeader');
   if (topbar) topbar.classList.toggle('hidden', !visible);
   if (tabs) tabs.classList.toggle('hidden', !visible);
+  if (fullHeader) fullHeader.classList.toggle('hidden', visible); // se muestra justo cuando el resto se oculta
 }
 function evAdShowList() {
   evAdminFormView.classList.add('hidden');
