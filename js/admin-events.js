@@ -678,6 +678,14 @@ function evadSetupPreviewEditing() {
   // (perdería el cursor); se corta la burbuja para que el listener global del
   // form no dispare un render completo mientras se está escribiendo.
   preview.addEventListener('input', (e) => {
+    // Los inputs nativos de fecha/hora disparan 'input' mientras el usuario
+    // todavía está interactuando con el selector (antes de elegir un valor
+    // final); si eso llegaba a burbujear hasta el listener global del form,
+    // se re-renderizaba toda la preview a mitad de la interacción y el
+    // selector nativo se cerraba solo. Se corta acá sin sincronizar todavía
+    // (la sincronización real pasa en 'change', cuando el valor ya quedó fijo).
+    if (e.target.closest('[data-ev-quickfield]')) { e.stopPropagation(); return; }
+
     const el = e.target.closest('[data-ev-field]');
     if (!el || !el.isContentEditable) return;
     e.stopPropagation();

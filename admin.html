@@ -366,6 +366,14 @@
         <form id="evAdminForm">
           <input type="hidden" id="evad_id">
 
+          <div class="evad-preview-wrap">
+            <div class="evad-preview-label">Así se ve la ficha del evento · <span class="evad-preview-status" id="evadPreviewStatus"></span></div>
+            <p class="evad-preview-hint">💡 Podés editar los datos básicos tocando directamente acá arriba, o usar el formulario de abajo.</p>
+            <div id="evadPreview" class="evad-preview"></div>
+          </div>
+
+          <div id="evadOwnerInfo" class="evad-owner-info hidden"></div>
+
           <div class="form-section">
             <h3><span class="n">📋</span> Información básica</h3>
 
@@ -551,14 +559,6 @@
               </div>
             </div>
           </div>
-
-          <div class="evad-preview-wrap">
-            <div class="evad-preview-label">Así se ve la ficha del evento · <span class="evad-preview-status" id="evadPreviewStatus"></span></div>
-            <p class="evad-preview-hint">💡 Podés editar los datos básicos tocando directamente acá abajo, o usar el formulario de arriba.</p>
-            <div id="evadPreview" class="evad-preview"></div>
-          </div>
-
-          <div id="evadOwnerInfo" class="evad-owner-info hidden"></div>
 
           <button type="submit" class="btn btn-primary" id="evAdminSaveBtn">Guardar evento</button>
           <button type="button" class="btn btn-secondary" id="evAdminCancelBtn">Cancelar</button>
