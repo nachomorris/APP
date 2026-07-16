@@ -483,6 +483,22 @@ let hasSession = false;
 
 let NOVEDADES = [];
 
+// Interruptor cargado desde app_settings (tabla clave/valor): el admin
+// puede apagar toda la sección Novedades sin tocar código. Por defecto
+// (si todavía no existe la fila, o falla la consulta) queda habilitada.
+let NOVEDADES_ENABLED = true;
+async function loadAppSettings(){
+  try {
+    const { data, error } = await supabaseClient
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'novedades_enabled')
+      .maybeSingle();
+    if (error) return;
+    NOVEDADES_ENABLED = data ? data.value !== false : true;
+  } catch(e){ /* si falla, se queda habilitada por defecto */ }
+}
+
 /* ============ ACTIVIDADES (deportivas / culturales) ============
    Calcado de la Agenda de eventos: misma tabla de estructura, mismo
    diseño de tarjetas y detalle, pero con una sola etiqueta fija en
@@ -654,6 +670,7 @@ async function loadData(){
   await loadPlaces();
   await loadAgendaData();
   await loadActivitiesData();
+  await loadAppSettings();
 }
 
 // Restringe BUSINESSES a los comercios (publicados) de la cámara pedida
@@ -1049,7 +1066,8 @@ function setBottomnav(active){
     {key:'destacado', path:'/destacado', ic:'⭐', label:'Destacado'},
     {key:'agenda', path:'/agenda', ic:'🎉', label:'Eventos'},
     {key:'actividades', path:'/actividades', ic:'🏃', label:'Actividades'},
-    {key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'},
+    // Se apaga por completo si el admin deshabilitó el panel (ver loadAppSettings).
+    ...(NOVEDADES_ENABLED ? [{key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'}] : []),
     // No es una página interna: abre WhatsApp directo, con mensaje precargado.
     {key:'consultas', external:true, ic:'💬', label:'Consultas'},
   ];
@@ -1071,7 +1089,7 @@ function render(){
   if(parts[0]==='evento') return renderEventoDetail(parts[1]);
   if(parts[0]==='actividades') return renderActividades();
   if(parts[0]==='actividad') return renderActividadDetail(parts[1]);
-  if(parts[0]==='novedades') return renderNovedades();
+  if(parts[0]==='novedades') return NOVEDADES_ENABLED ? renderNovedades() : renderHome();
   if(parts[0]==='destacado') return renderDestacado();
   if(parts[0]==='comercio') return renderComercio(parts[1]);
   if(parts[0]==='lugares') return renderLugar(parts[1]);

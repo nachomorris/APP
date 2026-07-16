@@ -18,7 +18,36 @@ mainTabNovedades.addEventListener('click', () => {
   if (!novedadesLoaded) {
     novedadesLoaded = true;
     loadNovedadesAdmin();
+    loadNovedadesPanelSetting();
   }
+});
+
+// ---------- Interruptor: habilitar/deshabilitar todo el panel ----------
+const novedadesPanelEnabledInput = document.getElementById('novedadesPanelEnabled');
+
+async function loadNovedadesPanelSetting() {
+  const { data, error } = await supabaseClient
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'novedades_enabled')
+    .maybeSingle();
+  if (error) { showAlert('No se pudo leer el estado del panel: ' + error.message, 'error'); return; }
+  novedadesPanelEnabledInput.checked = data ? data.value !== false : true;
+}
+
+novedadesPanelEnabledInput.addEventListener('change', async () => {
+  const enabled = novedadesPanelEnabledInput.checked;
+  novedadesPanelEnabledInput.disabled = true;
+  const { error } = await supabaseClient
+    .from('app_settings')
+    .upsert({ key: 'novedades_enabled', value: enabled });
+  novedadesPanelEnabledInput.disabled = false;
+  if (error) {
+    showAlert('No se pudo actualizar: ' + error.message, 'error');
+    novedadesPanelEnabledInput.checked = !enabled;
+    return;
+  }
+  showAlert(enabled ? 'Panel de Novedades habilitado: ya se ve en el sitio.' : 'Panel de Novedades deshabilitado: desapareció de la barra inferior del sitio.', 'success');
 });
 
 async function loadNovedadesAdmin() {

@@ -812,6 +812,11 @@
           <button class="btn btn-primary btn-small" id="newNovedadBtn">+ Nueva novedad</button>
         </div>
         <p class="subtitle" style="margin-bottom:14px;">Estas novedades aparecen en la sección "Novedades" del sitio, ordenadas de la más reciente a la más vieja.</p>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:10px 12px; background:var(--bg2, #f4f4f4); border-radius:10px;">
+          <input type="checkbox" id="novedadesPanelEnabled" style="width:auto;">
+          <span style="font-weight:600; color:var(--muted); font-size:14px;">Panel habilitado (visible en el sitio). Si lo apagás, "Novedades" desaparece de la barra inferior y nadie puede entrar a esa sección, aunque las novedades sigan cargadas acá.</span>
+        </label>
         <div id="novedadesList">
           <p class="empty-state">Cargando...</p>
         </div>
