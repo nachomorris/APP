@@ -94,7 +94,10 @@ async function requireAdmin() {
   currentAdminRole = profile.role;
 
   if (isMasterEventos && !isFullAdmin) {
-    // Master Eventos: solo puede ver/administrar la pestaña Eventos.
+    // Master Eventos: administra Eventos y Actividades (misma tabla
+    // "activities" ahora también le da permiso de escritura vía
+    // is_master_eventos(), ver schema_update_28.sql), pero no
+    // Comercios, Novedades, Usuarios, Destacados ni Lugares.
     ['mainTabBusinesses', 'mainTabNovedades', 'mainTabUsuarios', 'mainTabFeatured', 'mainTabPlaces'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.classList.add('hidden');

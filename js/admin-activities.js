@@ -751,8 +751,14 @@ actAdminForm.addEventListener('submit', async (e) => {
 
   try {
     if (id) {
-      const { error } = await supabaseClient.from('activities').update(basePayload).eq('id', id);
+      // Pedimos .select() a propósito: si la RLS bloquea la fila (por
+      // ejemplo un usuario sin permiso real sobre "activities"),
+      // Postgres no tira error, solo no actualiza nada — sin el
+      // .select() acá no nos enterábamos y mostrábamos "guardado"
+      // aunque no se hubiera guardado nada.
+      const { data, error } = await supabaseClient.from('activities').update(basePayload).eq('id', id).select('id');
       if (error) throw error;
+      if (!data || !data.length) throw new Error('No se pudo guardar: no tenés permiso para editar esta actividad.');
     } else {
       const row = { ...basePayload, owner_id: currentAdminUser.id };
       const { error } = await supabaseClient.from('activities').insert([row]);
