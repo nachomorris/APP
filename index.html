@@ -492,9 +492,14 @@ const ACT_TAGS_PUBLIC = {
   deportiva: { id: 'deportiva', label: 'Deportiva', icon: '🏅', color: '#ca8a04' },
   cultural: { id: 'cultural', label: 'Cultural', icon: '🎭', color: '#7c3aed' },
 };
-// Botón fijo de "Consultas" en el detalle de cada actividad: todas
-// van a este mismo número, no al contacto propio de la actividad.
-const ACTIVITIES_INQUIRIES_WHATSAPP = '+5492665022328';
+// WhatsApp fijo de "Consultas" (detalle de cada actividad + barra
+// inferior de toda la app): todas van a este mismo número, con un
+// mensaje precargado, no al contacto propio de cada actividad/comercio.
+const INQUIRIES_WHATSAPP = '+5492665022328';
+const INQUIRIES_WHATSAPP_MSG = 'Hola, estoy en la APP de Potrero Encanta y quisiera hacerles una consulta.';
+function inquiriesWaLink(){
+  return waLink(INQUIRIES_WHATSAPP) + '?text=' + encodeURIComponent(INQUIRIES_WHATSAPP_MSG);
+}
 function activityTag(id){
   return ACT_TAGS_PUBLIC[id] || { id:'', label:'Actividad', icon:'🏅', color:'#111111' };
 }
@@ -1045,9 +1050,13 @@ function setBottomnav(active){
     {key:'agenda', path:'/agenda', ic:'🎉', label:'Eventos'},
     {key:'actividades', path:'/actividades', ic:'🏃', label:'Actividades'},
     {key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'},
+    // No es una página interna: abre WhatsApp directo, con mensaje precargado.
+    {key:'consultas', external:true, ic:'💬', label:'Consultas'},
   ];
   document.getElementById('bottomnav').innerHTML = items.map(i=>
-    `<a class="${active===i.key?'active':''}" onclick="navigate('${i.path}')"><span class="ic">${i.ic}</span>${i.label}</a>`
+    i.external
+      ? `<a href="${inquiriesWaLink()}" target="_blank" rel="noopener"><span class="ic">${i.ic}</span>${i.label}</a>`
+      : `<a class="${active===i.key?'active':''}" onclick="navigate('${i.path}')"><span class="ic">${i.ic}</span>${i.label}</a>`
   ).join('');
 }
 
@@ -2130,7 +2139,7 @@ function renderActividadDetail(id){
       ${isAddressUrl(a.address) ? `<a class="map" href="${a.address}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ((a.lat && a.lng) ? `<a class="map" href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (a.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(a.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''))}
     </div>
     <div class="cta-btns" style="margin-top:10px;">
-      <a class="wsp" style="flex:1;" href="${waLink(ACTIVITIES_INQUIRIES_WHATSAPP)}" target="_blank" rel="noopener">💬 Consultas</a>
+      <a class="wsp" style="flex:1;" href="${inquiriesWaLink()}" target="_blank" rel="noopener">💬 Consultas</a>
       <a class="map" style="flex:1;" onclick="shareActivity('${a.id}')">📤 Compartir</a>
     </div>
     ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${a.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
