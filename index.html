@@ -1980,7 +1980,6 @@ function renderActividades(){
     </div>` : ''}
 
     <div class="section" style="margin-top:${featured.length?'32px':'0'};">
-      <div class="section-head"><h2>Actividades</h2></div>
       <div id="activitiesList"></div>
     </div>
   `;
@@ -2012,20 +2011,7 @@ function renderActividadesList(){
     return;
   }
 
-  const hoy = items.filter(isActivityToday);
-  const resto = items.filter(a=>!isActivityToday(a));
-
-  let html = '';
-  let counter = 0;
-  const section = (title, arr) => {
-    if(!arr.length) return;
-    html += `<div class="agenda-group-title">${title}</div>`;
-    arr.forEach(a=>{ html += activityCard(a, counter++); });
-  };
-  section('Hoy', hoy);
-  section('Todas las actividades', resto);
-
-  list.innerHTML = html;
+  list.innerHTML = items.map((a,i)=>activityCard(a,i)).join('');
   initScrollReveal();
 }
 
