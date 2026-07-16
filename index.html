@@ -265,6 +265,23 @@
   }
   .filter-pill.active{background:var(--ink);border-color:var(--ink);color:var(--primary);}
 
+  /* Actividades: logo del Año de la Educación al lado de los filtros. */
+  .filter-row-with-logo{display:flex;align-items:center;gap:12px;}
+  .filter-row-with-logo .filter-row{flex:1;margin-bottom:0;justify-content:flex-end;}
+  .filter-row-with-logo .filter-pill{
+    border-radius:8px;padding:9px 16px;
+    box-shadow:0 2px 5px rgba(0,0,0,.12), inset 0 1px 1px rgba(255,255,255,.9), inset 0 -1px 2px rgba(0,0,0,.06);
+  }
+  .filter-row-with-logo .filter-pill.active{
+    box-shadow:0 2px 6px rgba(0,0,0,.25), inset 0 1px 1px rgba(255,255,255,.15), inset 0 -1px 2px rgba(0,0,0,.25);
+  }
+  .educ-logo-wrap{
+    display:flex;align-items:center;justify-content:center;background:#fff;
+    padding:6px 16px 6px 14px;border-radius:14px 0 0 14px;margin-right:-16px;margin-top:-13px;flex:none;
+    box-shadow:0 6px 14px rgba(0,0,0,.22), 0 2px 4px rgba(0,0,0,.14);
+  }
+  .educ-logo{height:60px;width:auto;display:block;}
+
   /* Detail page */
   .detail-hero{height:180px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:56px;color:var(--primary);background:var(--ink);margin-bottom:16px;overflow:hidden;position:relative;}
   .detail-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -1950,7 +1967,10 @@ function renderActividades(){
           <input id="activitiesSearch" placeholder="Buscar actividad..." value="${activitiesState.q}">
         </div>
       </div>
-      <div class="filter-row" id="activitiesTagRow"></div>
+      <div class="filter-row-with-logo">
+        <div class="filter-row" id="activitiesTagRow"></div>
+        <div class="educ-logo-wrap"><img class="educ-logo" src="images/educ.png" alt="Año de la Educación"></div>
+      </div>
     </div>
 
     ${featured.length ? `
@@ -1966,7 +1986,7 @@ function renderActividades(){
   `;
 
   document.getElementById('activitiesTagRow').innerHTML = [
-    {k:'todas', l:'Todas'}, {k:'deportiva', l:'🏅 Deportivas'}, {k:'cultural', l:'🎭 Culturales'}
+    {k:'deportiva', l:'🏅 Deportivas'}, {k:'cultural', l:'🎭 Culturales'}
   ].map(f=>`<button class="filter-pill ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${f.l}</button>`).join('');
 
   document.getElementById('activitiesSearch').addEventListener('input', e=>{
@@ -1979,7 +1999,8 @@ function renderActividades(){
   initScrollReveal();
 }
 
-function setActividadesTag(k){ activitiesState.tag = k; renderActividades(); }
+// Sin botón "Todas": tocar una etiqueta ya activa la desmarca (vuelve a mostrar todas).
+function setActividadesTag(k){ activitiesState.tag = (activitiesState.tag === k) ? 'todas' : k; renderActividades(); }
 
 function renderActividadesList(){
   const items = activeUpcomingActivities().filter(matchesActivitiesFilters);
