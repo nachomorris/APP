@@ -492,6 +492,9 @@ const ACT_TAGS_PUBLIC = {
   deportiva: { id: 'deportiva', label: 'Deportiva', icon: '🏅', color: '#ca8a04' },
   cultural: { id: 'cultural', label: 'Cultural', icon: '🎭', color: '#7c3aed' },
 };
+// Botón fijo de "Consultas" en el detalle de cada actividad: todas
+// van a este mismo número, no al contacto propio de la actividad.
+const ACTIVITIES_INQUIRIES_WHATSAPP = '+5492665022328';
 function activityTag(id){
   return ACT_TAGS_PUBLIC[id] || { id:'', label:'Actividad', icon:'🏅', color:'#111111' };
 }
@@ -2127,6 +2130,7 @@ function renderActividadDetail(id){
       ${isAddressUrl(a.address) ? `<a class="map" href="${a.address}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ((a.lat && a.lng) ? `<a class="map" href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (a.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(a.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''))}
     </div>
     <div class="cta-btns" style="margin-top:10px;">
+      <a class="wsp" style="flex:1;" href="${waLink(ACTIVITIES_INQUIRIES_WHATSAPP)}" target="_blank" rel="noopener">💬 Consultas</a>
       <a class="map" style="flex:1;" onclick="shareActivity('${a.id}')">📤 Compartir</a>
     </div>
     ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${a.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
