@@ -10,11 +10,13 @@
 // Se carga después de js/admin.js y js/admin-events.js: reutiliza
 // de ahí supabaseClient, showAlert(), clearAlert(), escapeHtml(),
 // showAdminSection(), currentAdminUser, y varios helpers genéricos
-// que no son específicos de eventos (evStatusLabel, EVAD_MESES_ES,
-// evAdParseDate/evAdFmtDate, evAdFmtDay/evAdFmtDateRange/evAdFmtTimeRange,
-// evAdPriceLabel, evAdWebsiteUrl/evAdInstagramUrl/evAdIsUrl,
-// evAdSetupToggle, evadResizeImageToBlob, evadPreviewPointFromEvent,
-// evAdComputeOccurrences).
+// que no son específicos de eventos (evStatusLabel, evAdPriceLabel,
+// evAdWebsiteUrl/evAdInstagramUrl/evAdIsUrl, evAdSetupToggle,
+// evadResizeImageToBlob, evadPreviewPointFromEvent).
+//
+// Las actividades no tienen fecha puntual (se hacen todo el año):
+// en vez de start_date/end_date/recurrencia tienen days_of_week
+// (checkboxes Lunes..Domingo) + un horario.
 // ============================================================
 
 // Etiquetas fijas (no hay tabla de categorías para actividades).
@@ -24,6 +26,32 @@ const ACT_TAGS = {
 };
 function actTagInfo(id) {
   return ACT_TAGS[id] || { id: '', label: 'Elegir etiqueta', icon: '🏷️', color: '#111111' };
+}
+
+// Las actividades no tienen fecha puntual: se repiten todo el año en
+// ciertos días de la semana.
+const ACT_DAYS = [
+  { id: 'lunes', label: 'Lunes' },
+  { id: 'martes', label: 'Martes' },
+  { id: 'miercoles', label: 'Miércoles' },
+  { id: 'jueves', label: 'Jueves' },
+  { id: 'viernes', label: 'Viernes' },
+  { id: 'sabado', label: 'Sábado' },
+  { id: 'domingo', label: 'Domingo' },
+];
+function actFormatDays(days) {
+  if (!days || !days.length) return 'Sin días asignados';
+  const ordered = ACT_DAYS.filter((d) => days.includes(d.id)).map((d) => d.label);
+  if (ordered.length === 7) return 'Todos los días';
+  if (ordered.length === 1) return ordered[0];
+  return ordered.slice(0, -1).join(', ') + ' y ' + ordered[ordered.length - 1];
+}
+function actGetCheckedDays() {
+  return Array.from(document.querySelectorAll('.actad-day:checked')).map((el) => el.value);
+}
+function actSetCheckedDays(days) {
+  const set = new Set(days || []);
+  document.querySelectorAll('.actad-day').forEach((el) => { el.checked = set.has(el.value); });
 }
 
 let actAdminBusinesses = [];
@@ -41,7 +69,6 @@ const actadBusinessResults = document.getElementById('actad_business_results');
 const actadTagSelect = document.getElementById('actad_tag');
 const actadIsFree = document.getElementById('actad_is_free');
 const actadRequiresRegistration = document.getElementById('actad_requires_registration');
-const actadRecurrenceType = document.getElementById('actad_recurrence_type');
 const actadTitleInput = document.getElementById('actad_title');
 
 // El título se guarda siempre en mayúscula (dato real, no solo estilo
@@ -135,23 +162,13 @@ document.getElementById('actAdminStatusTabs').addEventListener('click', (e) => {
 });
 document.getElementById('actAdminTagFilter').addEventListener('change', renderActAdminList);
 document.getElementById('actAdminOrgSearch').addEventListener('input', renderActAdminList);
-document.getElementById('actAdminDateFilter').addEventListener('input', renderActAdminList);
-
-function actAdminIsFinished(a) {
-  const [y, m, d] = (a.end_date || a.start_date).split('-').map(Number);
-  const end = new Date(y, m - 1, d);
-  const t = a.end_time || a.start_time || '23:59:59';
-  const [h, mi] = t.split(':').map(Number);
-  end.setHours(h || 23, mi || 59, 0, 0);
-  return end.getTime() < Date.now();
-}
 
 async function loadActAdminActivities() {
   actAdminList.innerHTML = '<p class="empty-state">Cargando...</p>';
   const { data, error } = await supabaseClient
     .from('activities')
     .select('*, businesses(id, legacy_id, name), profiles(full_name, phone, email)')
-    .order('start_date', { ascending: true });
+    .order('title', { ascending: true });
   if (error) { actAdminList.innerHTML = ''; showAlert('No se pudo cargar el listado de actividades: ' + error.message, 'error'); return; }
   actAdminActivities = data || [];
   updateActAdminStatusCounts();
@@ -166,7 +183,6 @@ function updateActAdminStatusCounts() {
   actAdminActivities.forEach((a) => {
     if (a.status in counts) counts[a.status]++;
     if (a.is_featured) counts.featured++;
-    if (actAdminIsFinished(a)) counts.finished++;
   });
   document.querySelectorAll('#actAdminStatusTabs .tab-count').forEach((el) => {
     const key = el.getAttribute('data-count-for');
@@ -178,17 +194,13 @@ function renderActAdminList() {
   let items = actAdminActivities.slice();
   const tagFilter = document.getElementById('actAdminTagFilter').value;
   const orgSearch = document.getElementById('actAdminOrgSearch').value.trim().toLowerCase();
-  const dateFilter = document.getElementById('actAdminDateFilter').value;
 
   if (actAdminStatusFilter === 'featured') {
     items = items.filter((a) => a.is_featured);
-  } else if (actAdminStatusFilter === 'finished') {
-    items = items.filter((a) => actAdminIsFinished(a));
   } else if (actAdminStatusFilter !== 'all') {
     items = items.filter((a) => a.status === actAdminStatusFilter);
   }
   if (tagFilter) items = items.filter((a) => a.tag === tagFilter);
-  if (dateFilter) items = items.filter((a) => a.start_date <= dateFilter && a.end_date >= dateFilter);
   if (orgSearch) {
     items = items.filter((a) => {
       const org = (a.businesses ? a.businesses.name : '') + ' ' + (a.title || '');
@@ -213,7 +225,7 @@ function renderActAdminCard(a) {
   const tag = actTagInfo(a.tag);
   const owner = a.profiles || {};
   const org = a.businesses ? a.businesses.name : '(organiza el municipio)';
-  const dateLabel = a.start_date === a.end_date ? a.start_date : `${a.start_date} → ${a.end_date}`;
+  const daysLabel = actFormatDays(a.days_of_week);
 
   const card = document.createElement('div');
   card.className = 'card admin-card';
@@ -230,7 +242,7 @@ function renderActAdminCard(a) {
       <dd>${escapeHtml(org)} ${a.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}</dd>
 
       <dt>Cuándo</dt>
-      <dd>${escapeHtml(dateLabel)}${a.start_time ? ' · ' + a.start_time.slice(0, 5) : ''}${a.end_time ? ' a ' + a.end_time.slice(0, 5) : ''}</dd>
+      <dd>${escapeHtml(daysLabel)}${a.start_time ? ' · ' + a.start_time.slice(0, 5) : ''}${a.end_time ? ' a ' + a.end_time.slice(0, 5) : ''}</dd>
 
       <dt>Cargada por</dt>
       <dd>${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}</dd>
@@ -334,17 +346,12 @@ document.getElementById('actAdminBackBtn').addEventListener('click', actAdShowLi
 
 actadIsFree.addEventListener('change', () => document.getElementById('actad_price_wrap').classList.toggle('hidden', actadIsFree.checked));
 actadRequiresRegistration.addEventListener('change', () => document.getElementById('actad_registration_wrap').classList.toggle('hidden', !actadRequiresRegistration.checked));
-actadRecurrenceType.addEventListener('change', () => {
-  const t = actadRecurrenceType.value;
-  document.getElementById('actad_recurrence_until_wrap').classList.toggle('hidden', t === 'none' || t === 'custom');
-  document.getElementById('actad_recurrence_custom_wrap').classList.toggle('hidden', t !== 'custom');
-});
+document.querySelectorAll('.actad-day').forEach((el) => el.addEventListener('change', () => { if (typeof renderActAdPreview === 'function') renderActAdPreview(); }));
 
 // ---------- Secciones colapsables (reutiliza evAdSetupToggle, genérico) ----------
 const actadGalleryToggleCtl = evAdSetupToggle('actadGalleryToggle', 'actadGalleryWrap');
 const actadBasicToggleCtl = evAdSetupToggle('actadBasicToggle', 'actadBasicWrap');
 const actadWhenToggleCtl = evAdSetupToggle('actadWhenToggle', 'actadWhenWrap');
-const actadDateToggleCtl = evAdSetupToggle('actadDateToggle', 'actadDateAdvancedWrap');
 const actadLocationToggleCtl = evAdSetupToggle('actadLocationToggle', 'actadLocationWrap');
 const actadPriceToggleCtl = evAdSetupToggle('actadPriceToggle', 'actadPriceWrap');
 const actadStatusToggleCtl = evAdSetupToggle('actadStatusToggle', 'actadStatusWrap');
@@ -418,8 +425,7 @@ function renderActAdPreview() {
   const rawDesc = document.getElementById('actad_description').value.trim();
   const cover = document.getElementById('actad_cover_image').value.trim();
   const rawAddress = document.getElementById('actad_address').value.trim();
-  const startDate = document.getElementById('actad_start_date').value;
-  const endDate = document.getElementById('actad_end_date').value;
+  const selectedDays = actGetCheckedDays();
   const startTime = document.getElementById('actad_start_time').value;
   const endTime = document.getElementById('actad_end_time').value;
   const rawPhone = document.getElementById('actad_phone').value.trim();
@@ -437,10 +443,7 @@ function renderActAdPreview() {
   const focalX = parseFloat(actadFocalXInput.value) || 50;
   const focalY = parseFloat(actadFocalYInput.value) || 50;
 
-  const hasCustomEnd = !!((endDate && endDate !== startDate) || endTime);
-  const endHint = hasCustomEnd
-    ? `Hasta ${endDate ? escapeHtml(evAdFmtDay(endDate)) : ''}${endTime ? ' · ' + escapeHtml(endTime.slice(0, 5)) + ' hs' : ''} <span style="opacity:.6;">(desde "Personalizar" arriba)</span>`
-    : '';
+  const daysLabel = actFormatDays(selectedDays);
 
   preview.innerHTML = `
     <div class="evad-top-card">
@@ -460,17 +463,17 @@ function renderActAdPreview() {
 
     <div class="detail-block">
       <h3>Cuándo</h3>
+      <p style="margin:0 0 8px; font-weight:700;">${escapeHtml(daysLabel)} <span style="opacity:.6; font-weight:400;">(elegir días arriba, en "Días y horario")</span></p>
       <div class="evad-quick-datetime">
         <div class="evad-qd-field">
-          <span class="evad-qd-label">Fecha</span>
-          <input type="date" data-act-quickfield="start_date" value="${startDate || ''}">
-        </div>
-        <div class="evad-qd-field">
-          <span class="evad-qd-label">Hora</span>
+          <span class="evad-qd-label">Hora inicio</span>
           <input type="time" data-act-quickfield="start_time" value="${startTime ? startTime.slice(0, 5) : ''}">
         </div>
+        <div class="evad-qd-field">
+          <span class="evad-qd-label">Hora fin</span>
+          <input type="time" data-act-quickfield="end_time" value="${endTime ? endTime.slice(0, 5) : ''}">
+        </div>
       </div>
-      ${endHint ? `<p class="field-hint" style="margin:6px 0 0;">${endHint}</p>` : ''}
     </div>
 
     <div class="detail-block">
@@ -503,8 +506,8 @@ const ACTAD_PREVIEW_TEXT_FIELDS = {
   instagram: 'actad_instagram',
 };
 const ACTAD_PREVIEW_QUICK_FIELDS = {
-  start_date: 'actad_start_date',
   start_time: 'actad_start_time',
+  end_time: 'actad_end_time',
 };
 
 let actadCoverDragMoved = false;
@@ -615,13 +618,10 @@ function actAdResetForm() {
   document.getElementById('actad_id').value = '';
   document.getElementById('actad_price_wrap').classList.remove('hidden');
   document.getElementById('actad_registration_wrap').classList.add('hidden');
-  document.getElementById('actad_recurrence_until_wrap').classList.add('hidden');
-  document.getElementById('actad_recurrence_custom_wrap').classList.add('hidden');
-  document.getElementById('actad_recurrence_section').classList.remove('hidden');
+  actSetCheckedDays([]);
   actadGalleryToggleCtl.setOpen(false);
   actadBasicToggleCtl.setOpen(false);
   actadWhenToggleCtl.setOpen(false);
-  actadDateToggleCtl.setOpen(false);
   actadLocationToggleCtl.setOpen(false);
   actadPriceToggleCtl.setOpen(false);
   actadStatusToggleCtl.setOpen(false);
@@ -643,7 +643,6 @@ function openActAdminForm(a) {
   actAdResetForm();
   document.getElementById('actAdminFormTitle').textContent = 'Editar actividad';
   document.getElementById('actad_id').value = a.id;
-  document.getElementById('actad_recurrence_section').classList.add('hidden');
   actadPhotoFolderId = a.id;
   const org = a.businesses ? a.businesses.name : '';
   actAdSetBusinessSelection(a.business_id || '', org);
@@ -655,8 +654,7 @@ function openActAdminForm(a) {
   actadApplyFocalPoint(a.cover_focal_x != null ? a.cover_focal_x : 50, a.cover_focal_y != null ? a.cover_focal_y : 50);
   document.getElementById('actad_gallery').value = (a.gallery || []).join(', ');
   if ((a.gallery || []).length) { actadGalleryWrap.classList.remove('hidden'); actadGalleryToggle.classList.add('open'); }
-  document.getElementById('actad_start_date').value = a.start_date || '';
-  document.getElementById('actad_end_date').value = a.end_date || '';
+  actSetCheckedDays(a.days_of_week || []);
   document.getElementById('actad_start_time').value = a.start_time ? a.start_time.slice(0, 5) : '';
   document.getElementById('actad_end_time').value = a.end_time ? a.end_time.slice(0, 5) : '';
   document.getElementById('actad_address').value = a.address || '';
@@ -670,16 +668,13 @@ function openActAdminForm(a) {
   actadRequiresRegistration.checked = !!a.requires_registration;
   document.getElementById('actad_registration_wrap').classList.toggle('hidden', !actadRequiresRegistration.checked);
   document.getElementById('actad_registration_url').value = a.registration_url || '';
-  actadRecurrenceType.value = 'none';
   document.getElementById('actad_status').value = a.status;
   document.getElementById('actad_is_featured').checked = !!a.is_featured;
   document.getElementById('actad_featured_order').value = a.featured_order || 0;
   actAdRenderOwnerInfo(a);
 
-  const hasCustomDate = !!(a.end_date && a.end_date !== a.start_date) || !!a.end_time || !!a.recurrence_group_id;
   actadBasicToggleCtl.setOpen(true);
-  actadWhenToggleCtl.setOpen(hasCustomDate);
-  actadDateToggleCtl.setOpen(hasCustomDate);
+  actadWhenToggleCtl.setOpen(true);
   actadLocationToggleCtl.setOpen(!!(a.address || a.phone || a.whatsapp || a.instagram || a.website));
   actadPriceToggleCtl.setOpen(!a.is_free || !!a.requires_registration);
   actadStatusToggleCtl.setOpen(true);
@@ -716,17 +711,13 @@ actAdminForm.addEventListener('submit', async (e) => {
   }
 
   const id = document.getElementById('actad_id').value;
-  const startDate = document.getElementById('actad_start_date').value;
-  const endDate = document.getElementById('actad_end_date').value || startDate;
+  const daysOfWeek = actGetCheckedDays();
   if (!document.getElementById('actad_title').value.trim()) { actadBasicToggleCtl.setOpen(true); showAlert('El título es obligatorio.', 'error'); return; }
   if (!actadTagSelect.value) { actadBasicToggleCtl.setOpen(true); showAlert('Elegí una etiqueta.', 'error'); return; }
-  if (!startDate) { actadWhenToggleCtl.setOpen(true); showAlert('Completá la fecha.', 'error'); return; }
-  if (endDate < startDate) { showAlert('La fecha de finalización no puede ser anterior a la de inicio.', 'error'); return; }
+  if (!daysOfWeek.length) { actadWhenToggleCtl.setOpen(true); showAlert('Elegí al menos un día de la semana.', 'error'); return; }
 
   const isFree = actadIsFree.checked;
   const requiresReg = actadRequiresRegistration.checked;
-  const recurrenceType = actadRecurrenceType.value;
-  const spanDays = Math.round((evAdParseDate(endDate) - evAdParseDate(startDate)) / 86400000);
 
   const basePayload = {
     business_id: actadBusinessIdInput.value || null,
@@ -738,6 +729,7 @@ actAdminForm.addEventListener('submit', async (e) => {
     cover_focal_x: parseFloat(actadFocalXInput.value) || 50,
     cover_focal_y: parseFloat(actadFocalYInput.value) || 50,
     gallery: document.getElementById('actad_gallery').value.split(',').map((s) => s.trim()).filter(Boolean),
+    days_of_week: daysOfWeek,
     start_time: document.getElementById('actad_start_time').value || null,
     end_time: document.getElementById('actad_end_time').value || null,
     address: document.getElementById('actad_address').value.trim(),
@@ -749,7 +741,6 @@ actAdminForm.addEventListener('submit', async (e) => {
     price: isFree ? null : (document.getElementById('actad_price').value ? parseFloat(document.getElementById('actad_price').value) : null),
     requires_registration: requiresReg,
     registration_url: requiresReg ? document.getElementById('actad_registration_url').value.trim() : '',
-    recurrence_type: recurrenceType,
     status: document.getElementById('actad_status').value,
     is_featured: document.getElementById('actad_is_featured').checked,
     featured_order: parseInt(document.getElementById('actad_featured_order').value, 10) || 0,
@@ -760,20 +751,11 @@ actAdminForm.addEventListener('submit', async (e) => {
 
   try {
     if (id) {
-      const payload = { ...basePayload, start_date: startDate, end_date: endDate };
-      const { error } = await supabaseClient.from('activities').update(payload).eq('id', id);
+      const { error } = await supabaseClient.from('activities').update(basePayload).eq('id', id);
       if (error) throw error;
     } else {
-      const untilStr = document.getElementById('actad_recurrence_until').value;
-      const customRaw = document.getElementById('actad_recurrence_dates').value;
-      const occurrences = evAdComputeOccurrences(startDate, recurrenceType, untilStr, customRaw);
-      const recurrenceGroupId = (occurrences.length > 1 && crypto.randomUUID) ? crypto.randomUUID() : null;
-      const rows = occurrences.map((d) => {
-        const s = evAdFmtDate(d);
-        const en = evAdFmtDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + spanDays));
-        return { ...basePayload, start_date: s, end_date: en, recurrence_group_id: recurrenceGroupId, owner_id: currentAdminUser.id };
-      });
-      const { error } = await supabaseClient.from('activities').insert(rows);
+      const row = { ...basePayload, owner_id: currentAdminUser.id };
+      const { error } = await supabaseClient.from('activities').insert([row]);
       if (error) throw error;
     }
 

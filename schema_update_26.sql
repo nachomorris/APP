@@ -2,12 +2,15 @@
 -- Update 26: sección "Actividades" (deportivas / culturales).
 --
 -- Calcada de "events" (misma estructura: portada con foco, galería,
--- fecha/hora, recurrencia, cronograma multi-día, precio/inscripción,
--- destacados, estados) pero más simple en un punto clave: acá NO hay
--- flujo de comercios cargando sus propias actividades. Solo el
--- municipio (admin) las carga, así que no hace falta ningún esquema
--- de ownership/revisión — el admin tiene acceso total y el público
--- solo lee las publicadas.
+-- precio/inscripción, destacados, estados) pero con dos diferencias
+-- clave:
+--   1) Acá NO hay flujo de comercios cargando sus propias actividades.
+--      Solo el municipio (admin) las carga, así que no hace falta
+--      ningún esquema de ownership/revisión — el admin tiene acceso
+--      total y el público solo lee las publicadas.
+--   2) Las actividades se hacen todo el año (no tienen una fecha
+--      puntual como un evento): en vez de start_date/end_date tienen
+--      days_of_week (qué días de la semana se repiten) + un horario.
 --
 -- En vez de una tabla de categorías (como event_categories), las
 -- actividades usan una sola etiqueta fija: 'deportiva' o 'cultural'.
@@ -36,8 +39,11 @@ create table public.activities (
 
   tag text not null check (tag in ('deportiva', 'cultural')),
 
-  start_date date not null,
-  end_date date not null,
+  -- Las actividades se hacen todo el año, no tienen fecha puntual:
+  -- se repiten semanalmente en estos días (lunes..domingo) dentro
+  -- de un mismo horario.
+  days_of_week text[] not null default '{}'
+    check (days_of_week <@ array['lunes','martes','miercoles','jueves','viernes','sabado','domingo']::text[]),
   start_time time,
   end_time time,
 
@@ -57,12 +63,8 @@ create table public.activities (
   registration_url text,
   capacity int,
 
-  -- Recurrencia: igual que en eventos, se generan varias filas (una
-  -- por fecha real) que comparten recurrence_group_id.
-  recurrence_type text not null default 'none'
-    check (recurrence_type in ('none','weekly_fri','weekly_sat','weekend','weekly','custom')),
-  recurrence_group_id uuid,
-
+  -- 'finished' acá es manual (lo pone el admin cuando el programa/
+  -- temporada termina), no se calcula por fecha porque no hay fecha.
   status text not null default 'draft'
     check (status in ('draft','pending','approved','published','needs_changes','rejected','finished','hidden')),
   review_note text,
@@ -73,15 +75,12 @@ create table public.activities (
   views_count int not null default 0,
 
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-
-  constraint activities_end_after_start check (end_date >= start_date)
+  updated_at timestamptz not null default now()
 );
 
-create index activities_status_start_idx on public.activities (status, start_date);
+create index activities_status_idx on public.activities (status);
 create index activities_business_idx on public.activities (business_id);
 create index activities_tag_idx on public.activities (tag);
-create index activities_recurrence_group_idx on public.activities (recurrence_group_id);
 
 alter table public.activities enable row level security;
 

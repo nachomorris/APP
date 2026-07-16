@@ -140,6 +140,15 @@
   }
   .evad-photo-preview.pickable .evad-focal-marker { display: block; }
   .evad-focal-hint { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .day-checks {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+  }
+  .day-checks label {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+    background: var(--bg2, #f4f4f4); border: 1px solid rgba(0,0,0,.08); border-radius: 10px;
+    padding: 7px 10px; cursor: pointer;
+  }
+  .day-checks input { margin: 0; }
 </style>
 </head>
 <body>
@@ -612,7 +621,6 @@
         </select>
         <input type="text" id="actAdminOrgSearch" placeholder="Buscar por organizador o título...">
       </div>
-      <input type="date" id="actAdminDateFilter" style="margin-bottom:14px;">
 
       <button class="btn btn-primary btn-small" id="newActivityBtn" style="margin-bottom:14px;">+ Crear actividad</button>
 
@@ -678,51 +686,27 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadWhenToggle"><span class="arrow">▸</span> <span class="n">📅</span> Fecha y horario</div>
+            <div class="form-toggle-row" id="actadWhenToggle"><span class="arrow">▸</span> <span class="n">📅</span> Días y horario</div>
             <div id="actadWhenWrap" class="hidden">
-              <div class="row-2">
-                <div>
-                  <label for="actad_start_date">Fecha *</label>
-                  <input type="date" id="actad_start_date" required>
-                </div>
-                <div>
-                  <label for="actad_start_time">Horario</label>
-                  <input type="time" id="actad_start_time">
-                </div>
+              <p class="field-hint">Las actividades se hacen todo el año: elegí en qué días de la semana ocurren.</p>
+              <div id="actad_days_wrap" class="day-checks">
+                <label><input type="checkbox" class="actad-day" value="lunes"> Lunes</label>
+                <label><input type="checkbox" class="actad-day" value="martes"> Martes</label>
+                <label><input type="checkbox" class="actad-day" value="miercoles"> Miércoles</label>
+                <label><input type="checkbox" class="actad-day" value="jueves"> Jueves</label>
+                <label><input type="checkbox" class="actad-day" value="viernes"> Viernes</label>
+                <label><input type="checkbox" class="actad-day" value="sabado"> Sábado</label>
+                <label><input type="checkbox" class="actad-day" value="domingo"> Domingo</label>
               </div>
 
-              <div class="form-toggle-row" id="actadDateToggle"><span class="arrow">▸</span> Personalizar fecha de fin, horario de fin y repetición</div>
-              <div id="actadDateAdvancedWrap" class="hidden">
-                <div class="row-2">
-                  <div>
-                    <label for="actad_end_date">Fecha de finalización</label>
-                    <input type="date" id="actad_end_date">
-                  </div>
-                  <div>
-                    <label for="actad_end_time">Horario de finalización</label>
-                    <input type="time" id="actad_end_time">
-                  </div>
+              <div class="row-2">
+                <div>
+                  <label for="actad_start_time">Horario de inicio</label>
+                  <input type="time" id="actad_start_time">
                 </div>
-
-                <div id="actad_recurrence_section">
-                  <label for="actad_recurrence_type">Repetición</label>
-                  <select id="actad_recurrence_type">
-                    <option value="none">No se repite</option>
-                    <option value="weekly_fri">Todos los viernes</option>
-                    <option value="weekly_sat">Todos los sábados</option>
-                    <option value="weekend">Todos los fines de semana</option>
-                    <option value="weekly">Una vez por semana</option>
-                    <option value="custom">Fechas específicas</option>
-                  </select>
-                  <p class="field-hint">Genera una actividad por cada fecha que coincida; se puede editar cada una por separado después.</p>
-                  <div id="actad_recurrence_until_wrap" class="hidden">
-                    <label for="actad_recurrence_until">Repetir hasta</label>
-                    <input type="date" id="actad_recurrence_until">
-                  </div>
-                  <div id="actad_recurrence_custom_wrap" class="hidden">
-                    <label for="actad_recurrence_dates">Fechas puntuales (una por línea, AAAA-MM-DD)</label>
-                    <textarea id="actad_recurrence_dates"></textarea>
-                  </div>
+                <div>
+                  <label for="actad_end_time">Horario de fin</label>
+                  <input type="time" id="actad_end_time">
                 </div>
               </div>
             </div>

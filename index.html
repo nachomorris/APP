@@ -474,6 +474,27 @@ function activityTag(id){
 }
 let ACTIVITIES = [];
 
+/* Las actividades se hacen todo el año: en vez de fecha tienen los
+   días de la semana en que se repiten. */
+const ACT_DAYS_PUBLIC = [
+  { id:'lunes', label:'Lunes' }, { id:'martes', label:'Martes' },
+  { id:'miercoles', label:'Miércoles' }, { id:'jueves', label:'Jueves' },
+  { id:'viernes', label:'Viernes' }, { id:'sabado', label:'Sábado' },
+  { id:'domingo', label:'Domingo' },
+];
+function formatActivityDays(days){
+  if(!days || !days.length) return '';
+  const ordered = ACT_DAYS_PUBLIC.filter(d=>days.includes(d.id)).map(d=>d.label);
+  if(ordered.length === 7) return 'Todos los días';
+  if(ordered.length === 1) return ordered[0];
+  return ordered.slice(0,-1).join(', ') + ' y ' + ordered[ordered.length-1];
+}
+function isActivityToday(a){
+  const idx = new Date().getDay(); // 0=domingo..6=sábado
+  const map = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+  return (a.daysOfWeek || []).includes(map[idx]);
+}
+
 let CATEGORIES = [];
 let SUBCATEGORIES = {};
 let BUSINESSES = [];
@@ -758,7 +779,7 @@ async function loadActivitiesData(){
     .from('activities')
     .select('*, businesses(id, legacy_id, name, category_id)')
     .eq('status', 'published')
-    .order('start_date', { ascending: true });
+    .order('title', { ascending: true });
 
   if (error) {
     console.error('Error cargando actividades', error);
@@ -776,8 +797,7 @@ async function loadActivitiesData(){
     coverFocalY: a.cover_focal_y != null ? a.cover_focal_y : 50,
     gallery: a.gallery || [],
     tag: a.tag,
-    startDate: a.start_date,
-    endDate: a.end_date,
+    daysOfWeek: a.days_of_week || [],
     startTime: a.start_time,
     endTime: a.end_time,
     address: a.address || '',
@@ -1014,7 +1034,6 @@ function render(){
   if(parts[0]==='agenda' && parts[1]==='anteriores') return renderAgendaAnteriores();
   if(parts[0]==='agenda') return renderAgenda();
   if(parts[0]==='evento') return renderEventoDetail(parts[1]);
-  if(parts[0]==='actividades' && parts[1]==='anteriores') return renderActividadesAnteriores();
   if(parts[0]==='actividades') return renderActividades();
   if(parts[0]==='actividad') return renderActividadDetail(parts[1]);
   if(parts[0]==='novedades') return renderNovedades();
@@ -1849,24 +1868,29 @@ function closeImageLightbox(){
 /* ============ ACTIVIDADES (deportivas / culturales) ============
    Misma pinta que la Agenda (reutiliza las clases .agenda-card,
    .featured-card, .home-panel, etc. y helpers genéricos ya definidos
-   para eventos: fmtDay/fmtDateRange/fmtTimeRange, priceLabel,
-   organizerName, isEventFinished/isEventThisWeek/isEventThisMonth,
-   waLink, isAddressUrl, eventIcsHref). Ruta: /actividades y
-   /actividad/:id, con su propio ícono en la barra inferior. */
+   para eventos: priceLabel, organizerName, waLink, isAddressUrl).
+   Se hacen todo el año (no tienen fecha puntual): en vez de fmtDateRange
+   muestran los días de la semana (formatActivityDays) + horario.
+   Ruta: /actividades y /actividad/:id, con su propio ícono en la
+   barra inferior. */
 let activitiesState = { q:'', tag:'todas' };
+
+const ACT_DAY_ORDER = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+function activityEarliestDayIndex(a){
+  const idxs = (a.daysOfWeek||[]).map(d=>ACT_DAY_ORDER.indexOf(d)).filter(i=>i>=0);
+  return idxs.length ? Math.min(...idxs) : 99;
+}
 
 function activityCard(a, i){
   const t = activityTag(a.tag);
   const org = organizerName(a);
-  const d = parseYMD(a.startDate);
   return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/actividad/${a.id}')">
     <div class="cover" style="background:${t.color || '#111'}">
       ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
-      <div class="date-badge"><span class="day">${d.getDate()}</span><span class="mon">${MESES_ES[d.getMonth()].slice(0,3)}</span></div>
       ${a.isFree ? `<span class="free-tag">Gratis</span>` : ''}
     </div>
     <div class="body">
-      <div class="when">🗓️ ${fmtDateRange(a)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
+      <div class="when">🗓️ ${formatActivityDays(a.daysOfWeek)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
       <h3>${a.title}</h3>
       ${(a.address && !isAddressUrl(a.address)) ? `<div class="meta-row">📍 ${a.address}</div>` : ''}
       ${a.desc || a.shortDesc ? `<div class="desc">${a.shortDesc || a.desc}</div>` : ''}
@@ -1884,7 +1908,7 @@ function activityFeaturedCard(a){
       <span class="star">★ Destacada</span>
     </div>
     <div class="cap">
-      <div class="when">${fmtDateRange(a)}</div>
+      <div class="when">${formatActivityDays(a.daysOfWeek)}</div>
       <h3>${a.title}</h3>
       <div class="sub">${t.label}${(a.address && !isAddressUrl(a.address)) ? ' · ' + a.address : ''}</div>
     </div>
@@ -1892,10 +1916,12 @@ function activityFeaturedCard(a){
 }
 
 function activeUpcomingActivities(){
-  return ACTIVITIES.filter(a=>!isEventFinished(a)).sort((a,b)=>{
-    const d = a.startDate.localeCompare(b.startDate);
+  return ACTIVITIES.slice().sort((a,b)=>{
+    const d = activityEarliestDayIndex(a) - activityEarliestDayIndex(b);
     if(d !== 0) return d;
-    return (a.startTime||'00:00').localeCompare(b.startTime||'00:00');
+    const t = (a.startTime||'00:00').localeCompare(b.startTime||'00:00');
+    if(t !== 0) return t;
+    return (a.title||'').localeCompare(b.title||'');
   });
 }
 
@@ -1935,9 +1961,8 @@ function renderActividades(){
     </div>` : ''}
 
     <div class="section" style="margin-top:${featured.length?'32px':'0'};">
-      <div class="section-head"><h2>Próximamente</h2></div>
+      <div class="section-head"><h2>Actividades</h2></div>
       <div id="activitiesList"></div>
-      <div class="agenda-archive-link"><a onclick="navigate('/actividades/anteriores')">Ver actividades anteriores →</a></div>
     </div>
   `;
 
@@ -1967,17 +1992,8 @@ function renderActividadesList(){
     return;
   }
 
-  const today = todayYMD();
-  const tomorrow = (()=>{ const d=parseYMD(today); d.setDate(d.getDate()+1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
-  const in7 = (()=>{ const d=parseYMD(today); d.setDate(d.getDate()+7); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
-
-  const buckets = { hoy:[], manana:[], semana:[], despues:[] };
-  items.forEach(a=>{
-    if(a.startDate === today) buckets.hoy.push(a);
-    else if(a.startDate === tomorrow) buckets.manana.push(a);
-    else if(a.startDate < in7) buckets.semana.push(a);
-    else buckets.despues.push(a);
-  });
+  const hoy = items.filter(isActivityToday);
+  const resto = items.filter(a=>!isActivityToday(a));
 
   let html = '';
   let counter = 0;
@@ -1986,24 +2002,10 @@ function renderActividadesList(){
     html += `<div class="agenda-group-title">${title}</div>`;
     arr.forEach(a=>{ html += activityCard(a, counter++); });
   };
-  section('Hoy', buckets.hoy);
-  section('Mañana', buckets.manana);
-  section('Esta semana', buckets.semana);
-  section('Próximas actividades', buckets.despues);
+  section('Hoy', hoy);
+  section('Todas las actividades', resto);
 
   list.innerHTML = html;
-  initScrollReveal();
-}
-
-function renderActividadesAnteriores(){
-  setTopbar({title:'Actividades anteriores', sub:'Visit Potrero', back:true});
-  setBottomnav('actividades');
-  const items = ACTIVITIES.filter(isEventFinished).sort((a,b)=>b.startDate.localeCompare(a.startDate));
-  document.getElementById('view').innerHTML = `
-    <div class="section" style="margin-top:0;">
-      ${items.length ? items.map((a,i)=>activityCard(a,i)).join('') : '<div class="empty-state">Todavía no hay actividades archivadas.</div>'}
-    </div>
-  `;
   initScrollReveal();
 }
 
@@ -2084,7 +2086,7 @@ function renderActividadDetail(id){
 
     <div class="detail-block">
       <h3>Cuándo</h3>
-      <p>${fmtDateRange(a)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</p>
+      <p>${formatActivityDays(a.daysOfWeek)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</p>
     </div>
 
     <div class="detail-block hidden" id="actScheduleBlock">
@@ -2113,7 +2115,6 @@ function renderActividadDetail(id){
     </div>
     <div class="cta-btns" style="margin-top:10px;">
       <a class="map" style="flex:1;" onclick="shareActivity('${a.id}')">📤 Compartir</a>
-      <a class="map" style="flex:1;" href="${eventIcsHref(a)}" download="${(a.title||'actividad').replace(/[^a-z0-9]+/gi,'-')}.ics">📅 Agendar</a>
     </div>
     ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${a.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
 
