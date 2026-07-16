@@ -265,22 +265,28 @@
   }
   .filter-pill.active{background:var(--ink);border-color:var(--ink);color:var(--primary);}
 
-  /* Actividades: logo del Año de la Educación al lado de los filtros. */
-  .filter-row-with-logo{display:flex;align-items:center;gap:12px;}
-  .filter-row-with-logo .filter-row{flex:1;margin-bottom:0;justify-content:flex-end;}
-  .filter-row-with-logo .filter-pill{
-    border-radius:8px;padding:9px 16px;
-    box-shadow:0 2px 5px rgba(0,0,0,.12), inset 0 1px 1px rgba(255,255,255,.9), inset 0 -1px 2px rgba(0,0,0,.06);
+  /* Actividades: selector segmentado de ancho completo (Deportivas/
+     Culturales) debajo del panel naranja, con el rectángulo del logo
+     del Año de la Educación al lado, saliendo del margen derecho. */
+  .filter-row-with-logo{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+  .filter-row-with-logo #activitiesTagRow{flex:1;margin-bottom:0;}
+  #activitiesTagRow{
+    display:flex;align-items:center;overflow:visible;
+    background:var(--primary-light);border-radius:12px;padding:3px;gap:3px;
   }
-  .filter-row-with-logo .filter-pill.active{
-    box-shadow:0 2px 6px rgba(0,0,0,.25), inset 0 1px 1px rgba(255,255,255,.15), inset 0 -1px 2px rgba(0,0,0,.25);
+  #activitiesTagRow .seg-btn{
+    flex:1;border:none;background:transparent;border-radius:9px;padding:8px 7px;
+    font-size:11.5px;font-weight:700;color:var(--ink);cursor:pointer;text-align:center;white-space:nowrap;
+  }
+  #activitiesTagRow .seg-btn.active{
+    background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12), inset 0 1px 1px rgba(255,255,255,.7);
   }
   .educ-logo-wrap{
     display:flex;align-items:center;justify-content:center;background:#fff;
-    padding:6px 16px 6px 14px;border-radius:14px 0 0 14px;margin-right:-16px;margin-top:-13px;flex:none;
+    padding:6px 16px 6px 14px;border-radius:14px 0 0 14px;margin-right:-16px;flex:none;
     box-shadow:0 6px 14px rgba(0,0,0,.22), 0 2px 4px rgba(0,0,0,.14);
   }
-  .educ-logo{height:60px;width:auto;display:block;}
+  .educ-logo{height:52px;width:auto;display:block;}
 
   /* Detail page */
   .detail-hero{height:180px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:56px;color:var(--primary);background:var(--ink);margin-bottom:16px;overflow:hidden;position:relative;}
@@ -1967,10 +1973,11 @@ function renderActividades(){
           <input id="activitiesSearch" placeholder="Buscar actividad..." value="${activitiesState.q}">
         </div>
       </div>
-      <div class="filter-row-with-logo">
-        <div class="filter-row" id="activitiesTagRow"></div>
-        <div class="educ-logo-wrap"><img class="educ-logo" src="images/educ.png" alt="Año de la Educación"></div>
-      </div>
+    </div>
+
+    <div class="filter-row-with-logo">
+      <div class="filter-row" id="activitiesTagRow"></div>
+      <div class="educ-logo-wrap"><img class="educ-logo" src="images/educ.png" alt="Año de la Educación"></div>
     </div>
 
     ${featured.length ? `
@@ -1986,7 +1993,7 @@ function renderActividades(){
 
   document.getElementById('activitiesTagRow').innerHTML = [
     {k:'deportiva', l:'🏅 Deportivas'}, {k:'cultural', l:'🎭 Culturales'}
-  ].map(f=>`<button class="filter-pill ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${f.l}</button>`).join('');
+  ].map(f=>`<button class="seg-btn ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${f.l}</button>`).join('');
 
   document.getElementById('activitiesSearch').addEventListener('input', e=>{
     activitiesState.q = e.target.value;
