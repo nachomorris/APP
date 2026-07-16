@@ -1882,20 +1882,19 @@ function activityEarliestDayIndex(a){
 }
 
 function activityCard(a, i){
+  // Mismo tamaño/formato compacto que las tarjetas de comercios
+  // (reutiliza .biz-card/.thumb/.info), en vez de las tarjetas
+  // grandes de la Agenda de eventos.
   const t = activityTag(a.tag);
-  const org = organizerName(a);
-  return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/actividad/${a.id}')">
-    <div class="cover" style="background:${t.color || '#111'}">
-      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
-      ${a.isFree ? `<span class="free-tag">Gratis</span>` : ''}
+  return `<div class="biz-card reveal" style="transition-delay:${((i||0)%6)*60}ms; margin-bottom:10px;" onclick="navigate('/actividad/${a.id}')">
+    <div class="info">
+      <div class="badges">${a.isFree ? `<span class="badge featured">Gratis</span>` : ''}</div>
+      <div class="name">${a.title}</div>
+      <div class="cat">${t.icon} ${t.label}</div>
+      <div class="addr">🗓️ ${formatActivityDays(a.daysOfWeek)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
     </div>
-    <div class="body">
-      <div class="when">🗓️ ${formatActivityDays(a.daysOfWeek)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
-      <h3>${a.title}</h3>
-      ${(a.address && !isAddressUrl(a.address)) ? `<div class="meta-row">📍 ${a.address}</div>` : ''}
-      ${a.desc || a.shortDesc ? `<div class="desc">${a.shortDesc || a.desc}</div>` : ''}
-      ${org ? `<div class="org"><span>Organiza:</span> ${org}</div>` : ''}
-      <span class="more-btn">Ver más →</span>
+    <div class="thumb" style="background:${t.color || '#111'}">
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
     </div>
   </div>`;
 }
