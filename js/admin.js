@@ -524,9 +524,45 @@ function showFormView() {
 }
 
 document.getElementById('cancelBtn').addEventListener('click', showListView);
+document.getElementById('newBusinessAdminBtn').addEventListener('click', openNewBusinessForm);
+
+function openNewBusinessForm() {
+  businessForm.reset();
+  document.getElementById('business_id').value = '';
+  setOwnerSelection('', '');
+  document.getElementById('featured').checked = false;
+  chamberSelect.value = '';
+  categorySelect.value = '';
+  subcategorySelect.innerHTML = '<option value="">(opcional)</option>';
+  updateAmenitiesVisibility();
+  document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
+  document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
+  document.querySelectorAll('.benefit-check').forEach((cb) => { cb.checked = false; });
+  if (typeof refreshPhotoUploadState === 'function') refreshPhotoUploadState(null, null);
+  document.getElementById('bizFormTitle').textContent = 'Nueva ficha';
+  document.getElementById('bizOwnerHint').textContent = 'Elegí el usuario dueño de este comercio (tiene que estar registrado en la app).';
+  saveBtn.textContent = 'Crear ficha';
+  showFormView();
+}
+
+async function openEditFormById(id) {
+  const { data, error } = await supabaseClient
+    .from('businesses')
+    .select('*, categories(label), profiles(full_name, phone), business_chambers(chamber)')
+    .eq('id', id)
+    .single();
+  if (error) {
+    showAlert('La ficha se creó, pero no se pudo volver a abrir: ' + error.message, 'error');
+    return;
+  }
+  openEditForm(data);
+}
 
 function openEditForm(b) {
   businessForm.reset();
+  document.getElementById('bizFormTitle').textContent = 'Editar ficha';
+  document.getElementById('bizOwnerHint').textContent = 'Cambialo solo si la ficha pasó a otra persona o estaba asociada a una cuenta provisoria.';
+  saveBtn.textContent = 'Guardar cambios';
   document.getElementById('business_id').value = b.id;
   setOwnerSelection(b.owner_id || '', ownerLabel(b.profiles));
   document.getElementById('name').value = b.name || '';
@@ -598,32 +634,56 @@ businessForm.addEventListener('submit', async (e) => {
   saveBtn.disabled = true;
   saveBtn.textContent = 'Guardando...';
 
-  const { error } = await supabaseClient.from('businesses').update(payload).eq('id', id);
+  let error;
+  let newId = null;
+  if (id) {
+    ({ error } = await supabaseClient.from('businesses').update(payload).eq('id', id));
+  } else {
+    // El admin la carga directo: no necesita pasar por revisión de nadie.
+    payload.status = 'published';
+    const insertResult = await supabaseClient.from('businesses').insert(payload).select('id').single();
+    error = insertResult.error;
+    newId = insertResult.data ? insertResult.data.id : null;
+  }
 
   if (error) {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Guardar cambios';
+    saveBtn.textContent = id ? 'Guardar cambios' : 'Crear ficha';
     showAlert('No se pudo guardar: ' + error.message, 'error');
     return;
   }
 
+  const targetId = id || newId;
+
   // La cámara vive en una tabla aparte (solo admin puede leerla/escribirla).
   const chamberValue = chamberSelect.value;
-  const chamberResult = chamberValue
-    ? await supabaseClient.from('business_chambers').upsert({ business_id: id, chamber: chamberValue, updated_at: new Date().toISOString() })
-    : await supabaseClient.from('business_chambers').delete().eq('business_id', id);
+  const chamberResult = targetId
+    ? (chamberValue
+        ? await supabaseClient.from('business_chambers').upsert({ business_id: targetId, chamber: chamberValue, updated_at: new Date().toISOString() })
+        : await supabaseClient.from('business_chambers').delete().eq('business_id', targetId))
+    : { error: null };
 
   saveBtn.disabled = false;
-  saveBtn.textContent = 'Guardar cambios';
+  saveBtn.textContent = id ? 'Guardar cambios' : 'Crear ficha';
 
   if (chamberResult.error) {
     showAlert('La ficha se guardó, pero no se pudo actualizar la cámara: ' + chamberResult.error.message, 'error');
     return;
   }
 
-  showListView();
-  showAlert('Ficha actualizada.', 'success');
   loadList();
+
+  if (id) {
+    showListView();
+    showAlert('Ficha actualizada.', 'success');
+  } else if (newId) {
+    // vuelve a abrir la ficha recién creada para poder agregarle la foto
+    await openEditFormById(newId);
+    showAlert('Ficha creada y publicada. Ya podés agregarle una foto.', 'success');
+  } else {
+    showListView();
+    showAlert('Ficha creada y publicada.', 'success');
+  }
 });
 
 async function setStatus(id, status, rejection_note) {

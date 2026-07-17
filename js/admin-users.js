@@ -9,6 +9,12 @@
 let usersAdminSectionLoaded = false;
 let allUsersAdmin = [];
 let businessCountByOwner = {};
+let userLoginInfoById = {};
+
+function fmtUserDateTime(iso) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
 
 const ROLE_LABELS = {
   comercio: 'Comercio',
@@ -82,12 +88,13 @@ function showUsersNewFormView() {
 async function loadUsersAdmin() {
   usersAdminList.innerHTML = '<p class="empty-state">Cargando...</p>';
 
-  const [{ data: profiles, error: profErr }, { data: businesses, error: bizErr }] = await Promise.all([
+  const [{ data: profiles, error: profErr }, { data: businesses, error: bizErr }, { data: logins, error: loginErr }] = await Promise.all([
     supabaseClient
       .from('profiles')
       .select('id, full_name, phone, email, is_admin, is_blocked, role, chamber, created_at')
       .order('created_at', { ascending: false }),
     supabaseClient.from('businesses').select('owner_id'),
+    supabaseClient.rpc('admin_list_user_logins'),
   ]);
 
   if (profErr) {
@@ -102,6 +109,13 @@ async function loadUsersAdmin() {
       if (!b.owner_id) return;
       businessCountByOwner[b.owner_id] = (businessCountByOwner[b.owner_id] || 0) + 1;
     });
+  }
+
+  // No es crítico: si falla (ej. función todavía no migrada en la base),
+  // simplemente no se muestra el bloque de último login.
+  userLoginInfoById = {};
+  if (!loginErr) {
+    (logins || []).forEach((l) => { userLoginInfoById[l.id] = l; });
   }
 
   allUsersAdmin = profiles || [];
@@ -220,6 +234,19 @@ async function openUserEditForm(u) {
 
   const isSelf = currentAdminUser && u.id === currentAdminUser.id;
   userRoleSelect.disabled = isSelf;
+
+  const loginInfo = userLoginInfoById[u.id];
+  const loginInfoBox = document.getElementById('userLoginInfo');
+  if (loginInfo) {
+    const lastLogin = fmtUserDateTime(loginInfo.last_sign_in_at);
+    const createdAt = fmtUserDateTime(loginInfo.auth_created_at || u.created_at);
+    loginInfoBox.innerHTML = `
+      <span>🕐 Último inicio de sesión: <strong>${lastLogin || 'Nunca inició sesión'}</strong></span>
+      ${createdAt ? `<span>📅 Cuenta creada el: <strong>${createdAt}</strong></span>` : ''}
+    `;
+  } else {
+    loginInfoBox.innerHTML = '';
+  }
 
   showUsersFormView();
 

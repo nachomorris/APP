@@ -70,6 +70,14 @@
   .evad-card-extra { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
   .evad-card-extra strong { color: var(--ink); }
 
+  /* ---------- Usuarios: último login / fecha de alta ---------- */
+  .user-login-info {
+    display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; color: var(--muted);
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 18px;
+  }
+  .user-login-info strong { color: var(--ink); }
+
   /* Página de carga de evento: sin topbar/section-tabs, header propio a todo el ancho, ancho completo */
   .evad-form-page { max-width: 100%; margin: 24px 0 60px; }
   .evad-full-header {
@@ -373,6 +381,8 @@
       </div>
     </div>
 
+    <button class="btn btn-primary btn-small" id="newBusinessAdminBtn" style="margin-bottom:14px;">+ Nuevo comercio</button>
+
     <div class="view-toggle">
       <button type="button" id="viewCardsBtn">🗂️ Tarjetas</button>
       <button type="button" id="viewTableBtn" class="active">📊 Tabla</button>
@@ -385,7 +395,7 @@
 
   <div id="formView" class="hidden">
     <div class="card">
-      <h2>Editar ficha</h2>
+      <h2 id="bizFormTitle">Editar ficha</h2>
 
       <form id="businessForm">
         <input type="hidden" id="business_id">
@@ -396,7 +406,7 @@
           <input type="hidden" id="owner_id">
           <div id="owner_results" class="autocomplete-results hidden"></div>
         </div>
-        <p class="field-hint">Cambialo solo si la ficha pasó a otra persona o estaba asociada a una cuenta provisoria.</p>
+        <p class="field-hint" id="bizOwnerHint">Cambialo solo si la ficha pasó a otra persona o estaba asociada a una cuenta provisoria.</p>
 
         <label for="name">Nombre del comercio *</label>
         <input type="text" id="name" required>
@@ -773,12 +783,10 @@
 
       <div class="biz-filters-bar">
         <input type="text" id="actAdminOrgSearch" placeholder="Buscar por organizador o título...">
-        <div class="biz-filters-row">
-          <select id="actAdminTagFilter">
-            <option value="">Todas las etiquetas</option>
-            <option value="deportiva">🏅 Deportiva</option>
-            <option value="cultural">🎭 Cultural</option>
-          </select>
+        <div class="tabs" id="actAdminTagFilterGroup" style="margin-bottom:0;">
+          <button type="button" class="tab active" data-tag="">Todas las etiquetas</button>
+          <button type="button" class="tab" data-tag="deportiva">🏅 Deportiva</button>
+          <button type="button" class="tab" data-tag="cultural">🎭 Cultural</button>
         </div>
       </div>
 
@@ -1202,6 +1210,7 @@
     <div id="usuariosFormView" class="hidden">
       <div class="card">
         <h2 style="margin-top:0;">Editar usuario</h2>
+        <div id="userLoginInfo" class="user-login-info"></div>
         <form id="userForm">
           <input type="hidden" id="user_id">
 

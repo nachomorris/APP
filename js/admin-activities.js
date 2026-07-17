@@ -160,7 +160,15 @@ document.getElementById('actAdminStatusTabs').addEventListener('click', (e) => {
   actAdminStatusFilter = btn.getAttribute('data-actstatus');
   renderActAdminList();
 });
-document.getElementById('actAdminTagFilter').addEventListener('change', renderActAdminList);
+let actAdminTagFilter = '';
+document.getElementById('actAdminTagFilterGroup').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-tag]');
+  if (!btn) return;
+  document.querySelectorAll('#actAdminTagFilterGroup .tab').forEach((t) => t.classList.remove('active'));
+  btn.classList.add('active');
+  actAdminTagFilter = btn.getAttribute('data-tag');
+  renderActAdminList();
+});
 document.getElementById('actAdminOrgSearch').addEventListener('input', renderActAdminList);
 
 async function loadActAdminActivities() {
@@ -192,7 +200,7 @@ function updateActAdminStatusCounts() {
 
 function renderActAdminList() {
   let items = actAdminActivities.slice();
-  const tagFilter = document.getElementById('actAdminTagFilter').value;
+  const tagFilter = actAdminTagFilter;
   const orgSearch = document.getElementById('actAdminOrgSearch').value.trim().toLowerCase();
 
   if (actAdminStatusFilter === 'featured') {
