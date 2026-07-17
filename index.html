@@ -1078,9 +1078,19 @@ function setBottomnav(active){
   ).join('');
 }
 
+// Registra cada carga de página en site_visits para medir el tráfico
+// real del sitio (distinto de views_count, que es por ficha puntual).
+// Fire-and-forget: si falla, no debe frenar la navegación.
+function trackPageView(path){
+  try {
+    supabaseClient.from('site_visits').insert({ path: path || '/' }).then(() => {});
+  } catch (e) { /* no-op */ }
+}
+
 function render(){
   const parts = parseRoute();
   window.scrollTo(0,0);
+  trackPageView(location.hash.replace(/^#/, '') || '/');
   if(parts.length===0){ return CHAMBER_MODE ? renderChamberHome() : renderHome(); }
   if(parts[0]==='categoria') return renderCategoria(parts[1]);
   if(parts[0]==='buscar') return renderBuscar();

@@ -261,8 +261,10 @@ textarea { resize: vertical; min-height: 90px; }
   padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
   background: var(--card); color: var(--muted); font-size: 13px; font-weight: 700;
   cursor: pointer; box-shadow: var(--shadow);
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
 }
-.tab.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
+.tab:hover:not(.active) { background: var(--primary-light); border-color: var(--primary); color: var(--ink); transform: translateY(-1px); }
+.tab.active { background: var(--primary); color: var(--ink); border-color: var(--primary); }
 
 /* --- Buscador con autocompletado (ej: elegir ficha organizadora) --- */
 .autocomplete-wrap { position: relative; }
@@ -323,9 +325,10 @@ textarea { resize: vertical; min-height: 90px; }
 .view-toggle button {
   padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
   background: var(--card); color: var(--muted); font-size: 13px; font-weight: 700;
-  cursor: pointer;
+  cursor: pointer; transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
 }
-.view-toggle button.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
+.view-toggle button:hover:not(.active) { background: var(--primary-light); border-color: var(--primary); color: var(--ink); transform: translateY(-1px); }
+.view-toggle button.active { background: var(--primary); color: var(--ink); border-color: var(--primary); }
 
 /* --- Tabla de comercios (admin) --- */
 .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
@@ -349,8 +352,13 @@ textarea { resize: vertical; min-height: 90px; }
   flex: 1; padding: 12px; border-radius: 14px; border: 1px solid var(--border);
   background: var(--card); color: var(--muted); font-weight: 700; font-size: 14px;
   cursor: pointer; font-family: var(--font);
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.section-tabs button.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
+.section-tabs button:hover:not(.active) {
+  background: var(--primary-light); border-color: var(--primary); color: var(--ink);
+  transform: translateY(-2px); box-shadow: 0 4px 10px rgba(245,164,85,.28);
+}
+.section-tabs button.active { background: var(--primary); color: var(--ink); border-color: var(--primary); }
 
 /* --- Filas dinámicas (cronograma / fechas custom) --- */
 .dynamic-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }

@@ -21,13 +21,15 @@
     padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border);
     background: var(--card); color: var(--muted); font-size: 13px; font-weight: 700;
     cursor: pointer; box-shadow: var(--shadow);
+    transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
   }
-  .tab.active { background: var(--ink); color: var(--primary); border-color: var(--ink); }
+  .tab:hover:not(.active) { background: var(--primary-light); border-color: var(--primary); color: var(--ink); transform: translateY(-1px); }
+  .tab.active { background: var(--primary); color: var(--ink); border-color: var(--primary); }
   .tab .tab-count {
     display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
     background: rgba(0,0,0,.08); color: inherit; font-size: 11.5px; font-weight: 800;
   }
-  .tab.active .tab-count { background: rgba(255,255,255,.22); }
+  .tab.active .tab-count { background: rgba(255,255,255,.55); }
   .admin-card { margin-bottom: 14px; }
   .admin-card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .admin-card .name { font-weight: 800; font-size: 17px; margin-bottom: 2px; }
@@ -36,6 +38,37 @@
   .admin-card dt { color: var(--muted); font-size: 12px; margin-top: 8px; text-transform: uppercase; letter-spacing: .02em; }
   .admin-card dd { margin: 2px 0 0; }
   .admin-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+  /* ---------- Eventos/Actividades: tarjetas con imagen en grilla ---------- */
+  #evAdminList, #actAdminList {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; align-items: start;
+  }
+  #evAdminList .empty-state, #actAdminList .empty-state { grid-column: 1 / -1; }
+  #evAdminList .admin-card, #actAdminList .admin-card {
+    margin-bottom: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .evad-thumb {
+    position: relative; height: 150px; background: var(--primary-light); overflow: hidden; flex: none;
+  }
+  .evad-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .evad-thumb-ph {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 42px; opacity: .55;
+  }
+  .evad-thumb-badge { position: absolute; top: 10px; left: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+  .evad-thumb-cat {
+    position: absolute; bottom: 10px; left: 10px; padding: 4px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18);
+  }
+  .evad-card-body { padding: 14px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+  .evad-card-title {
+    font-weight: 800; font-size: 15.5px; line-height: 1.3; margin-bottom: 10px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .evad-card-meta { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .evad-card-meta .row { display: flex; align-items: center; gap: 6px; }
+  .evad-card-extra { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .evad-card-extra strong { color: var(--ink); }
 
   /* Página de carga de evento: sin topbar/section-tabs, header propio a todo el ancho, ancho completo */
   .evad-form-page { max-width: 100%; margin: 24px 0 60px; }
@@ -149,6 +182,73 @@
     padding: 7px 10px; cursor: pointer;
   }
   .day-checks input { margin: 0; }
+
+  /* ---------- Dashboard ---------- */
+  .dash-stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px; margin-bottom: 20px;
+  }
+  .dash-stat-card { display: flex; flex-direction: column; padding: 26px 28px; }
+  .dash-stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .dash-stat-label { font-size: 14px; color: var(--muted); font-weight: 600; }
+  .dash-stat-icon {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none;
+  }
+  .dash-stat-value { font-size: 40px; font-weight: 800; color: var(--ink); margin-bottom: 4px; line-height: 1.1; }
+  .dash-stat-sub { font-size: 13.5px; color: var(--muted); font-weight: 600; margin: 10px 0 14px; line-height: 1.5; }
+  .dash-stat-link { font-size: 13px; font-weight: 700; color: var(--primary-dark); cursor: pointer; margin-top: auto; padding-top: 6px; }
+
+  .dash-stat-breakdown { display: flex; gap: 32px; margin: 14px 0 16px; }
+  .dash-stat-breakdown-item { display: flex; flex-direction: column; gap: 3px; }
+  .dash-stat-breakdown-item .n { font-size: 22px; font-weight: 800; color: var(--primary-dark); }
+  .dash-stat-breakdown-item .l { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+
+  .dash-stat-card-highlight {
+    background: var(--primary-light); border: 1px solid var(--primary);
+  }
+  .dash-stat-card-highlight .dash-stat-icon { background: var(--primary); }
+  .dash-stat-card-highlight .dash-stat-value { color: var(--primary-dark); }
+  .dash-stat-sub-roomy { font-size: 15px; color: var(--ink); font-weight: 700; margin-top: 16px; }
+
+  .dash-bar-chart {
+    display: flex; align-items: flex-end; gap: 14px; height: 180px; overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .dash-bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 0 0 44px; height: 100%; }
+  .dash-bar-count { font-size: 12px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+  .dash-bar { width: 26px; border-radius: 6px 6px 0 0; background: var(--primary); min-height: 3px; }
+  .dash-bar-label { font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 6px; white-space: nowrap; }
+
+  .dash-lists-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .dash-list-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .dash-list-item:last-child { border-bottom: none; }
+  .dash-list-badge {
+    flex: none; width: 40px; height: 40px; border-radius: 10px; background: var(--primary);
+    color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .dash-list-badge .d { font-weight: 800; font-size: 15px; }
+  .dash-list-badge .m { font-weight: 700; font-size: 9.5px; text-transform: uppercase; margin-top: 1px; }
+  .dash-list-rank {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--border);
+    color: var(--muted); display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 12.5px;
+  }
+  .dash-list-body { flex: 1; min-width: 0; }
+  .dash-list-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dash-list-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .dash-list-views { flex: none; font-size: 13px; font-weight: 700; color: var(--muted); }
+
+  /* ---------- Comercios / Eventos / Actividades: barra de filtros agrupada ---------- */
+  .biz-filters-bar {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .biz-filters-bar > input[type="text"] { margin-bottom: 12px; }
+  .biz-filters-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;
+  }
 </style>
 </head>
 <body>
@@ -177,7 +277,8 @@
   <div id="alert" class="alert"></div>
 
   <div class="section-tabs">
-    <button id="mainTabBusinesses" class="active">🏪 Comercios</button>
+    <button id="mainTabDashboard" class="active">📊 Dashboard</button>
+    <button id="mainTabBusinesses">🏪 Comercios</button>
     <button id="mainTabEvents">🎉 Eventos</button>
     <button id="mainTabActivities">🏅 Actividades</button>
     <button id="mainTabNovedades">📰 Novedades</button>
@@ -186,40 +287,95 @@
     <button id="mainTabUsuarios">👤 Usuarios</button>
   </div>
 
-  <div id="businessesSection">
+  <div id="dashboardAdminSection">
+
+    <div class="card" style="margin-bottom:20px;">
+      <h2 style="margin:0 0 4px;" id="dashGreeting">Bienvenido</h2>
+      <p class="subtitle" style="margin:0;" id="dashToday"></p>
+    </div>
+
+    <div class="dash-stats-grid">
+      <div class="card dash-stat-card">
+        <div class="dash-stat-top">
+          <span class="dash-stat-label">Total eventos</span>
+          <span class="dash-stat-icon">🎉</span>
+        </div>
+        <div class="dash-stat-value" id="dashTotalEvents">–</div>
+        <div class="dash-stat-breakdown">
+          <div class="dash-stat-breakdown-item">
+            <span class="n" id="dashTotalEventsUpcoming">–</span>
+            <span class="l">🔜 próximos</span>
+          </div>
+          <div class="dash-stat-breakdown-item">
+            <span class="n" id="dashTotalEventsThisMonth">–</span>
+            <span class="l">📆 este mes</span>
+          </div>
+        </div>
+        <a class="dash-stat-link" onclick="document.getElementById('mainTabEvents').click();">Ver eventos →</a>
+      </div>
+      <div class="card dash-stat-card dash-stat-card-highlight">
+        <div class="dash-stat-top">
+          <span class="dash-stat-label">Visitas al sitio</span>
+          <span class="dash-stat-icon">🌐</span>
+        </div>
+        <div class="dash-stat-value" id="dashTotalViews">–</div>
+        <div class="dash-stat-sub dash-stat-sub-roomy" id="dashTopViewedSub"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3 style="margin:0 0 16px;">Eventos por mes</h3>
+      <div id="dashMonthChart" class="dash-bar-chart">
+        <p class="empty-state">Cargando...</p>
+      </div>
+    </div>
+
+    <div class="dash-lists-grid">
+      <div class="card">
+        <h3 style="margin:0 0 14px;">Próximos eventos</h3>
+        <div id="dashUpcomingList"><p class="empty-state">Cargando...</p></div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 14px;">Eventos más vistos</h3>
+        <div id="dashTopViewedList"><p class="empty-state">Cargando...</p></div>
+      </div>
+    </div>
+
+  </div>
+  <!-- fin dashboardAdminSection -->
+
+  <div id="businessesSection" class="hidden">
 
   <div id="listView">
-    <div class="tabs">
-      <button class="tab active" data-status="pending">Pendientes</button>
-      <button class="tab" data-status="published">Publicadas</button>
-      <button class="tab" data-status="rejected">Rechazadas</button>
-      <button class="tab" data-status="all">Todas</button>
+    <div class="tabs" id="businessesStatusTabs">
+      <button class="tab" data-status="pending">Pendientes <span class="tab-count" data-count-for="pending">0</span></button>
+      <button class="tab active" data-status="published">Publicadas <span class="tab-count" data-count-for="published">0</span></button>
+      <button class="tab" data-status="rejected">Rechazadas <span class="tab-count" data-count-for="rejected">0</span></button>
+      <button class="tab" data-status="all">Todas <span class="tab-count" data-count-for="all">0</span></button>
     </div>
 
-    <input type="text" id="searchBusinessesAdmin" placeholder="Buscar por nombre o dirección..." style="margin-bottom:10px;">
-
-    <div class="row-2" style="margin-bottom:14px;">
-      <select id="filterCategoryAdmin">
-        <option value="">Todas las categorías</option>
-      </select>
-      <select id="filterSubcategoryAdmin">
-        <option value="">Todas las subcategorías</option>
-      </select>
-    </div>
-
-    <div class="row-2" style="margin-bottom:14px;">
-      <select id="filterChamberAdmin">
-        <option value="">Todas las cámaras</option>
-        <option value="UDAER">UDAER</option>
-        <option value="CCTA">CCTA</option>
-        <option value="AEHGA">AEHGA</option>
-        <option value="none">Sin cámara</option>
-      </select>
+    <div class="biz-filters-bar">
+      <input type="text" id="searchBusinessesAdmin" placeholder="Buscar por nombre o dirección...">
+      <div class="biz-filters-row">
+        <select id="filterCategoryAdmin">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select id="filterSubcategoryAdmin">
+          <option value="">Todas las subcategorías</option>
+        </select>
+        <select id="filterChamberAdmin">
+          <option value="">Todas las cámaras</option>
+          <option value="UDAER">UDAER</option>
+          <option value="CCTA">CCTA</option>
+          <option value="AEHGA">AEHGA</option>
+          <option value="none">Sin cámara</option>
+        </select>
+      </div>
     </div>
 
     <div class="view-toggle">
-      <button type="button" id="viewCardsBtn" class="active">🗂️ Tarjetas</button>
-      <button type="button" id="viewTableBtn">📊 Tabla</button>
+      <button type="button" id="viewCardsBtn">🗂️ Tarjetas</button>
+      <button type="button" id="viewTableBtn" class="active">📊 Tabla</button>
     </div>
 
     <div id="list">
@@ -378,13 +534,15 @@
         <button class="tab" data-evstatus="all">Todos <span class="tab-count" data-count-for="all">0</span></button>
       </div>
 
-      <div class="row-2" style="margin-bottom:10px;">
-        <select id="evAdminCategoryFilter">
-          <option value="">Todas las categorías</option>
-        </select>
+      <div class="biz-filters-bar">
         <input type="text" id="evAdminOrgSearch" placeholder="Buscar por organizador o título...">
+        <div class="biz-filters-row">
+          <select id="evAdminCategoryFilter">
+            <option value="">Todas las categorías</option>
+          </select>
+          <input type="date" id="evAdminDateFilter">
+        </div>
       </div>
-      <input type="date" id="evAdminDateFilter" style="margin-bottom:14px;">
 
       <button class="btn btn-primary btn-small" id="newOfficialEventBtn" style="margin-bottom:14px;">+ Crear evento oficial</button>
 
@@ -613,13 +771,15 @@
         <button class="tab" data-actstatus="all">Todas <span class="tab-count" data-count-for="all">0</span></button>
       </div>
 
-      <div class="row-2" style="margin-bottom:10px;">
-        <select id="actAdminTagFilter">
-          <option value="">Todas las etiquetas</option>
-          <option value="deportiva">🏅 Deportiva</option>
-          <option value="cultural">🎭 Cultural</option>
-        </select>
+      <div class="biz-filters-bar">
         <input type="text" id="actAdminOrgSearch" placeholder="Buscar por organizador o título...">
+        <div class="biz-filters-row">
+          <select id="actAdminTagFilter">
+            <option value="">Todas las etiquetas</option>
+            <option value="deportiva">🏅 Deportiva</option>
+            <option value="cultural">🎭 Cultural</option>
+          </select>
+        </div>
       </div>
 
       <button class="btn btn-primary btn-small" id="newActivityBtn" style="margin-bottom:14px;">+ Crear actividad</button>
@@ -1154,6 +1314,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/admin-dashboard.js"></script>
 <script src="js/admin-events.js"></script>
 <script src="js/admin-activities.js"></script>
 <script src="js/admin-novedades.js"></script>

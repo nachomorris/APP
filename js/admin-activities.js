@@ -227,32 +227,31 @@ function renderActAdminCard(a) {
   const org = a.businesses ? a.businesses.name : '(organiza el municipio)';
   const daysLabel = actFormatDays(a.days_of_week);
 
+  const timeLabel = a.start_time ? a.start_time.slice(0, 5) + (a.end_time ? ' a ' + a.end_time.slice(0, 5) : '') + ' hs' : '';
+
   const card = document.createElement('div');
   card.className = 'card admin-card';
   card.innerHTML = `
-    <div class="top">
-      <div>
-        <div class="name">${escapeHtml(a.title)}</div>
-        <div class="cat">${tag.icon} ${escapeHtml(tag.label)}</div>
-      </div>
-      <span class="badge ${st.cls}">${st.text}</span>
+    <div class="evad-thumb">
+      ${a.cover_image
+        ? `<img src="${a.cover_image}" alt="${escapeHtml(a.title)}" loading="lazy">`
+        : `<div class="evad-thumb-ph">${tag.icon || '🏅'}</div>`}
+      <span class="badge ${st.cls} evad-thumb-badge">${st.text}</span>
+      <span class="evad-thumb-cat" style="background:${tag.color || 'var(--primary-dark)'};">${tag.icon || ''} ${escapeHtml(tag.label)}</span>
     </div>
-    <dl>
-      <dt>Organiza</dt>
-      <dd>${escapeHtml(org)} ${a.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}</dd>
-
-      <dt>Cuándo</dt>
-      <dd>${escapeHtml(daysLabel)}${a.start_time ? ' · ' + a.start_time.slice(0, 5) : ''}${a.end_time ? ' a ' + a.end_time.slice(0, 5) : ''}</dd>
-
-      <dt>Cargada por</dt>
-      <dd>${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}</dd>
-
-      <dt>Vistas</dt>
-      <dd>👁 ${a.views_count || 0}${a.is_featured ? ' · ★ Destacada (orden ' + a.featured_order + ')' : ''}</dd>
-
-      ${a.review_note ? `<dt>Observación cargada</dt><dd>${escapeHtml(a.review_note)}</dd>` : ''}
-    </dl>
-    <div class="admin-actions"></div>
+    <div class="evad-card-body">
+      <div class="evad-card-title">${escapeHtml(a.title)}</div>
+      <div class="evad-card-meta">
+        <span class="row">🗓️ ${escapeHtml(daysLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
+        <span class="row">👁 ${a.views_count || 0} vistas${a.is_featured ? ' · ★ Destacada (orden ' + a.featured_order + ')' : ''}</span>
+      </div>
+      <div class="evad-card-extra">
+        <strong>Organiza:</strong> ${escapeHtml(org)} ${a.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
+        <strong>Cargada por:</strong> ${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}
+        ${a.review_note ? `<br><strong>Observación:</strong> ${escapeHtml(a.review_note)}` : ''}
+      </div>
+      <div class="admin-actions"></div>
+    </div>
   `;
 
   const actions = card.querySelector('.admin-actions');

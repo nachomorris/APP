@@ -1,12 +1,12 @@
-let currentFilter = 'pending';
+let currentFilter = 'published';
 let allCategories = [];
 let allSubcategories = [];
 let currentBusinessesList = [];
-let businessViewMode = 'cards';
+let businessViewMode = 'table';
 
 const alertBox = document.getElementById('alert');
 const listEl = document.getElementById('list');
-const tabs = document.querySelectorAll('.tab');
+const tabs = document.querySelectorAll('#businessesStatusTabs .tab');
 const listView = document.getElementById('listView');
 const formView = document.getElementById('formView');
 const businessForm = document.getElementById('businessForm');
@@ -56,7 +56,10 @@ tabs.forEach((tab) => {
     tabs.forEach((t) => t.classList.remove('active'));
     tab.classList.add('active');
     currentFilter = tab.getAttribute('data-status');
-    loadList();
+    // Ya tenemos todas las fichas cargadas (loadList trae todos los
+    // estados), así que cambiar de pestaña solo re-filtra en memoria,
+    // no vuelve a pedirle nada a la base.
+    renderFilteredBusinessList();
   });
 });
 
@@ -112,16 +115,13 @@ async function loadList() {
   clearAlert();
   listEl.innerHTML = '<p class="empty-state">Cargando...</p>';
 
-  let query = supabaseClient
+  // Trae todos los estados de una sola vez: permite mostrar el conteo
+  // en las 4 pestañas a la vez, y cambiar de pestaña no vuelve a pedirle
+  // nada a la base (solo re-filtra en memoria).
+  const { data, error } = await supabaseClient
     .from('businesses')
     .select('*, categories(label), profiles(full_name, phone), business_chambers(chamber)')
     .order('created_at', { ascending: false });
-
-  if (currentFilter !== 'all') {
-    query = query.eq('status', currentFilter);
-  }
-
-  const { data, error } = await query;
 
   if (error) {
     listEl.innerHTML = '';
@@ -130,7 +130,19 @@ async function loadList() {
   }
 
   currentBusinessesList = data || [];
+  updateBusinessStatusCounts();
   renderFilteredBusinessList();
+}
+
+function updateBusinessStatusCounts() {
+  const counts = { pending: 0, published: 0, rejected: 0, all: currentBusinessesList.length };
+  currentBusinessesList.forEach((b) => {
+    if (b.status in counts) counts[b.status]++;
+  });
+  document.querySelectorAll('#businessesStatusTabs .tab-count').forEach((el) => {
+    const key = el.getAttribute('data-count-for');
+    el.textContent = counts[key] != null ? counts[key] : 0;
+  });
 }
 
 function renderFilteredBusinessList() {
@@ -140,6 +152,7 @@ function renderFilteredBusinessList() {
   const chamberFilter = filterChamberAdmin.value;
 
   const filtered = currentBusinessesList.filter((b) => {
+    if (currentFilter !== 'all' && b.status !== currentFilter) return false;
     if (catFilter && b.category_id !== catFilter) return false;
     if (subFilter && b.subcategory_id !== subFilter) return false;
     if (chamberFilter) {
@@ -158,7 +171,7 @@ function renderFilteredBusinessList() {
   });
 
   if (currentBusinessesList.length === 0) {
-    listEl.innerHTML = '<p class="empty-state">No hay fichas en esta pestaña.</p>';
+    listEl.innerHTML = '<p class="empty-state">Todavía no hay fichas cargadas.</p>';
     return;
   }
   if (filtered.length === 0) {
@@ -649,6 +662,7 @@ async function deleteBusiness(id) {
 // sola a la vez sin que cada archivo (admin-events.js, admin-novedades.js...)
 // tenga que conocer a los demás.
 const ADMIN_SECTION_TABS = {
+  dashboardAdminSection: 'mainTabDashboard',
   businessesSection: 'mainTabBusinesses',
   eventsAdminSection: 'mainTabEvents',
   activitiesAdminSection: 'mainTabActivities',
@@ -667,6 +681,12 @@ function showAdminSection(sectionId) {
   });
   clearAlert();
 }
+
+// Antes "Comercios" era la sección por defecto (visible sin tocar
+// ninguna pestaña), por eso nunca tuvo su propio listener. Ahora que
+// el Dashboard es la que arranca visible, hace falta este para poder
+// volver a Comercios.
+document.getElementById('mainTabBusinesses').addEventListener('click', () => showAdminSection('businessesSection'));
 
 // ---------- Init ----------
 let currentAdminUser = null;
@@ -699,4 +719,7 @@ let currentAdminUser = null;
 
   await loadCategories();
   loadList();
+
+  const dashboardTab = document.getElementById('mainTabDashboard');
+  if (dashboardTab) dashboardTab.click();
 })();
