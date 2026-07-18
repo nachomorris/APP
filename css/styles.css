@@ -360,6 +360,26 @@ textarea { resize: vertical; min-height: 90px; }
 }
 .section-tabs button.active { background: var(--primary); color: var(--ink); border-color: var(--primary); }
 
+/* En celular, con muchas pestañas (ej. admin: Dashboard, Comercios,
+   Eventos, Actividades, Novedades, Destacado, Lugares, Usuarios) el
+   flex:1 las aplasta hasta que el texto se corta. Por debajo de cierto
+   ancho, en vez de repartir el espacio a la fuerza, se deja que cada
+   botón mida lo que necesita y toda la barra se desliza horizontalmente. */
+@media (max-width: 860px) {
+  .section-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .section-tabs::-webkit-scrollbar { display: none; }
+  .section-tabs button {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
 /* --- Filas dinámicas (cronograma / fechas custom) --- */
 .dynamic-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
 .dynamic-row .fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }

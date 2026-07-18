@@ -55,12 +55,28 @@
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     font-size: 42px; opacity: .55;
   }
-  .evad-thumb-badge { position: absolute; top: 10px; left: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
-  .evad-thumb-cat {
-    position: absolute; bottom: 10px; left: 10px; padding: 4px 11px; border-radius: 999px;
-    font-size: 11px; font-weight: 700; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18);
+  .evad-thumb-date {
+    position: absolute; top: 10px; left: 10px; background: #fff; color: var(--ink);
+    border-radius: 10px; padding: 5px 9px 4px; text-align: center; min-width: 46px;
+    line-height: 1.05; box-shadow: 0 2px 6px rgba(0,0,0,.2);
   }
+  .evad-thumb-date .d { display: block; font-size: 19px; font-weight: 800; }
+  .evad-thumb-date .m { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .02em; color: var(--primary-dark); margin-top: 1px; }
   .evad-card-body { padding: 14px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+  .evad-card-info { flex: 1; min-width: 0; }
+  .evad-card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .evad-cat-chip {
+    padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff;
+  }
+  .evad-days-chip {
+    display: inline-flex; align-items: center; gap: 2px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 999px; padding: 4px 8px;
+  }
+  .evad-days-chip span {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 4px; font-size: 9px; font-weight: 800; color: #c9c9c9;
+  }
+  .evad-days-chip span.on { color: #fff; background: var(--primary-dark); }
   .evad-card-title {
     font-weight: 800; font-size: 15.5px; line-height: 1.3; margin-bottom: 10px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -70,6 +86,23 @@
   .evad-card-extra { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
   .evad-card-extra strong { color: var(--ink); }
 
+  /* Toggle Tarjetas/Lista: en modo lista, una columna y la tarjeta pasa
+     a fila horizontal (miniatura chica a la izquierda, info a la derecha,
+     acciones abajo de todo). */
+  #evAdminList.list-mode, #actAdminList.list-mode { grid-template-columns: 1fr; gap: 12px; }
+  #evAdminList.list-mode .admin-card, #actAdminList.list-mode .admin-card { flex-direction: row; }
+  #evAdminList.list-mode .evad-thumb { width: 130px; height: auto; }
+  #evAdminList.list-mode .evad-card-body {
+    flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 4px 24px; padding: 14px 18px;
+  }
+  #evAdminList.list-mode .evad-card-info { flex: 1; min-width: 240px; }
+  #evAdminList.list-mode .evad-card-title { -webkit-line-clamp: 1; margin-bottom: 6px; }
+  #evAdminList.list-mode .admin-actions { flex-basis: 100%; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
+  @media (max-width: 640px) {
+    #evAdminList.list-mode .admin-card, #actAdminList.list-mode .admin-card { flex-direction: column; }
+    #evAdminList.list-mode .evad-thumb { width: 100%; height: 140px; }
+  }
+
   /* ---------- Usuarios: último login / fecha de alta ---------- */
   .user-login-info {
     display: flex; gap: 22px; flex-wrap: wrap; font-size: 13px; color: var(--muted);
@@ -77,6 +110,30 @@
     padding: 10px 14px; margin-bottom: 18px;
   }
   .user-login-info strong { color: var(--ink); }
+
+  .user-view-fields { margin: 18px 0 0; font-size: 14px; }
+  .user-view-fields dt { color: var(--muted); font-size: 12px; margin-top: 12px; text-transform: uppercase; letter-spacing: .02em; }
+  .user-view-fields dd { margin: 2px 0 0; font-weight: 700; }
+  .admin-table tbody tr.clickable-row { cursor: pointer; }
+
+  /* ---------- Menú desplegable "Mi Perfil" en la topbar ---------- */
+  .account-menu { position: relative; }
+  .account-menu-trigger { display: flex; align-items: center; gap: 5px; }
+  .account-menu-trigger .chevron { font-size: 10px; transition: transform .15s ease; }
+  .account-menu.open .account-menu-trigger .chevron { transform: rotate(180deg); }
+  .account-menu-panel {
+    position: absolute; top: calc(100% + 12px); right: 0; min-width: 210px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow); overflow: hidden; z-index: 40;
+  }
+  .account-menu-item {
+    display: block; width: 100%; box-sizing: border-box; text-align: left;
+    padding: 11px 16px; font-size: 14px; font-weight: 600; color: var(--ink);
+    background: none; border: none; cursor: pointer; text-decoration: none;
+  }
+  .account-menu-item:hover { background: var(--primary-light); }
+  .account-menu-item-danger { color: #b91c1c; }
+  .account-menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
   /* Página de carga de evento: sin topbar/section-tabs, header propio a todo el ancho, ancho completo */
   .evad-form-page { max-width: 100%; margin: 24px 0 60px; }
@@ -263,10 +320,16 @@
 
 <div class="topbar">
   <div class="brand">Visit<span>Potrero</span> <span style="font-size:12px; color:rgba(255,255,255,.6); font-weight:400;">· admin</span></div>
-  <div style="display:flex; gap:14px; align-items:center;">
-    <a href="importar.html" class="btn-icon" style="text-decoration:none;">Importar catálogo</a>
-    <a href="panel.html" class="btn-icon" style="text-decoration:none;">Mi panel</a>
-    <button class="btn-icon" id="logoutBtn">Cerrar sesión</button>
+  <div class="account-menu" id="accountMenu">
+    <button type="button" class="btn-icon account-menu-trigger" id="accountMenuBtn">
+      Mi Perfil <span class="chevron">▾</span>
+    </button>
+    <div class="account-menu-panel hidden" id="accountMenuPanel">
+      <a href="panel.html" class="account-menu-item">👤 Ver mi perfil</a>
+      <a href="importar.html" class="account-menu-item">📥 Importar catálogo</a>
+      <div class="account-menu-divider"></div>
+      <button type="button" class="account-menu-item account-menu-item-danger" id="logoutBtn">🚪 Cerrar sesión</button>
+    </div>
   </div>
 </div>
 
@@ -556,7 +619,12 @@
 
       <button class="btn btn-primary btn-small" id="newOfficialEventBtn" style="margin-bottom:14px;">+ Crear evento oficial</button>
 
-      <div id="evAdminList">
+      <div class="view-toggle">
+        <button type="button" id="evViewListBtn" class="active">📋 Lista</button>
+        <button type="button" id="evViewCardsBtn">🗂️ Tarjetas</button>
+      </div>
+
+      <div id="evAdminList" class="list-mode">
         <p class="empty-state">Cargando...</p>
       </div>
     </div>
@@ -792,7 +860,12 @@
 
       <button class="btn btn-primary btn-small" id="newActivityBtn" style="margin-bottom:14px;">+ Crear actividad</button>
 
-      <div id="actAdminList">
+      <div class="view-toggle">
+        <button type="button" id="actViewListBtn" class="active">📋 Lista</button>
+        <button type="button" id="actViewCardsBtn">🗂️ Tarjetas</button>
+      </div>
+
+      <div id="actAdminList" class="list-mode">
         <p class="empty-state">Cargando...</p>
       </div>
     </div>
@@ -1159,6 +1232,37 @@
         <input type="text" id="searchUsersAdmin" placeholder="Buscar por nombre, email o teléfono..." style="margin-bottom:14px;">
 
         <div id="usersAdminList">
+          <p class="empty-state">Cargando...</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="usuariosViewView" class="hidden">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0 0 6px;" id="userViewName">—</h2>
+            <span class="badge" id="userViewStatusBadge"></span>
+            <span class="badge badge-draft" id="userViewRoleBadge" style="margin-left:6px;"></span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-primary btn-small" id="userViewEditBtn">✏️ Editar</button>
+            <button type="button" class="btn btn-secondary btn-small" id="userViewBackBtn">← Volver</button>
+          </div>
+        </div>
+
+        <dl class="user-view-fields">
+          <dt>Email</dt><dd id="userViewEmail">—</dd>
+          <dt>Teléfono</dt><dd id="userViewPhone">—</dd>
+          <dt>Rol</dt><dd id="userViewRole">—</dd>
+          <dt>Cuenta creada el</dt><dd id="userViewCreated">—</dd>
+          <dt>Último inicio de sesión</dt><dd id="userViewLastLogin">—</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h2 style="margin-top:0;">Fichas asociadas a este perfil</h2>
+        <div id="userViewBusinessesList">
           <p class="empty-state">Cargando...</p>
         </div>
       </div>

@@ -50,8 +50,14 @@ function showAlert(message, type) {
 }
 
 // Si vino desde un link con destino propio (ej. cargar-evento.html), lo
-// respetamos; si no, el destino de siempre es panel.html.
-const redirectTo = new URLSearchParams(window.location.search).get('redirect') || 'panel.html';
+// respetamos. Si no, el destino por defecto depende del rol: admin y
+// master_eventos entran directo al dashboard de admin; el resto, a su
+// panel personal (panel.html).
+const explicitRedirect = new URLSearchParams(window.location.search).get('redirect');
+function defaultDestFor(profile) {
+  if (profile && (profile.is_admin || profile.role === 'master_eventos')) return 'admin.html';
+  return 'panel.html';
+}
 
 // Si ya hay sesión activa, mandar directo al destino (salvo que la
 // cuenta esté bloqueada, ahí se cierra la sesión).
@@ -61,7 +67,7 @@ const redirectTo = new URLSearchParams(window.location.search).get('redirect') |
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('is_blocked')
+    .select('is_blocked, is_admin, role')
     .eq('id', data.session.user.id)
     .single();
 
@@ -70,7 +76,7 @@ const redirectTo = new URLSearchParams(window.location.search).get('redirect') |
     return;
   }
 
-  window.location.href = redirectTo;
+  window.location.href = explicitRedirect || defaultDestFor(profile);
 })();
 
 form.addEventListener('submit', async (e) => {
@@ -100,7 +106,7 @@ form.addEventListener('submit', async (e) => {
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('is_blocked')
+    .select('is_blocked, is_admin, role')
     .eq('id', data.user.id)
     .single();
 
@@ -113,7 +119,7 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  window.location.href = redirectTo;
+  window.location.href = explicitRedirect || defaultDestFor(profile);
 });
 </script>
 

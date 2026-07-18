@@ -189,6 +189,20 @@ function evStatusLabel(status) {
   return map[status] || { text: status, cls: 'badge-draft' };
 }
 
+// ---------- Toggle Tarjetas/Lista ----------
+const evViewListBtn = document.getElementById('evViewListBtn');
+const evViewCardsBtn = document.getElementById('evViewCardsBtn');
+evViewListBtn.addEventListener('click', () => {
+  evViewListBtn.classList.add('active');
+  evViewCardsBtn.classList.remove('active');
+  evAdminList.classList.add('list-mode');
+});
+evViewCardsBtn.addEventListener('click', () => {
+  evViewCardsBtn.classList.add('active');
+  evViewListBtn.classList.remove('active');
+  evAdminList.classList.remove('list-mode');
+});
+
 function renderEvAdminList() {
   let items = evAdminEvents.slice();
   const catFilter = document.getElementById('evAdminCategoryFilter').value;
@@ -223,6 +237,8 @@ function renderEvAdminList() {
   items.forEach((e) => renderEvAdminCard(e));
 }
 
+const EVAD_MESES_ABBR = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
 function renderEvAdminCard(e) {
   const st = evStatusLabel(e.status);
   const cat = evAdminCategories.find((c) => c.id === e.category_id) || {};
@@ -230,6 +246,7 @@ function renderEvAdminCard(e) {
   const org = e.businesses ? e.businesses.name : (e.is_official ? 'Municipalidad (oficial)' : '(sin ficha)');
   const dateLabel = evAdFmtDateRange(e.start_date, e.end_date);
   const timeLabel = evAdFmtTimeRange(e.start_time, e.end_time);
+  const startD = e.start_date ? evAdParseDate(e.start_date) : null;
 
   const card = document.createElement('div');
   card.className = 'card admin-card';
@@ -238,19 +255,24 @@ function renderEvAdminCard(e) {
       ${e.cover_image
         ? `<img src="${e.cover_image}" alt="${escapeHtml(e.title)}" loading="lazy">`
         : `<div class="evad-thumb-ph">${cat.icon || '🎉'}</div>`}
-      <span class="badge ${st.cls} evad-thumb-badge">${st.text}</span>
-      <span class="evad-thumb-cat" style="background:${cat.color || 'var(--primary-dark)'};">${cat.icon || ''} ${escapeHtml(cat.label || e.category_id)}</span>
+      ${startD ? `<span class="evad-thumb-date"><span class="d">${startD.getDate()}</span><span class="m">${EVAD_MESES_ABBR[startD.getMonth()]}</span></span>` : ''}
     </div>
     <div class="evad-card-body">
-      <div class="evad-card-title">${escapeHtml(e.title)}</div>
-      <div class="evad-card-meta">
-        <span class="row">📅 ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
-        <span class="row">👁 ${e.views_count || 0} vistas${e.is_featured ? ' · ★ Destacado (orden ' + e.featured_order + ')' : ''}</span>
-      </div>
-      <div class="evad-card-extra">
-        <strong>Organiza:</strong> ${escapeHtml(org)} ${e.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
-        <strong>Cargado por:</strong> ${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}
-        ${e.review_note ? `<br><strong>Observación:</strong> ${escapeHtml(e.review_note)}` : ''}
+      <div class="evad-card-info">
+        <div class="evad-card-badges">
+          <span class="badge ${st.cls}">${st.text}</span>
+          <span class="evad-cat-chip" style="background:${cat.color || 'var(--primary-dark)'};">${cat.icon || ''} ${escapeHtml(cat.label || e.category_id)}</span>
+        </div>
+        <div class="evad-card-title">${escapeHtml(e.title)}</div>
+        <div class="evad-card-meta">
+          <span class="row">📅 ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
+          <span class="row">👁 ${e.views_count || 0} vistas${e.is_featured ? ' · ★ Destacado (orden ' + e.featured_order + ')' : ''}</span>
+        </div>
+        <div class="evad-card-extra">
+          <strong>Organiza:</strong> ${escapeHtml(org)} ${e.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
+          <strong>Cargado por:</strong> ${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}
+          ${e.review_note ? `<br><strong>Observación:</strong> ${escapeHtml(e.review_note)}` : ''}
+        </div>
       </div>
       <div class="admin-actions"></div>
     </div>

@@ -51,6 +51,22 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   window.location.href = 'login.html';
 });
 
+// ---------- Menú desplegable "Mi Perfil" (topbar) ----------
+const accountMenu = document.getElementById('accountMenu');
+const accountMenuBtn = document.getElementById('accountMenuBtn');
+const accountMenuPanel = document.getElementById('accountMenuPanel');
+accountMenuBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  accountMenu.classList.toggle('open');
+  accountMenuPanel.classList.toggle('hidden');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#accountMenu')) {
+    accountMenu.classList.remove('open');
+    accountMenuPanel.classList.add('hidden');
+  }
+});
+
 tabs.forEach((tab) => {
   tab.addEventListener('click', () => {
     tabs.forEach((t) => t.classList.remove('active'));
@@ -760,25 +776,26 @@ let currentAdminUser = null;
   // carga. Pensado para gente que solo tiene que cargar un evento ya.
   const quickEvento = new URLSearchParams(window.location.search).get('quick') === 'evento';
 
-  if (currentAdminRole === 'master_eventos' || quickEvento) {
-    // Solo administra eventos: no hace falta cargar comercios/categorías
-    // de comercio, va directo a la pestaña Eventos.
+  if (quickEvento) {
     const eventsTab = document.getElementById('mainTabEvents');
     if (eventsTab) eventsTab.click();
-    if (quickEvento) {
-      // Pequeño margen para que terminen de cargar categorías/organizadores
-      // antes de abrir el formulario (si no, el desplegable de categoría
-      // aparece vacío un instante).
-      setTimeout(() => {
-        const btn = document.getElementById('newOfficialEventBtn');
-        if (btn) btn.click();
-      }, 500);
-    }
+    // Pequeño margen para que terminen de cargar categorías/organizadores
+    // antes de abrir el formulario (si no, el desplegable de categoría
+    // aparece vacío un instante).
+    setTimeout(() => {
+      const btn = document.getElementById('newOfficialEventBtn');
+      if (btn) btn.click();
+    }, 500);
     return;
   }
 
-  await loadCategories();
-  loadList();
+  // master_eventos no tiene acceso a Comercios, así que no hace falta
+  // cargar categorías/listado de comercios para él. Ambos roles (admin
+  // y master_eventos) arrancan igual: en el Dashboard.
+  if (currentAdminRole !== 'master_eventos') {
+    await loadCategories();
+    loadList();
+  }
 
   const dashboardTab = document.getElementById('mainTabDashboard');
   if (dashboardTab) dashboardTab.click();

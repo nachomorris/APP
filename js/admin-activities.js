@@ -46,6 +46,16 @@ function actFormatDays(days) {
   if (ordered.length === 1) return ordered[0];
   return ordered.slice(0, -1).join(', ') + ' y ' + ordered[ordered.length - 1];
 }
+// Mini-badge de días (L M X J V S D) para la miniatura de la tarjeta:
+// como las actividades no tienen una fecha puntual, se resalta en qué
+// días de la semana se repiten.
+const ACT_DAYS_ORDER = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+const ACT_DAY_INITIALS = { lunes: 'L', martes: 'M', miercoles: 'X', jueves: 'J', viernes: 'V', sabado: 'S', domingo: 'D' };
+function actDaysBadgeHtml(days) {
+  const set = new Set(days || []);
+  return ACT_DAYS_ORDER.map((d) => `<span class="${set.has(d) ? 'on' : ''}">${ACT_DAY_INITIALS[d]}</span>`).join('');
+}
+
 function actGetCheckedDays() {
   return Array.from(document.querySelectorAll('.actad-day:checked')).map((el) => el.value);
 }
@@ -198,6 +208,20 @@ function updateActAdminStatusCounts() {
   });
 }
 
+// ---------- Toggle Tarjetas/Lista ----------
+const actViewListBtn = document.getElementById('actViewListBtn');
+const actViewCardsBtn = document.getElementById('actViewCardsBtn');
+actViewListBtn.addEventListener('click', () => {
+  actViewListBtn.classList.add('active');
+  actViewCardsBtn.classList.remove('active');
+  actAdminList.classList.add('list-mode');
+});
+actViewCardsBtn.addEventListener('click', () => {
+  actViewCardsBtn.classList.add('active');
+  actViewListBtn.classList.remove('active');
+  actAdminList.classList.remove('list-mode');
+});
+
 function renderActAdminList() {
   let items = actAdminActivities.slice();
   const tagFilter = actAdminTagFilter;
@@ -244,19 +268,24 @@ function renderActAdminCard(a) {
       ${a.cover_image
         ? `<img src="${a.cover_image}" alt="${escapeHtml(a.title)}" loading="lazy">`
         : `<div class="evad-thumb-ph">${tag.icon || '🏅'}</div>`}
-      <span class="badge ${st.cls} evad-thumb-badge">${st.text}</span>
-      <span class="evad-thumb-cat" style="background:${tag.color || 'var(--primary-dark)'};">${tag.icon || ''} ${escapeHtml(tag.label)}</span>
     </div>
     <div class="evad-card-body">
-      <div class="evad-card-title">${escapeHtml(a.title)}</div>
-      <div class="evad-card-meta">
-        <span class="row">🗓️ ${escapeHtml(daysLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
-        <span class="row">👁 ${a.views_count || 0} vistas${a.is_featured ? ' · ★ Destacada (orden ' + a.featured_order + ')' : ''}</span>
-      </div>
-      <div class="evad-card-extra">
-        <strong>Organiza:</strong> ${escapeHtml(org)} ${a.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
-        <strong>Cargada por:</strong> ${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}
-        ${a.review_note ? `<br><strong>Observación:</strong> ${escapeHtml(a.review_note)}` : ''}
+      <div class="evad-card-info">
+        <div class="evad-card-badges">
+          <span class="badge ${st.cls}">${st.text}</span>
+          <span class="evad-cat-chip" style="background:${tag.color || 'var(--primary-dark)'};">${tag.icon || ''} ${escapeHtml(tag.label)}</span>
+          <span class="evad-days-chip">${actDaysBadgeHtml(a.days_of_week)}</span>
+        </div>
+        <div class="evad-card-title">${escapeHtml(a.title)}</div>
+        <div class="evad-card-meta">
+          <span class="row">🗓️ ${escapeHtml(daysLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
+          <span class="row">👁 ${a.views_count || 0} vistas${a.is_featured ? ' · ★ Destacada (orden ' + a.featured_order + ')' : ''}</span>
+        </div>
+        <div class="evad-card-extra">
+          <strong>Organiza:</strong> ${escapeHtml(org)} ${a.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
+          <strong>Cargada por:</strong> ${escapeHtml(owner.full_name) || '(sin nombre)'} ${owner.phone ? '· ' + escapeHtml(owner.phone) : ''}
+          ${a.review_note ? `<br><strong>Observación:</strong> ${escapeHtml(a.review_note)}` : ''}
+        </div>
       </div>
       <div class="admin-actions"></div>
     </div>

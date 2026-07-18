@@ -10,6 +10,8 @@ let usersAdminSectionLoaded = false;
 let allUsersAdmin = [];
 let businessCountByOwner = {};
 let userLoginInfoById = {};
+let currentViewedUser = null;
+let userEditReturnTarget = 'list'; // 'list' | 'view' — a dónde volver al cancelar/guardar la edición
 
 function fmtUserDateTime(iso) {
   if (!iso) return null;
@@ -30,6 +32,7 @@ const usersAdminList = document.getElementById('usersAdminList');
 const searchUsersAdmin = document.getElementById('searchUsersAdmin');
 
 const usuariosListView = document.getElementById('usuariosListView');
+const usuariosViewView = document.getElementById('usuariosViewView');
 const usuariosFormView = document.getElementById('usuariosFormView');
 const usuariosNewFormView = document.getElementById('usuariosNewFormView');
 const userForm = document.getElementById('userForm');
@@ -70,19 +73,40 @@ mainTabUsuarios.addEventListener('click', () => {
 searchUsersAdmin.addEventListener('input', renderUsersAdminList);
 
 function showUsersListView() {
+  usuariosViewView.classList.add('hidden');
   usuariosFormView.classList.add('hidden');
   usuariosNewFormView.classList.add('hidden');
   usuariosListView.classList.remove('hidden');
 }
+function showUsersViewView() {
+  usuariosListView.classList.add('hidden');
+  usuariosFormView.classList.add('hidden');
+  usuariosNewFormView.classList.add('hidden');
+  usuariosViewView.classList.remove('hidden');
+}
 function showUsersFormView() {
   usuariosListView.classList.add('hidden');
+  usuariosViewView.classList.add('hidden');
   usuariosNewFormView.classList.add('hidden');
   usuariosFormView.classList.remove('hidden');
 }
 function showUsersNewFormView() {
   usuariosListView.classList.add('hidden');
+  usuariosViewView.classList.add('hidden');
   usuariosFormView.classList.add('hidden');
   usuariosNewFormView.classList.remove('hidden');
+}
+
+// Vuelve a donde corresponda después de cancelar/guardar una edición:
+// a la vista de perfil si se entró a editar desde ahí, o al listado
+// si se entró directo desde la tabla.
+function returnFromUserForm() {
+  if (userEditReturnTarget === 'view' && currentViewedUser) {
+    const fresh = allUsersAdmin.find((x) => x.id === currentViewedUser.id) || currentViewedUser;
+    openUserViewForm(fresh);
+  } else {
+    showUsersListView();
+  }
 }
 
 async function loadUsersAdmin() {
@@ -173,6 +197,7 @@ function renderUsersTable(list) {
     const roleText = ROLE_LABELS[u.role] || u.role || '—';
     const roleExtra = u.role === 'presidente' && u.chamber ? ` (${escapeHtml(u.chamber)})` : '';
     const tr = document.createElement('tr');
+    tr.className = 'clickable-row';
     tr.innerHTML = `
       <td class="wrap"><strong>${escapeHtml(u.full_name) || '(sin nombre)'}</strong></td>
       <td class="wrap">${escapeHtml(u.email) || '—'}</td>
@@ -183,14 +208,11 @@ function renderUsersTable(list) {
       <td><div class="row-actions"></div></td>
     `;
     const actions = tr.querySelector('.row-actions');
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-secondary btn-small';
-    editBtn.textContent = 'Editar';
-    editBtn.addEventListener('click', () => openUserEditForm(u));
-    actions.appendChild(editBtn);
-
     actions.appendChild(buildUserActionEl(u));
+    // Bloquear/desbloquear no debe disparar la apertura de la ficha.
+    actions.addEventListener('click', (e) => e.stopPropagation());
+
+    tr.addEventListener('click', () => openUserViewForm(u));
 
     tbody.appendChild(tr);
   });
@@ -214,15 +236,80 @@ function buildUserActionEl(u) {
   return toggleBtn;
 }
 
+// ---------- Fichas asociadas (compartido entre vista y edición) ----------
+async function loadOwnerBusinessesInto(container, ownerId) {
+  container.innerHTML = '<p class="empty-state">Cargando...</p>';
+  const { data: bizList, error } = await supabaseClient
+    .from('businesses')
+    .select('id, name, status, categories(label)')
+    .eq('owner_id', ownerId)
+    .order('name', { ascending: true });
+
+  if (error) {
+    container.innerHTML = '';
+    showAlert('No se pudieron cargar las fichas de este usuario: ' + error.message, 'error');
+    return;
+  }
+
+  if (!bizList || bizList.length === 0) {
+    container.innerHTML = '<p class="empty-state">No tiene ninguna ficha a su nombre.</p>';
+    return;
+  }
+
+  container.innerHTML = bizList.map((b) => {
+    const st = statusLabel(b.status);
+    return `
+      <div class="business-item">
+        <div class="info">
+          <div class="name">${escapeHtml(b.name)}</div>
+          <div class="meta">${escapeHtml(b.categories ? b.categories.label : '')} · <span class="badge ${st.cls}">${st.text}</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ---------- Vista de solo lectura del perfil ----------
+async function openUserViewForm(u) {
+  currentViewedUser = u;
+
+  const roleText = ROLE_LABELS[u.role] || u.role || '—';
+  const roleExtra = u.role === 'presidente' && u.chamber ? ` (${escapeHtml(u.chamber)})` : '';
+  const loginInfo = userLoginInfoById[u.id];
+
+  document.getElementById('userViewName').textContent = u.full_name || '(sin nombre)';
+  const statusBadge = document.getElementById('userViewStatusBadge');
+  statusBadge.className = 'badge ' + (u.is_blocked ? 'badge-rejected' : 'badge-published');
+  statusBadge.textContent = u.is_blocked ? 'Bloqueado' : 'Activo';
+  document.getElementById('userViewRoleBadge').textContent = roleText + roleExtra;
+
+  document.getElementById('userViewEmail').textContent = u.email || '—';
+  document.getElementById('userViewPhone').textContent = u.phone || '—';
+  document.getElementById('userViewRole').textContent = roleText + roleExtra;
+  document.getElementById('userViewCreated').textContent = fmtUserDateTime((loginInfo && loginInfo.auth_created_at) || u.created_at) || '—';
+  document.getElementById('userViewLastLogin').textContent = (loginInfo && fmtUserDateTime(loginInfo.last_sign_in_at)) || 'Nunca inició sesión';
+
+  showUsersViewView();
+
+  await loadOwnerBusinessesInto(document.getElementById('userViewBusinessesList'), u.id);
+}
+
+document.getElementById('userViewBackBtn').addEventListener('click', showUsersListView);
+document.getElementById('userViewEditBtn').addEventListener('click', () => {
+  if (currentViewedUser) openUserEditForm(currentViewedUser, 'view');
+});
+
 // ---------- Formulario de edición ----------
 function updateChamberVisibility() {
   userChamberWrap.classList.toggle('hidden', userRoleSelect.value !== 'presidente');
 }
 userRoleSelect.addEventListener('change', updateChamberVisibility);
 
-document.getElementById('cancelUserBtn').addEventListener('click', showUsersListView);
+document.getElementById('cancelUserBtn').addEventListener('click', returnFromUserForm);
 
-async function openUserEditForm(u) {
+async function openUserEditForm(u, returnTarget) {
+  userEditReturnTarget = returnTarget || 'list';
+
   userForm.reset();
   userIdInput.value = u.id;
   userEmailInput.value = u.email || '';
@@ -250,35 +337,7 @@ async function openUserEditForm(u) {
 
   showUsersFormView();
 
-  userBusinessesList.innerHTML = '<p class="empty-state">Cargando...</p>';
-  const { data: bizList, error } = await supabaseClient
-    .from('businesses')
-    .select('id, name, status, categories(label)')
-    .eq('owner_id', u.id)
-    .order('name', { ascending: true });
-
-  if (error) {
-    userBusinessesList.innerHTML = '';
-    showAlert('No se pudieron cargar las fichas de este usuario: ' + error.message, 'error');
-    return;
-  }
-
-  if (!bizList || bizList.length === 0) {
-    userBusinessesList.innerHTML = '<p class="empty-state">No tiene ninguna ficha a su nombre.</p>';
-    return;
-  }
-
-  userBusinessesList.innerHTML = bizList.map((b) => {
-    const st = statusLabel(b.status);
-    return `
-      <div class="business-item">
-        <div class="info">
-          <div class="name">${escapeHtml(b.name)}</div>
-          <div class="meta">${escapeHtml(b.categories ? b.categories.label : '')} · <span class="badge ${st.cls}">${st.text}</span></div>
-        </div>
-      </div>
-    `;
-  }).join('');
+  await loadOwnerBusinessesInto(userBusinessesList, u.id);
 }
 
 userForm.addEventListener('submit', async (e) => {
@@ -361,9 +420,9 @@ userForm.addEventListener('submit', async (e) => {
     saveUserBtn.textContent = 'Guardar cambios';
   }
 
-  showUsersListView();
+  await loadUsersAdmin();
+  returnFromUserForm();
   showAlert('Usuario actualizado.', 'success');
-  loadUsersAdmin();
 });
 
 // ---------- Nuevo usuario ----------
@@ -512,7 +571,7 @@ async function assignBusinessToCurrentUser(businessId, businessName) {
   assignBusinessSearch.value = '';
   hideAssignBusinessResults();
   showAlert(`"${businessName}" ahora pertenece a ${u.full_name || u.email}.`, 'success');
-  openUserEditForm(u);
+  openUserEditForm(u, userEditReturnTarget);
   loadUsersAdmin();
 }
 
