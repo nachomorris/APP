@@ -80,7 +80,7 @@ async function loadDashboard() {
   document.getElementById('dashTotalEventsThisMonth').textContent = thisMonth.length;
   document.getElementById('dashTotalViews').textContent = totalSiteVisits.toLocaleString('es-AR');
   document.getElementById('dashTopViewedSub').innerHTML = topViewed.length
-    ? `👑 Evento más visto: <strong>${escapeHtml(topViewed[0].title)}</strong> (${topViewed[0].views_count || 0} vistas)`
+    ? `${ICON('crown', { size: 13 })} Evento más visto: <strong>${escapeHtml(topViewed[0].title)}</strong> (${topViewed[0].views_count || 0} vistas)`
     : 'Todavía no hay vistas registradas en eventos.';
 
   renderDashMonthChart(events);
@@ -136,8 +136,8 @@ function renderDashUpcomingList(items, categoriesById) {
         <div class="dash-list-body">
           <div class="dash-list-title">${escapeHtml(e.title)}</div>
           <div class="dash-list-meta">
-            ${e.start_time ? `🕐 ${e.start_time.slice(0, 5)}` : ''}
-            ${e.address ? `· 📍 ${escapeHtml(e.address)}` : ''}
+            ${e.start_time ? `${ICON('clock', { size: 12 })} ${e.start_time.slice(0, 5)}` : ''}
+            ${e.address ? `· ${ICON('map-pin', { size: 12 })} ${escapeHtml(e.address)}` : ''}
             ${cat.label ? `· ${escapeHtml(cat.label)}` : ''}
           </div>
         </div>
@@ -158,7 +158,7 @@ function renderDashTopViewedList(items, categoriesById) {
           <div class="dash-list-title">${escapeHtml(e.title)}</div>
           <div class="dash-list-meta">${cat.label ? escapeHtml(cat.label) : ''}</div>
         </div>
-        <div class="dash-list-views">👁 ${e.views_count || 0}</div>
+        <div class="dash-list-views">${ICON('eye', { size: 13 })} ${e.views_count || 0}</div>
       </div>
     `;
   }).join('');

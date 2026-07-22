@@ -55,10 +55,10 @@
   <div id="alert" class="alert"></div>
 
   <div class="section-tabs">
-    <button id="mainTabFichas" class="active">🏪 Mis fichas</button>
-    <button id="mainTabEventos">🎉 Mis eventos</button>
-    <button id="mainTabSocios" class="hidden">🤝 Mis socios</button>
-    <button id="mainTabCuenta">👤 Mi cuenta</button>
+    <button id="mainTabFichas" class="active"><span data-icon="store" data-icon-size="15"></span> Mis fichas</button>
+    <button id="mainTabEventos"><span data-icon="ticket" data-icon-size="15"></span> Mis eventos</button>
+    <button id="mainTabSocios" class="hidden"><span data-icon="handshake" data-icon-size="15"></span> Mis socios</button>
+    <button id="mainTabCuenta"><span data-icon="users" data-icon-size="15"></span> Mi cuenta</button>
   </div>
 
   <!-- ===== SECCIÓN FICHAS ===== -->
@@ -162,29 +162,29 @@
         <div id="amenitiesWrap" class="hidden">
           <label style="margin-top:20px;">Servicios que ofrece</label>
           <div class="amenities-check-grid">
-            <label><input type="checkbox" class="amenity-check" value="wifi"> 📶 Wifi</label>
-            <label><input type="checkbox" class="amenity-check" value="estacionamiento"> 🅿️ Estacionamiento</label>
-            <label><input type="checkbox" class="amenity-check" value="piscina"> 🏊 Piscina</label>
-            <label><input type="checkbox" class="amenity-check" value="desayuno"> 🍳 Desayuno</label>
-            <label><input type="checkbox" class="amenity-check" value="gym"> 🏋️ Gimnasio</label>
-            <label><input type="checkbox" class="amenity-check" value="aire_acondicionado"> ❄️ Aire acondicionado</label>
-            <label><input type="checkbox" class="amenity-check" value="parrilla"> 🔥 Parrilla</label>
-            <label><input type="checkbox" class="amenity-check" value="spa"> 💆 Spa</label>
-            <label><input type="checkbox" class="amenity-check" value="petfriendly"> 🐾 Pet friendly</label>
+            <label><input type="checkbox" class="amenity-check" value="wifi"> <span data-icon="wifi" data-icon-size="14"></span> Wifi</label>
+            <label><input type="checkbox" class="amenity-check" value="estacionamiento"> <span data-icon="parking" data-icon-size="14"></span> Estacionamiento</label>
+            <label><input type="checkbox" class="amenity-check" value="piscina"> <span data-icon="waves" data-icon-size="14"></span> Piscina</label>
+            <label><input type="checkbox" class="amenity-check" value="desayuno"> <span data-icon="egg" data-icon-size="14"></span> Desayuno</label>
+            <label><input type="checkbox" class="amenity-check" value="gym"> <span data-icon="dumbbell" data-icon-size="14"></span> Gimnasio</label>
+            <label><input type="checkbox" class="amenity-check" value="aire_acondicionado"> <span data-icon="snowflake" data-icon-size="14"></span> Aire acondicionado</label>
+            <label><input type="checkbox" class="amenity-check" value="parrilla"> <span data-icon="flame" data-icon-size="14"></span> Parrilla</label>
+            <label><input type="checkbox" class="amenity-check" value="spa"> <span data-icon="sparkle" data-icon-size="14"></span> Spa</label>
+            <label><input type="checkbox" class="amenity-check" value="petfriendly"> <span data-icon="paw-print" data-icon-size="14"></span> Pet friendly</label>
           </div>
         </div>
 
         <div id="gastroTagsWrap" class="hidden">
           <label style="margin-top:20px;">Etiquetas</label>
           <div class="amenities-check-grid">
-            <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> 🏔️ Menú Serrano</label>
+            <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> <span data-icon="mountain" data-icon-size="14"></span> Menú Serrano</label>
           </div>
         </div>
 
         <div id="benefitsWrap" class="hidden">
           <label style="margin-top:20px;">Beneficios</label>
           <div class="amenities-check-grid">
-            <label><input type="checkbox" class="benefit-check" value="bna"> 🏷️ Promo BNA</label>
+            <label><input type="checkbox" class="benefit-check" value="bna"> <span data-icon="tag" data-icon-size="14"></span> Promo BNA</label>
           </div>
         </div>
 
@@ -201,9 +201,9 @@
         <div class="preview-info">
           <div class="preview-name" id="previewName">Nombre del comercio</div>
           <div class="preview-cat" id="previewCat">Categoría</div>
-          <div class="preview-addr" id="previewAddr">📍 Dirección</div>
+          <div class="preview-addr" id="previewAddr"><span data-icon="map-pin" data-icon-size="13"></span> Dirección</div>
         </div>
-        <div class="preview-thumb" id="previewThumb">🏪</div>
+        <div class="preview-thumb" id="previewThumb"><span data-icon="store" data-icon-size="22" data-icon-color="#fff"></span></div>
       </div>
     </div>
   </div>
@@ -467,6 +467,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/panel.js"></script>
 <script src="js/panel-events.js"></script>
 <script src="js/panel-account.js"></script>

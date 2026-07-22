@@ -54,9 +54,11 @@
   header.topbar .title{font-weight:800;font-size:16px;line-height:1.1;}
   header.topbar .sub{font-size:11px;opacity:.75;font-weight:500;}
   header.topbar .back{
-    background:var(--primary);border:none;color:var(--ink);width:32px;height:32px;border-radius:50%;
-    font-size:16px;font-weight:800;cursor:pointer;flex:none;
+    background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;
+    cursor:pointer;flex:none;
+    display:flex;align-items:center;justify-content:center;
   }
+  header.topbar .back .icn{stroke-width:1.75;}
   header.topbar.hidden{display:none;}
 
   main{padding:16px 16px 8px;}
@@ -117,20 +119,31 @@
     scroll-snap-align:start;
   }
   .cat-chip .emoji{
-    width:52px;height:52px;border-radius:50%;background:#fff;color:var(--ink);
-    display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px;
+    width:46px;height:46px;border-radius:50%;background:#fff;color:var(--primary-dark);
+    display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 7px;
     box-shadow:
       0 3px 8px rgba(0,0,0,.15),
       inset 0 1px 1px rgba(255,255,255,.9),
       inset 0 -2px 3px rgba(0,0,0,.12);
     overflow:hidden;
-    transition:width .25s ease, height .25s ease, margin .25s ease, opacity .2s ease, font-size .25s ease, box-shadow .25s ease;
+    transition:width .25s ease, height .25s ease, margin .25s ease, opacity .2s ease, font-size .25s ease, box-shadow .25s ease, transform .15s ease;
   }
+  .cat-chip .emoji .icn{stroke-width:1.75;}
   .home-panel.collapsed .cat-chip .emoji{
     width:0;height:0;margin:0;opacity:0;font-size:0;box-shadow:none;
   }
-  .cat-chip .label{display:block;font-size:10.5px;font-weight:600;color:var(--ink);white-space:nowrap;}
-  .cat-chip.active .emoji{outline:2px solid var(--ink);}
+  .cat-chip .label{display:block;font-size:11px;font-weight:600;letter-spacing:.1px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.28);white-space:nowrap;transition:opacity .15s ease;}
+  .cat-chip.active .emoji{outline:2px solid var(--primary-dark);}
+  @media (hover:hover) and (pointer:fine){
+    .cat-chip:not(.disabled):hover .label{opacity:.75;}
+    .cat-chip:not(.disabled):hover .emoji{
+      transform:translateY(-2px) scale(1.08);
+      box-shadow:
+        0 6px 14px rgba(0,0,0,.22),
+        inset 0 1px 1px rgba(255,255,255,.9),
+        inset 0 -2px 3px rgba(0,0,0,.12);
+    }
+  }
   /* Deshabilitado temporalmente (ver TEMP_ENABLED_CATEGORY_SLUGS): se ve
      gris y no se puede tocar, pero sigue visible. */
   .cat-chip.disabled{cursor:default;}
@@ -249,8 +262,9 @@
   .badge.top{background:var(--ink);color:var(--primary);}
   .badge.featured{background:var(--primary);color:var(--ink);}
   .biz-card .name{font-size:14px;font-weight:700;margin:0 0 2px;}
-  .biz-card .cat{font-size:11.5px;color:var(--primary-dark);font-weight:600;}
-  .biz-card .addr{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .biz-card .cat{font-size:11.5px;color:var(--primary-dark);font-weight:600;display:inline-flex;align-items:center;gap:4px;}
+  .biz-card .addr{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:4px;max-width:100%;}
+  .biz-card .more-link{display:inline-flex;align-items:center;gap:2px;font-size:11.5px;font-weight:700;color:var(--primary-dark);margin-top:auto;align-self:flex-end;padding-top:6px;}
 
   /* Search bar */
   .searchbar{
@@ -263,7 +277,7 @@
     flex:none;border:1px solid var(--border);background:var(--card);border-radius:20px;padding:7px 14px;
     font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);white-space:nowrap;
   }
-  .filter-pill.active{background:var(--ink);border-color:var(--ink);color:var(--primary);}
+  .filter-pill.active{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
 
   /* Actividades: selector segmentado de ancho completo (Deportivas/
      Culturales) debajo del panel naranja, con el rectángulo del logo
@@ -276,7 +290,8 @@
   }
   #activitiesTagRow .seg-btn{
     flex:1;border:none;background:transparent;border-radius:9px;padding:8px 7px;
-    font-size:11.5px;font-weight:700;color:var(--ink);cursor:pointer;text-align:center;white-space:nowrap;
+    font-size:11.5px;font-weight:700;color:var(--ink);cursor:pointer;white-space:nowrap;
+    display:inline-flex;align-items:center;justify-content:center;gap:5px;
   }
   #activitiesTagRow .seg-btn.active{
     background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12), inset 0 1px 1px rgba(255,255,255,.7);
@@ -312,7 +327,7 @@
   .cta-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
   .cta-btns a{flex:1 1 calc(50% - 5px);text-align:center;padding:12px;border-radius:14px;font-weight:700;font-size:13px;}
   .cta-btns .wsp{background:#25D366;color:#fff;}
-  .cta-btns .map{background:var(--ink);color:var(--primary);}
+  .cta-btns .map{background:var(--primary-dark);color:#fff;}
   .cta-btns .call{background:var(--primary);color:var(--ink);}
   .cta-btns .ig{background:#E4405F;color:#fff;}
 
@@ -353,7 +368,7 @@
   .agenda-card .desc{font-size:12.5px;color:var(--muted);line-height:1.4;margin:8px 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
   .agenda-card .org{font-size:11.5px;color:var(--ink);font-weight:600;margin-bottom:10px;}
   .agenda-card .org span{color:var(--muted);font-weight:500;}
-  .agenda-card .more-btn{display:inline-block;background:var(--ink);color:var(--primary);font-size:12.5px;font-weight:700;padding:9px 16px;border-radius:12px;}
+  .agenda-card .more-btn{display:inline-block;background:var(--primary-dark);color:#fff;font-size:12.5px;font-weight:700;padding:9px 16px;border-radius:12px;}
 
   .featured-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;touch-action:pan-x;-webkit-overflow-scrolling:touch;}
   .featured-scroll::-webkit-scrollbar{display:none;}
@@ -434,6 +449,14 @@
       inset 0 1px 1px rgba(255,255,255,.6),
       inset 0 -2px 2px rgba(0,0,0,.18);
   }
+  @media (hover:hover) and (pointer:fine){
+    nav.bottomnav a{transition:opacity .15s ease;}
+    nav.bottomnav a:not(.active):hover{opacity:.9;}
+    nav.bottomnav a:not(.active):hover .ic{
+      background:rgba(255,255,255,.14);
+      transform:translateY(-2px) scale(1.06);
+    }
+  }
 
   @media (min-width:521px){
     .app{border-left:1px solid var(--border);border-right:1px solid var(--border);}
@@ -453,6 +476,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
+<script src="js/icons.js"></script>
 <script>
 /* ============ DATOS ============
    CATEGORIES, SUBCATEGORIES y BUSINESSES ahora se cargan en vivo desde
@@ -473,7 +497,7 @@ function catChipHtml(c){
   const enabled = TEMP_ENABLED_CATEGORY_SLUGS.includes(c.slug);
   const onclick = enabled ? ` onclick="navigate('/categoria/${c.slug}')"` : '';
   return `<div class="cat-chip${enabled ? '' : ' disabled'}"${onclick}>
-    <div class="emoji">${c.emoji}</div><span class="label">${c.label}</span>
+    <div class="emoji">${catIcon(c.emoji,{size:26})}</div><span class="label">${c.label}</span>
   </div>`;
 }
 
@@ -902,14 +926,14 @@ function bizThumb(b){
   const photo = photoForBusiness(b);
   const isLogo = isLogoPlaceholder(photo);
   return `<div class="thumb${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
-    ${photo ? `<img src="${photo}" alt="${b.name}" loading="lazy"${isLogo ? ' class="logo-fit"' : ''}>` : c.emoji}
+    ${photo ? `<img src="${photo}" alt="${b.name}" loading="lazy"${isLogo ? ' class="logo-fit"' : ''}>` : catIcon(c.emoji,{size:34,color:isLogo?'var(--ink)':'#fff'})}
   </div>`;
 }
 
 function badgesFor(b){
   let h = '';
-  if(b.top) h += `<span class="badge top">★ TOP</span>`;
-  if(b.featured) h += `<span class="badge featured">☆ Destacado</span>`;
+  if(b.top) h += `<span class="badge top">${ICON('star-filled',{size:11})} TOP</span>`;
+  if(b.featured) h += `<span class="badge featured">${ICON('star',{size:11})} Destacado</span>`;
   return h;
 }
 
@@ -921,8 +945,8 @@ function bizCard(b, i){
       <div class="badges">${badgesFor(b)}</div>
       <div class="name">${b.name}</div>
       <div class="cat">${cat(b.category).label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
-      <div class="addr">📍 ${b.address}</div>
-      ${showAmenities ? `<div class="card-amenities">${cardAmenityIds.map(a=>`<span class="card-amenity-icon" title="${amenityInfo(a).label}">${amenityInfo(a).icon}</span>`).join('')}</div>` : ''}
+      <div class="addr">${ICON('map-pin',{size:13})} ${b.address}</div>
+      ${showAmenities ? `<div class="card-amenities">${cardAmenityIds.map(a=>`<span class="card-amenity-icon" title="${amenityInfo(a).label}">${catIcon(amenityInfo(a).icon,{size:14})}</span>`).join('')}</div>` : ''}
     </div>
     ${bizThumb(b, i)}
   </div>`;
@@ -935,7 +959,7 @@ function promoCard(f, i){
   else if (f.externalUrl) onclick = `onclick="window.open('${f.externalUrl.replace(/'/g,"\\'")}', '_blank')"`;
   return `<div class="promo-card reveal" style="transition-delay:${(i%4)*70}ms" ${onclick}>
     <div class="promo-img" style="background:var(--ink)">
-      ${f.image ? `<img src="${f.image}" alt="${f.title}" loading="lazy">` : '⭐'}
+      ${f.image ? `<img src="${f.image}" alt="${f.title}" loading="lazy">` : ICON('star',{size:32,color:'#fff'})}
     </div>
     <div class="promo-caption">
       ${biz ? `<div class="promo-name">${biz.name}</div>` : ''}
@@ -949,7 +973,7 @@ function promoCard(f, i){
 
 function placeCard(p, i){
   return `<div class="place-card reveal" style="transition-delay:${((i||0)%4)*70}ms" onclick="navigate('/lugares/${p.id}')">
-    <div class="img">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : p.emoji}</div>
+    <div class="img">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : catIcon(p.emoji,{size:30,color:'#fff'})}</div>
     <div class="body">
       <div class="tag">${p.type}</div>
       <div class="name">${p.name}</div>
@@ -1048,7 +1072,7 @@ function setTopbar({title, sub, back}){
   const tb = document.getElementById('topbar');
   tb.classList.remove('hidden');
   tb.innerHTML = `
-    ${back ? `<button class="back" onclick="history.back()">←</button>` : `<div class="logo">🏔️</div>`}
+    ${back ? `<button class="back" onclick="history.back()">${ICON('arrow-left',{size:15})}</button>` : `<div class="logo"><img src="images/logo-mark.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>`}
     <div>
       <div class="title">${title}</div>
       ${sub ? `<div class="sub">${sub}</div>` : ''}
@@ -1062,19 +1086,19 @@ function hideTopbar(){
 
 function setBottomnav(active){
   const items = [
-    {key:'home', path:'/', ic:'🏠', label:'Inicio'},
-    {key:'destacado', path:'/destacado', ic:'⭐', label:'Destacado'},
-    {key:'agenda', path:'/agenda', ic:'🎉', label:'Eventos'},
-    {key:'actividades', path:'/actividades', ic:'🏃', label:'Actividades'},
+    {key:'home', path:'/', ic:'home', label:'Inicio'},
+    {key:'destacado', path:'/destacado', ic:'star', label:'Destacado'},
+    {key:'agenda', path:'/agenda', ic:'calendar', label:'Eventos'},
+    {key:'actividades', path:'/actividades', ic:'runner', label:'Actividades'},
     // Se apaga por completo si el admin deshabilitó el panel (ver loadAppSettings).
-    ...(NOVEDADES_ENABLED ? [{key:'novedades', path:'/novedades', ic:'📰', label:'Novedades'}] : []),
+    ...(NOVEDADES_ENABLED ? [{key:'novedades', path:'/novedades', ic:'newspaper', label:'Novedades'}] : []),
     // No es una página interna: abre WhatsApp directo, con mensaje precargado.
-    {key:'consultas', external:true, ic:'💬', label:'Consultas'},
+    {key:'consultas', external:true, ic:'message-circle', label:'Consultas'},
   ];
   document.getElementById('bottomnav').innerHTML = items.map(i=>
     i.external
-      ? `<a href="${inquiriesWaLink()}" target="_blank" rel="noopener"><span class="ic">${i.ic}</span>${i.label}</a>`
-      : `<a class="${active===i.key?'active':''}" onclick="navigate('${i.path}')"><span class="ic">${i.ic}</span>${i.label}</a>`
+      ? `<a href="${inquiriesWaLink()}" target="_blank" rel="noopener"><span class="ic">${ICON(i.ic,{size:20})}</span>${i.label}</a>`
+      : `<a class="${active===i.key?'active':''}" onclick="navigate('${i.path}')"><span class="ic">${ICON(i.ic,{size:20})}</span>${i.label}</a>`
   ).join('');
 }
 
@@ -1169,7 +1193,7 @@ function renderChamberHome(){
       <div class="panel-topbar">
         <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
         <div class="searchbar" style="cursor:pointer;" onclick="navigate('/buscar')">
-          <span>🔎</span><span style="color:var(--muted);font-size:12px;">Buscá tu comercio</span>
+          <span>${ICON('search',{size:14})}</span><span style="color:var(--muted);font-size:12px;">Buscá tu comercio</span>
         </div>
       </div>
       <div class="cat-grid-wrap">
@@ -1203,7 +1227,7 @@ function renderHome(){
       <div class="panel-topbar">
         <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
         <div class="searchbar" style="cursor:pointer;" onclick="navigate('/buscar')">
-          <span>🔎</span><span style="color:var(--muted);font-size:12px;">Buscá tu comercio</span>
+          <span>${ICON('search',{size:14})}</span><span style="color:var(--muted);font-size:12px;">Buscá tu comercio</span>
         </div>
       </div>
       <div class="cat-grid-wrap">
@@ -1268,7 +1292,7 @@ function renderCategoria(slug){
   document.getElementById('view').innerHTML = `
     <div class="section" style="margin-top:0;">
       <div class="searchbar" style="margin-bottom:14px;">
-        <span>🔎</span>
+        <span>${ICON('search',{size:14})}</span>
         <input id="categoriaSearchInput" placeholder="Buscar en ${c.label.toLowerCase()}...">
       </div>
       ${subcats.length ? `<div class="filter-row" id="subFilterRow"></div>` : ''}
@@ -1307,7 +1331,7 @@ function renderAmenitiesFilterRow(slug){
   if(!el) return;
   el.innerHTML = tagsForCategory(slug).map(a=>{
     const active = categoriaFilterAmenities.includes(a.id);
-    return `<button class="filter-pill ${active?'active':''}" onclick="toggleCategoriaAmenity('${slug}','${a.id}')">${a.icon} ${a.label}</button>`;
+    return `<button class="filter-pill ${active?'active':''}" onclick="toggleCategoriaAmenity('${slug}','${a.id}')">${catIcon(a.icon,{size:13})} ${a.label}</button>`;
   }).join('');
 }
 function renderBenefitsFilterRow(slug){
@@ -1315,7 +1339,7 @@ function renderBenefitsFilterRow(slug){
   if(!el) return;
   el.innerHTML = benefitsForCategory(slug).map(a=>{
     const active = categoriaFilterAmenities.includes(a.id);
-    return `<button class="filter-pill ${active?'active':''}" onclick="toggleCategoriaAmenity('${slug}','${a.id}')">${a.icon} ${a.label}</button>`;
+    return `<button class="filter-pill ${active?'active':''}" onclick="toggleCategoriaAmenity('${slug}','${a.id}')">${catIcon(a.icon,{size:13})} ${a.label}</button>`;
   }).join('');
 }
 function toggleCategoriaAmenity(slug, id){
@@ -1361,7 +1385,7 @@ function renderBuscar(){
   const view = document.getElementById('view');
   view.innerHTML = `
     <div class="searchbar">
-      <span>🔎</span>
+      <span>${ICON('search',{size:14})}</span>
       <input id="searchInput" placeholder="Buscar comercios, lugares..." value="${searchState.q}">
     </div>
     <div class="filter-row" id="filterRow"></div>
@@ -1446,10 +1470,10 @@ function renderComercio(id){
   const fbUrl = facebookUrl(b.facebook);
   document.getElementById('view').innerHTML = `
     <div class="detail-hero full-bleed${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
-      ${photo ? `<img src="${photo}" alt="${b.name}"${isLogo ? ' class="logo-fit"' : ''}>` : c.emoji}
+      ${photo ? `<img src="${photo}" alt="${b.name}"${isLogo ? ' class="logo-fit"' : ''}>` : catIcon(c.emoji,{size:44,color:isLogo?'var(--ink)':'#fff'})}
     </div>
     <div class="detail-title">${b.name}</div>
-    <div class="detail-cat">${c.emoji} ${c.label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
+    <div class="detail-cat">${catIcon(c.emoji,{size:14})} ${c.label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
     <div class="detail-badges">${badgesFor(b)}</div>
 
     ${b.desc ? `<div class="detail-block">
@@ -1459,29 +1483,29 @@ function renderComercio(id){
 
     ${(()=>{ const ids = (b.amenities||[]).filter(a=>!BENEFITS.some(x=>x.id===a)); return ids.length ? `<div class="detail-block">
       <h3>Servicios</h3>
-      <div class="detail-amenities">${ids.map(a=>{ const info = amenityInfo(a); return `<span class="detail-amenity-tag">${info.icon} ${info.label}</span>`; }).join('')}</div>
+      <div class="detail-amenities">${ids.map(a=>{ const info = amenityInfo(a); return `<span class="detail-amenity-tag">${catIcon(info.icon,{size:14})} ${info.label}</span>`; }).join('')}</div>
     </div>` : ''; })()}
 
     ${(()=>{ const ids = (b.amenities||[]).filter(a=>BENEFITS.some(x=>x.id===a)); return ids.length ? `<div class="detail-block">
       <h3>Beneficios</h3>
-      <div class="detail-amenities">${ids.map(a=>{ const info = amenityInfo(a); return `<span class="detail-amenity-tag">${info.icon} ${info.label}</span>`; }).join('')}</div>
+      <div class="detail-amenities">${ids.map(a=>{ const info = amenityInfo(a); return `<span class="detail-amenity-tag">${catIcon(info.icon,{size:14})} ${info.label}</span>`; }).join('')}</div>
     </div>` : ''; })()}
 
     <div class="detail-block">
       <h3>Información</h3>
-      ${b.address ? `<div class="detail-row"><span class="ic">📍</span>${b.address}</div>` : ''}
-      ${b.phone ? `<div class="detail-row"><span class="ic">📞</span>${b.phone}</div>` : ''}
-      ${b.email ? `<div class="detail-row"><span class="ic">✉️</span><a href="mailto:${b.email}">${b.email}</a></div>` : ''}
-      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${b.web}</a></div>` : ''}
-      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span><a href="${igUrl}" target="_blank" rel="noopener">${b.instagram}</a></div>` : ''}
-      ${fbUrl ? `<div class="detail-row"><span class="ic">📘</span><a href="${fbUrl}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
+      ${b.address ? `<div class="detail-row"><span class="ic">${ICON('map-pin',{size:15})}</span>${b.address}</div>` : ''}
+      ${b.phone ? `<div class="detail-row"><span class="ic">${ICON('phone',{size:15})}</span>${b.phone}</div>` : ''}
+      ${b.email ? `<div class="detail-row"><span class="ic">${ICON('mail',{size:15})}</span><a href="mailto:${b.email}">${b.email}</a></div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">${ICON('globe',{size:15})}</span><a href="${webUrl}" target="_blank" rel="noopener">${b.web}</a></div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">${ICON('instagram',{size:15})}</span><a href="${igUrl}" target="_blank" rel="noopener">${b.instagram}</a></div>` : ''}
+      ${fbUrl ? `<div class="detail-row"><span class="ic">${ICON('facebook',{size:15})}</span><a href="${fbUrl}" target="_blank" rel="noopener">Facebook</a></div>` : ''}
     </div>
 
     <div class="cta-btns">
-      ${mapsUrlFor(b) ? `<a class="map" href="${mapsUrlFor(b)}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''}
-      ${(b.whatsapp || b.phone) ? `<a class="wsp" href="${waLink(b.whatsapp || b.phone)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
-      ${b.phone ? `<a class="call" href="tel:${b.phone.replace(/[^0-9+]/g,'')}">📞 Llamar</a>` : ''}
-      ${igUrl ? `<a class="ig" href="${igUrl}" target="_blank" rel="noopener">📷 Instagram</a>` : ''}
+      ${mapsUrlFor(b) ? `<a class="map" href="${mapsUrlFor(b)}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : ''}
+      ${(b.whatsapp || b.phone) ? `<a class="wsp" href="${waLink(b.whatsapp || b.phone)}" target="_blank" rel="noopener">${ICON('message-circle',{size:15})} WhatsApp</a>` : ''}
+      ${b.phone ? `<a class="call" href="tel:${b.phone.replace(/[^0-9+]/g,'')}">${ICON('phone',{size:15})} Llamar</a>` : ''}
+      ${igUrl ? `<a class="ig" href="${igUrl}" target="_blank" rel="noopener">${ICON('instagram',{size:15})} Instagram</a>` : ''}
     </div>
   `;
 }
@@ -1528,7 +1552,7 @@ function renderLugar(id){
   setBottomnav('');
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${p.image ? ' zoomable' : ''}"${p.image ? ` onclick="openImageLightbox('${p.image.replace(/'/g,"\\'")}', '${(p.name||'').replace(/'/g,"\\'")}')"` : ''}>
-      ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.emoji}
+      ${p.image ? `<img src="${p.image}" alt="${p.name}">` : catIcon(p.emoji,{size:44,color:'#fff'})}
     </div>
     <div class="detail-title">${p.name}</div>
     <div class="detail-cat">${p.type}</div>
@@ -1537,11 +1561,11 @@ function renderLugar(id){
       <p>${p.desc}</p>
     </div>
     <div class="cta-btns">
-      <a class="map" style="flex:1" href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>
+      <a class="map" style="flex:1" href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>
     </div>
 
     ${p.image ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
-      <span class="img-lightbox-close" onclick="closeImageLightbox()">✕</span>
+      <span class="img-lightbox-close" onclick="closeImageLightbox()">${ICON('x',{size:20,color:'#fff'})}</span>
       <img id="imgLightboxImg" src="${p.image}" alt="${p.name}" onclick="event.stopPropagation()">
     </div>` : ''}
   `;
@@ -1638,17 +1662,17 @@ function agendaCard(e, i){
   const d = parseYMD(e.startDate);
   return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/evento/${e.id}')">
     <div class="cover" style="background:${c.color || '#111'}">
-      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : (c.icon||'🎉')}
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : catIcon(c.icon||'🎉',{size:34,color:'#fff'})}
       <div class="date-badge"><span class="day">${d.getDate()}</span><span class="mon">${MESES_ES[d.getMonth()].slice(0,3)}</span></div>
       ${e.isFree ? `<span class="free-tag">Gratis</span>` : ''}
     </div>
     <div class="body">
-      <div class="when">🗓️ ${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
+      <div class="when">${ICON('calendar',{size:13})} ${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
       <h3>${e.title}</h3>
-      ${(e.address && !isAddressUrl(e.address)) ? `<div class="meta-row">📍 ${e.address}</div>` : ''}
+      ${(e.address && !isAddressUrl(e.address)) ? `<div class="meta-row">${ICON('map-pin',{size:13})} ${e.address}</div>` : ''}
       ${e.desc || e.shortDesc ? `<div class="desc">${e.shortDesc || e.desc}</div>` : ''}
       ${org ? `<div class="org"><span>Organiza:</span> ${org}</div>` : ''}
-      <span class="more-btn">Ver más →</span>
+      <span class="more-btn">Ver más ${ICON('chevron-right',{size:13})}</span>
     </div>
   </div>`;
 }
@@ -1657,8 +1681,8 @@ function featuredCard(e){
   const c = eventCat(e.category);
   return `<div class="featured-card" onclick="navigate('/evento/${e.id}')">
     <div class="cover" style="background:${c.color || '#111'}">
-      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : (c.icon||'🎉')}
-      <span class="star">★ Destacado</span>
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : catIcon(c.icon||'🎉',{size:34,color:'#fff'})}
+      <span class="star">${ICON('star-filled',{size:13})} Destacado</span>
     </div>
     <div class="cap">
       <div class="when">${fmtDateRange(e)}</div>
@@ -1691,7 +1715,7 @@ function renderAgenda(){
       <div class="panel-topbar">
         <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
         <div class="searchbar">
-          <span>🔎</span>
+          <span>${ICON('search',{size:14})}</span>
           <input id="agendaSearch" placeholder="Buscar evento, lugar u organizador..." value="${agendaState.q}">
         </div>
       </div>
@@ -1707,7 +1731,7 @@ function renderAgenda(){
     <div class="section" style="margin-top:${featured.length?'32px':'0'};">
       <div class="section-head"><h2>Próximamente</h2></div>
       <div id="agendaList"></div>
-      <div class="agenda-archive-link"><a onclick="navigate('/agenda/anteriores')">Ver eventos anteriores →</a></div>
+      <div class="agenda-archive-link"><a onclick="navigate('/agenda/anteriores')">Ver eventos anteriores ${ICON('chevron-right',{size:13})}</a></div>
     </div>
 
     ${hasSession ? `<div class="fab-cargar"><a href="panel.html#eventos">+ Cargar un evento</a></div>` : ''}
@@ -1863,11 +1887,11 @@ function renderEventoDetail(id){
 
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${e.cover ? ' zoomable' : ''}" style="background:${c.color||'#111'}"${e.cover ? ` onclick="openImageLightbox('${e.cover.replace(/'/g,"\\'")}', '${(e.title||'').replace(/'/g,"\\'")}')"` : ''}>
-      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : (c.icon||'🎉')}
-      ${e.cover ? `<span class="zoom-hint">🔍 Ver flyer</span>` : ''}
+      ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : catIcon(c.icon||'🎉',{size:44,color:'#fff'})}
+      ${e.cover ? `<span class="zoom-hint">${ICON('search',{size:13})} Ver flyer</span>` : ''}
     </div>
     <div class="detail-title">${e.title}</div>
-    <div class="detail-cat">${c.icon||''} ${c.label}</div>
+    <div class="detail-cat">${catIcon(c.icon||'',{size:14})} ${c.label}</div>
     <div class="event-badges">
       <span class="badge ${e.isFree ? 'free' : 'price'}">${e.isFree ? '● Entrada gratuita' : (priceLabel(e) ? '● ' + priceLabel(e) : '● Consultar precio')}</span>
       ${e.requiresRegistration ? '<span class="badge price">● Requiere inscripción</span>' : ''}
@@ -1890,26 +1914,26 @@ function renderEventoDetail(id){
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      ${e.address ? `<div class="detail-row"><span class="ic">📍</span>${isAddressUrl(e.address) ? `<a href="${e.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : e.address}</div>` : ''}
-      ${orgBiz || e.isOfficial || e.contactName ? `<div class="detail-row"><span class="ic">🏪</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(e))}</div>` : ''}
-      ${e.phone ? `<div class="detail-row"><span class="ic">📞</span>${e.phone}</div>` : ''}
-      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${e.website}</a></div>` : ''}
-      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span><a href="${igUrl}" target="_blank" rel="noopener">${e.instagram}</a></div>` : ''}
-      ${e.capacity ? `<div class="detail-row"><span class="ic">👥</span>Cupo limitado: ${e.capacity} personas</div>` : ''}
+      ${e.address ? `<div class="detail-row"><span class="ic">${ICON('map-pin',{size:15})}</span>${isAddressUrl(e.address) ? `<a href="${e.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : e.address}</div>` : ''}
+      ${orgBiz || e.isOfficial || e.contactName ? `<div class="detail-row"><span class="ic">${ICON('store',{size:15})}</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(e))}</div>` : ''}
+      ${e.phone ? `<div class="detail-row"><span class="ic">${ICON('phone',{size:15})}</span>${e.phone}</div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">${ICON('globe',{size:15})}</span><a href="${webUrl}" target="_blank" rel="noopener">${e.website}</a></div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">${ICON('instagram',{size:15})}</span><a href="${igUrl}" target="_blank" rel="noopener">${e.instagram}</a></div>` : ''}
+      ${e.capacity ? `<div class="detail-row"><span class="ic">${ICON('users',{size:15})}</span>Cupo limitado: ${e.capacity} personas</div>` : ''}
     </div>
 
     <div class="cta-btns">
-      ${e.whatsapp ? `<a class="wsp" href="${waLink(e.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
-      ${isAddressUrl(e.address) ? `<a class="map" href="${e.address}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ((e.lat && e.lng) ? `<a class="map" href="https://www.google.com/maps?q=${e.lat},${e.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (e.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(e.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''))}
+      ${e.whatsapp ? `<a class="wsp" href="${waLink(e.whatsapp)}" target="_blank" rel="noopener">${ICON('message-circle',{size:15})} WhatsApp</a>` : ''}
+      ${isAddressUrl(e.address) ? `<a class="map" href="${e.address}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : ((e.lat && e.lng) ? `<a class="map" href="https://www.google.com/maps?q=${e.lat},${e.lng}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : (e.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(e.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : ''))}
     </div>
     <div class="cta-btns" style="margin-top:10px;">
-      <a class="map" style="flex:1;" onclick="shareEvent('${e.id}')">📤 Compartir</a>
-      <a class="map" style="flex:1;" href="${eventIcsHref(e)}" download="${(e.title||'evento').replace(/[^a-z0-9]+/gi,'-')}.ics">📅 Agendar</a>
+      <a class="map" style="flex:1;" onclick="shareEvent('${e.id}')">${ICON('share',{size:15})} Compartir</a>
+      <a class="map" style="flex:1;" href="${eventIcsHref(e)}" download="${(e.title||'evento').replace(/[^a-z0-9]+/gi,'-')}.ics">${ICON('calendar',{size:15})} Agendar</a>
     </div>
-    ${e.requiresRegistration && e.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${e.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
+    ${e.requiresRegistration && e.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--primary-dark); color:#fff;" href="${e.registrationUrl}" target="_blank" rel="noopener">${ICON('ticket',{size:15})} Inscribirme / Comprar entrada</a></div>` : ''}
 
     ${e.cover ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
-      <span class="img-lightbox-close" onclick="closeImageLightbox()">✕</span>
+      <span class="img-lightbox-close" onclick="closeImageLightbox()">${ICON('x',{size:20,color:'#fff'})}</span>
       <img id="imgLightboxImg" src="${e.cover}" alt="${e.title}" onclick="event.stopPropagation()">
     </div>` : ''}
   `;
@@ -1953,11 +1977,12 @@ function activityCard(a, i){
     <div class="info">
       <div class="badges">${a.isFree ? `<span class="badge featured">Gratis</span>` : ''}</div>
       <div class="name">${a.title}</div>
-      <div class="cat">${t.icon} ${t.label}</div>
-      <div class="addr">🗓️ ${formatActivityDays(a.daysOfWeek)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
+      <div class="cat">${catIcon(t.icon,{size:14})} ${t.label}</div>
+      <div class="addr">${ICON('calendar',{size:13})} ${formatActivityDays(a.daysOfWeek)}${fmtTimeRange(a) ? ' · ' + fmtTimeRange(a) : ''}</div>
+      <span class="more-link">Ver más ${ICON('chevron-right',{size:11})}</span>
     </div>
     <div class="thumb" style="background:${t.color || '#111'}">
-      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : catIcon(t.icon||'🏅',{size:34,color:'#fff'})}
     </div>
   </div>`;
 }
@@ -1966,8 +1991,8 @@ function activityFeaturedCard(a){
   const t = activityTag(a.tag);
   return `<div class="featured-card" onclick="navigate('/actividad/${a.id}')">
     <div class="cover" style="background:${t.color || '#111'}">
-      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
-      <span class="star">★ Destacada</span>
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : catIcon(t.icon||'🏅',{size:34,color:'#fff'})}
+      <span class="star">${ICON('star-filled',{size:13})} Destacada</span>
     </div>
     <div class="cap">
       <div class="when">${formatActivityDays(a.daysOfWeek)}</div>
@@ -2009,7 +2034,7 @@ function renderActividades(){
       <div class="panel-topbar">
         <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
         <div class="searchbar">
-          <span>🔎</span>
+          <span>${ICON('search',{size:14})}</span>
           <input id="activitiesSearch" placeholder="Buscar actividad..." value="${activitiesState.q}">
         </div>
       </div>
@@ -2032,8 +2057,8 @@ function renderActividades(){
   `;
 
   document.getElementById('activitiesTagRow').innerHTML = [
-    {k:'deportiva', l:'🏅 Deportivas'}, {k:'cultural', l:'🎭 Culturales'}
-  ].map(f=>`<button class="seg-btn ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${f.l}</button>`).join('');
+    {k:'deportiva', ic:'trophy', l:'Deportivas'}, {k:'cultural', ic:'music', l:'Culturales'}
+  ].map(f=>`<button class="seg-btn ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${ICON(f.ic,{size:13})} ${f.l}</button>`).join('');
 
   document.getElementById('activitiesSearch').addEventListener('input', e=>{
     activitiesState.q = e.target.value;
@@ -2127,11 +2152,11 @@ function renderActividadDetail(id){
 
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${a.cover ? ' zoomable' : ''}" style="background:${t.color||'#111'}"${a.cover ? ` onclick="openImageLightbox('${a.cover.replace(/'/g,"\\'")}', '${(a.title||'').replace(/'/g,"\\'")}')"` : ''}>
-      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : (t.icon||'🏅')}
-      ${a.cover ? `<span class="zoom-hint">🔍 Ver flyer</span>` : ''}
+      ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : catIcon(t.icon||'🏅',{size:44,color:'#fff'})}
+      ${a.cover ? `<span class="zoom-hint">${ICON('search',{size:13})} Ver flyer</span>` : ''}
     </div>
     <div class="detail-title">${a.title}</div>
-    <div class="detail-cat">${t.icon||''} ${t.label}</div>
+    <div class="detail-cat">${catIcon(t.icon||'',{size:14})} ${t.label}</div>
     <div class="event-badges">
       <span class="badge ${a.isFree ? 'free' : 'price'}">${a.isFree ? '● Entrada gratuita' : (priceLabel(a) ? '● ' + priceLabel(a) : '● Consultar precio')}</span>
       ${a.requiresRegistration ? '<span class="badge price">● Requiere inscripción</span>' : ''}
@@ -2154,26 +2179,26 @@ function renderActividadDetail(id){
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      ${a.address ? `<div class="detail-row"><span class="ic">📍</span>${isAddressUrl(a.address) ? `<a href="${a.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : a.address}</div>` : ''}
-      ${orgBiz || a.isOfficial || a.contactName ? `<div class="detail-row"><span class="ic">🏪</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(a))}</div>` : ''}
-      ${a.phone ? `<div class="detail-row"><span class="ic">📞</span>${a.phone}</div>` : ''}
-      ${webUrl ? `<div class="detail-row"><span class="ic">🌐</span><a href="${webUrl}" target="_blank" rel="noopener">${a.website}</a></div>` : ''}
-      ${igUrl ? `<div class="detail-row"><span class="ic">📷</span><a href="${igUrl}" target="_blank" rel="noopener">${a.instagram}</a></div>` : ''}
-      ${a.capacity ? `<div class="detail-row"><span class="ic">👥</span>Cupo limitado: ${a.capacity} personas</div>` : ''}
+      ${a.address ? `<div class="detail-row"><span class="ic">${ICON('map-pin',{size:15})}</span>${isAddressUrl(a.address) ? `<a href="${a.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : a.address}</div>` : ''}
+      ${orgBiz || a.isOfficial || a.contactName ? `<div class="detail-row"><span class="ic">${ICON('store',{size:15})}</span>${orgBiz ? `<a onclick="${orgLink}">${orgBiz.name}</a>` : (organizerName(a))}</div>` : ''}
+      ${a.phone ? `<div class="detail-row"><span class="ic">${ICON('phone',{size:15})}</span>${a.phone}</div>` : ''}
+      ${webUrl ? `<div class="detail-row"><span class="ic">${ICON('globe',{size:15})}</span><a href="${webUrl}" target="_blank" rel="noopener">${a.website}</a></div>` : ''}
+      ${igUrl ? `<div class="detail-row"><span class="ic">${ICON('instagram',{size:15})}</span><a href="${igUrl}" target="_blank" rel="noopener">${a.instagram}</a></div>` : ''}
+      ${a.capacity ? `<div class="detail-row"><span class="ic">${ICON('users',{size:15})}</span>Cupo limitado: ${a.capacity} personas</div>` : ''}
     </div>
 
     <div class="cta-btns">
-      ${a.whatsapp ? `<a class="wsp" href="${waLink(a.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
-      ${isAddressUrl(a.address) ? `<a class="map" href="${a.address}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ((a.lat && a.lng) ? `<a class="map" href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : (a.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(a.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">🗺️ Cómo llegar</a>` : ''))}
+      ${a.whatsapp ? `<a class="wsp" href="${waLink(a.whatsapp)}" target="_blank" rel="noopener">${ICON('message-circle',{size:15})} WhatsApp</a>` : ''}
+      ${isAddressUrl(a.address) ? `<a class="map" href="${a.address}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : ((a.lat && a.lng) ? `<a class="map" href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : (a.address ? `<a class="map" href="https://www.google.com/maps?q=${encodeURIComponent(a.address + ', Potrero de los Funes')}" target="_blank" rel="noopener">${ICON('navigation',{size:15})} Cómo llegar</a>` : ''))}
     </div>
     <div class="cta-btns" style="margin-top:10px;">
-      <a class="wsp" style="flex:1;" href="${inquiriesWaLink()}" target="_blank" rel="noopener">💬 Consultas</a>
-      <a class="map" style="flex:1;" onclick="shareActivity('${a.id}')">📤 Compartir</a>
+      <a class="wsp" style="flex:1;" href="${inquiriesWaLink()}" target="_blank" rel="noopener">${ICON('message-circle',{size:15})} Consultas</a>
+      <a class="map" style="flex:1;" onclick="shareActivity('${a.id}')">${ICON('share',{size:15})} Compartir</a>
     </div>
-    ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--ink); color:var(--primary);" href="${a.registrationUrl}" target="_blank" rel="noopener">🎟️ Inscribirme / Comprar entrada</a></div>` : ''}
+    ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--primary-dark); color:#fff;" href="${a.registrationUrl}" target="_blank" rel="noopener">${ICON('ticket',{size:15})} Inscribirme / Comprar entrada</a></div>` : ''}
 
     ${a.cover ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
-      <span class="img-lightbox-close" onclick="closeImageLightbox()">✕</span>
+      <span class="img-lightbox-close" onclick="closeImageLightbox()">${ICON('x',{size:20,color:'#fff'})}</span>
       <img id="imgLightboxImg" src="${a.cover}" alt="${a.title}" onclick="event.stopPropagation()">
     </div>` : ''}
   `;
@@ -2212,7 +2237,7 @@ function destacadoPageCard(f, i){
   if (biz) onclick = `onclick="navigate('/comercio/${biz.id}')"`;
   else if (f.externalUrl) onclick = `onclick="window.open('${f.externalUrl.replace(/'/g,"\\'")}', '_blank')"`;
   return `<div class="destacado-page-card reveal" style="transition-delay:${(i%6)*60}ms" ${onclick}>
-    <div class="img">${f.image ? `<img src="${f.image}" alt="${f.title}" loading="lazy">` : '⭐'}</div>
+    <div class="img">${f.image ? `<img src="${f.image}" alt="${f.title}" loading="lazy">` : ICON('star',{size:28,color:'#fff'})}</div>
     <div class="body">
       ${biz ? `<div class="name">${biz.name}</div>` : ''}
       <div class="title">${f.title}</div>

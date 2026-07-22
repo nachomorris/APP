@@ -272,7 +272,7 @@ function renderEventsList() {
       <div class="info">
         <div class="name">${escapeHtml(e.title)}</div>
         <div class="meta">${escapeHtml(dateLabel)} · <span class="badge ${st.cls}">${st.text}</span></div>
-        <div class="meta">👁 ${e.views_count || 0} vistas${e.business_id ? ' · ' + escapeHtml(org || '') : ''}</div>
+        <div class="meta">${ICON('eye', { size: 13 })} ${e.views_count || 0} vistas${e.business_id ? ' · ' + escapeHtml(org || '') : ''}</div>
         ${e.review_note ? `<div class="meta" style="color:var(--warning);">Observación del admin: ${escapeHtml(e.review_note)}</div>` : ''}
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -313,7 +313,7 @@ function addScheduleRow(data) {
       <input type="time" class="sched-start" value="${data && data.start_time ? data.start_time.slice(0, 5) : ''}" placeholder="Inicio">
       <input type="time" class="sched-end" value="${data && data.end_time ? data.end_time.slice(0, 5) : ''}" placeholder="Fin">
     </div>
-    <button type="button" class="remove-row" title="Quitar">✕</button>
+    <button type="button" class="remove-row" title="Quitar">${ICON('x', { size: 14 })}</button>
   `;
   row.querySelector('.remove-row').addEventListener('click', () => row.remove());
   const descRow = document.createElement('div');

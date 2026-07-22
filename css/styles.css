@@ -58,6 +58,10 @@ a { color: inherit; }
 
 .brand span { color: var(--primary); }
 
+/* Íconos vectoriales (ver js/icons.js): heredan el color de texto del
+   elemento que los contiene salvo que se les pase color explícito. */
+.icn { vertical-align: -3px; flex: none; }
+
 .btn-icon {
   background: none;
   border: none;

@@ -149,14 +149,14 @@ function updatePreview() {
     : '';
 
   document.getElementById('previewName').textContent = name;
-  document.getElementById('previewAddr').textContent = address ? '📍 ' + address : '📍 Sin dirección cargada';
+  document.getElementById('previewAddr').innerHTML = ICON('map-pin', { size: 13 }) + ' ' + (address || 'Sin dirección cargada');
 
   const catLabel = categoryMeta ? categoryMeta.label : 'Elegí una categoría';
   const subLabel = (subcatLabel && subcatLabel !== '(opcional)') ? ' · ' + subcatLabel : '';
   document.getElementById('previewCat').textContent = catLabel + subLabel;
 
   const thumb = document.getElementById('previewThumb');
-  thumb.textContent = categoryMeta ? (categoryMeta.icon || '🏪') : '🏪';
+  thumb.innerHTML = categoryMeta ? catIcon(categoryMeta.icon || '🏪', { size: 22, color: '#fff' }) : catIcon('🏪', { size: 22, color: '#fff' });
   thumb.style.background = categoryMeta ? (categoryMeta.color || '#111111') : '#111111';
 }
 

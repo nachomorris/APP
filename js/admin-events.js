@@ -254,19 +254,19 @@ function renderEvAdminCard(e) {
     <div class="evad-thumb">
       ${e.cover_image
         ? `<img src="${e.cover_image}" alt="${escapeHtml(e.title)}" loading="lazy">`
-        : `<div class="evad-thumb-ph">${cat.icon || '🎉'}</div>`}
+        : `<div class="evad-thumb-ph">${catIcon(cat.icon || '🎉', { size: 32, color: '#fff' })}</div>`}
       ${startD ? `<span class="evad-thumb-date"><span class="d">${startD.getDate()}</span><span class="m">${EVAD_MESES_ABBR[startD.getMonth()]}</span></span>` : ''}
     </div>
     <div class="evad-card-body">
       <div class="evad-card-info">
         <div class="evad-card-badges">
           <span class="badge ${st.cls}">${st.text}</span>
-          <span class="evad-cat-chip" style="background:${cat.color || 'var(--primary-dark)'};">${cat.icon || ''} ${escapeHtml(cat.label || e.category_id)}</span>
+          <span class="evad-cat-chip" style="background:${cat.color || 'var(--primary-dark)'};">${catIcon(cat.icon || '', { size: 12 })} ${escapeHtml(cat.label || e.category_id)}</span>
         </div>
         <div class="evad-card-title">${escapeHtml(e.title)}</div>
         <div class="evad-card-meta">
-          <span class="row">📅 ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
-          <span class="row">👁 ${e.views_count || 0} vistas${e.is_featured ? ' · ★ Destacado (orden ' + e.featured_order + ')' : ''}</span>
+          <span class="row">${ICON('calendar', { size: 13 })} ${escapeHtml(dateLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
+          <span class="row">${ICON('eye', { size: 13 })} ${e.views_count || 0} vistas${e.is_featured ? ' · ' + ICON('star-filled', { size: 12 }) + ' Destacado (orden ' + e.featured_order + ')' : ''}</span>
         </div>
         <div class="evad-card-extra">
           <strong>Organiza:</strong> ${escapeHtml(org)} ${e.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
@@ -282,7 +282,7 @@ function renderEvAdminCard(e) {
   const btn = (label, cls, fn) => {
     const b = document.createElement('button');
     b.className = 'btn ' + cls + ' btn-small';
-    b.textContent = label;
+    b.innerHTML = label;
     b.addEventListener('click', fn);
     actions.appendChild(b);
   };
@@ -294,8 +294,8 @@ function renderEvAdminCard(e) {
   else btn('Volver a publicar', 'btn-secondary', () => setEvStatus(e.id, 'published'));
   btn(e.is_featured ? 'Quitar destacado' : 'Destacar', 'btn-secondary', () => toggleEvFeatured(e));
   if (e.is_featured) {
-    btn('▲ Subir', 'btn-secondary', () => reorderFeatured(e, -1));
-    btn('▼ Bajar', 'btn-secondary', () => reorderFeatured(e, 1));
+    btn(ICON('chevron-up', { size: 13 }) + ' Subir', 'btn-secondary', () => reorderFeatured(e, -1));
+    btn(ICON('chevron-down', { size: 13 }) + ' Bajar', 'btn-secondary', () => reorderFeatured(e, 1));
   }
   btn('Editar', 'btn-secondary', () => openEvAdminForm(e));
   btn('Eliminar', 'btn-danger', () => deleteEvAdmin(e.id));
@@ -592,14 +592,14 @@ function renderEvAdPreview() {
         ${cover
           ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
           : `<img src="images/logo-markk.png" alt="" class="evad-hero-placeholder">`}
-        <span class="edit-hint">${evadPhotoUploading ? '⏳ Subiendo...' : (cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto')}</span>
+        <span class="edit-hint">${evadPhotoUploading ? ICON('loader', { size: 13 }) + ' Subiendo...' : (cover ? ICON('camera', { size: 13 }) + ' Cambiar · arrastrar para encuadrar' : ICON('camera', { size: 13 }) + ' Elegir foto')}</span>
       </div>
 
       <div class="detail-title evad-editable" contenteditable="true" data-ev-field="title" data-placeholder="Título del evento">${escapeHtml(rawTitle)}</div>
 
-      <div class="detail-cat clickable" data-ev-toggle="category">${cat.icon || '🏷️'} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
+      <div class="detail-cat clickable" data-ev-toggle="category">${catIcon(cat.icon || '🏷️', { size: 14 })} ${escapeHtml(cat.label || 'Elegir categoría')}</div>
 
-      <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="✏️ Descripción corta">${escapeHtml(rawShortDesc)}</p>
+      <p class="evad-editable evad-short-desc" contenteditable="true" data-ev-field="short_description" data-placeholder="Descripción corta">${escapeHtml(rawShortDesc)}</p>
     </div>
 
     <div class="detail-block">
@@ -624,11 +624,11 @@ function renderEvAdPreview() {
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      <div class="detail-row"><span class="ic">📍</span><span class="evad-editable" contenteditable="true" data-ev-field="address" data-placeholder="Dirección o link de Maps">${escapeHtml(rawAddress)}</span></div>
-      ${org ? `<div class="detail-row"><span class="ic">🏪</span>${escapeHtml(org)}</div>` : ''}
-      <div class="detail-row"><span class="ic">📞</span><span class="evad-editable" contenteditable="true" data-ev-field="phone" data-placeholder="Teléfono">${escapeHtml(rawPhone)}</span></div>
-      <div class="detail-row"><span class="ic">🌐</span><span class="evad-editable" contenteditable="true" data-ev-field="website" data-placeholder="Sitio web">${escapeHtml(rawWebsite)}</span></div>
-      <div class="detail-row"><span class="ic">📷</span><span class="evad-editable" contenteditable="true" data-ev-field="instagram" data-placeholder="Instagram">${escapeHtml(rawInstagram)}</span></div>
+      <div class="detail-row"><span class="ic">${ICON('map-pin', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-ev-field="address" data-placeholder="Dirección o link de Maps">${escapeHtml(rawAddress)}</span></div>
+      ${org ? `<div class="detail-row"><span class="ic">${ICON('store', { size: 14 })}</span>${escapeHtml(org)}</div>` : ''}
+      <div class="detail-row"><span class="ic">${ICON('phone', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-ev-field="phone" data-placeholder="Teléfono">${escapeHtml(rawPhone)}</span></div>
+      <div class="detail-row"><span class="ic">${ICON('globe', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-ev-field="website" data-placeholder="Sitio web">${escapeHtml(rawWebsite)}</span></div>
+      <div class="detail-row"><span class="ic">${ICON('instagram', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-ev-field="instagram" data-placeholder="Instagram">${escapeHtml(rawInstagram)}</span></div>
     </div>
   `;
 }

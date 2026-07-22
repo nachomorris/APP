@@ -322,24 +322,24 @@
   <div class="brand">Visit<span>Potrero</span> <span style="font-size:12px; color:rgba(255,255,255,.6); font-weight:400;">· admin</span></div>
   <div class="account-menu" id="accountMenu">
     <button type="button" class="btn-icon account-menu-trigger" id="accountMenuBtn">
-      Mi Perfil <span class="chevron">▾</span>
+      Mi Perfil <span class="chevron" data-icon="chevron-down" data-icon-size="12"></span>
     </button>
     <div class="account-menu-panel hidden" id="accountMenuPanel">
-      <a href="panel.html" class="account-menu-item">👤 Ver mi perfil</a>
-      <a href="importar.html" class="account-menu-item">📥 Importar catálogo</a>
+      <a href="panel.html" class="account-menu-item"><span data-icon="users" data-icon-size="14"></span> Ver mi perfil</a>
+      <a href="importar.html" class="account-menu-item"><span data-icon="upload" data-icon-size="14"></span> Importar catálogo</a>
       <div class="account-menu-divider"></div>
-      <button type="button" class="account-menu-item account-menu-item-danger" id="logoutBtn">🚪 Cerrar sesión</button>
+      <button type="button" class="account-menu-item account-menu-item-danger" id="logoutBtn"><span data-icon="log-out" data-icon-size="14"></span> Cerrar sesión</button>
     </div>
   </div>
 </div>
 
 <div id="evAdminFullHeader" class="evad-full-header hidden">
-  <button type="button" class="evad-back-btn" id="evAdminBackBtn" aria-label="Volver">←</button>
+  <button type="button" class="evad-back-btn" id="evAdminBackBtn" aria-label="Volver"><span data-icon="arrow-left" data-icon-size="18"></span></button>
   <h1 id="evAdminFormTitle">Nuevo evento</h1>
 </div>
 
 <div id="actAdminFullHeader" class="evad-full-header hidden">
-  <button type="button" class="evad-back-btn" id="actAdminBackBtn" aria-label="Volver">←</button>
+  <button type="button" class="evad-back-btn" id="actAdminBackBtn" aria-label="Volver"><span data-icon="arrow-left" data-icon-size="18"></span></button>
   <h1 id="actAdminFormTitle">Nueva actividad</h1>
 </div>
 
@@ -348,14 +348,14 @@
   <div id="alert" class="alert"></div>
 
   <div class="section-tabs">
-    <button id="mainTabDashboard" class="active">📊 Dashboard</button>
-    <button id="mainTabBusinesses">🏪 Comercios</button>
-    <button id="mainTabEvents">🎉 Eventos</button>
-    <button id="mainTabActivities">🏅 Actividades</button>
-    <button id="mainTabNovedades">📰 Novedades</button>
-    <button id="mainTabFeatured">⭐ Destacado</button>
-    <button id="mainTabPlaces">📍 Lugares</button>
-    <button id="mainTabUsuarios">👤 Usuarios</button>
+    <button id="mainTabDashboard" class="active"><span data-icon="bar-chart" data-icon-size="15"></span> Dashboard</button>
+    <button id="mainTabBusinesses"><span data-icon="store" data-icon-size="15"></span> Comercios</button>
+    <button id="mainTabEvents"><span data-icon="calendar" data-icon-size="15"></span> Eventos</button>
+    <button id="mainTabActivities"><span data-icon="activity" data-icon-size="15"></span> Actividades</button>
+    <button id="mainTabNovedades"><span data-icon="newspaper" data-icon-size="15"></span> Novedades</button>
+    <button id="mainTabFeatured"><span data-icon="star" data-icon-size="15"></span> Destacado</button>
+    <button id="mainTabPlaces"><span data-icon="map-pin" data-icon-size="15"></span> Lugares</button>
+    <button id="mainTabUsuarios"><span data-icon="users" data-icon-size="15"></span> Usuarios</button>
   </div>
 
   <div id="dashboardAdminSection">
@@ -369,25 +369,25 @@
       <div class="card dash-stat-card">
         <div class="dash-stat-top">
           <span class="dash-stat-label">Total eventos</span>
-          <span class="dash-stat-icon">🎉</span>
+          <span class="dash-stat-icon" data-icon="calendar" data-icon-size="16"></span>
         </div>
         <div class="dash-stat-value" id="dashTotalEvents">–</div>
         <div class="dash-stat-breakdown">
           <div class="dash-stat-breakdown-item">
             <span class="n" id="dashTotalEventsUpcoming">–</span>
-            <span class="l">🔜 próximos</span>
+            <span class="l"><span data-icon="clock" data-icon-size="11"></span> próximos</span>
           </div>
           <div class="dash-stat-breakdown-item">
             <span class="n" id="dashTotalEventsThisMonth">–</span>
-            <span class="l">📆 este mes</span>
+            <span class="l"><span data-icon="calendar" data-icon-size="11"></span> este mes</span>
           </div>
         </div>
-        <a class="dash-stat-link" onclick="document.getElementById('mainTabEvents').click();">Ver eventos →</a>
+        <a class="dash-stat-link" onclick="document.getElementById('mainTabEvents').click();">Ver eventos <span data-icon="chevron-right" data-icon-size="12"></span></a>
       </div>
       <div class="card dash-stat-card dash-stat-card-highlight">
         <div class="dash-stat-top">
           <span class="dash-stat-label">Visitas al sitio</span>
-          <span class="dash-stat-icon">🌐</span>
+          <span class="dash-stat-icon" data-icon="globe" data-icon-size="16"></span>
         </div>
         <div class="dash-stat-value" id="dashTotalViews">–</div>
         <div class="dash-stat-sub dash-stat-sub-roomy" id="dashTopViewedSub"></div>
@@ -447,8 +447,8 @@
     <button class="btn btn-primary btn-small" id="newBusinessAdminBtn" style="margin-bottom:14px;">+ Nuevo comercio</button>
 
     <div class="view-toggle">
-      <button type="button" id="viewCardsBtn">🗂️ Tarjetas</button>
-      <button type="button" id="viewTableBtn" class="active">📊 Tabla</button>
+      <button type="button" id="viewCardsBtn"><span data-icon="grid" data-icon-size="13"></span> Tarjetas</button>
+      <button type="button" id="viewTableBtn" class="active"><span data-icon="bar-chart" data-icon-size="13"></span> Tabla</button>
     </div>
 
     <div id="list">
@@ -542,29 +542,29 @@
         <div id="amenitiesWrap" class="hidden">
           <label style="margin-top:20px;">Servicios que ofrece</label>
           <div class="amenities-check-grid">
-            <label><input type="checkbox" class="amenity-check" value="wifi"> 📶 Wifi</label>
-            <label><input type="checkbox" class="amenity-check" value="estacionamiento"> 🅿️ Estacionamiento</label>
-            <label><input type="checkbox" class="amenity-check" value="piscina"> 🏊 Piscina</label>
-            <label><input type="checkbox" class="amenity-check" value="desayuno"> 🍳 Desayuno</label>
-            <label><input type="checkbox" class="amenity-check" value="gym"> 🏋️ Gimnasio</label>
-            <label><input type="checkbox" class="amenity-check" value="aire_acondicionado"> ❄️ Aire acondicionado</label>
-            <label><input type="checkbox" class="amenity-check" value="parrilla"> 🔥 Parrilla</label>
-            <label><input type="checkbox" class="amenity-check" value="spa"> 💆 Spa</label>
-            <label><input type="checkbox" class="amenity-check" value="petfriendly"> 🐾 Pet friendly</label>
+            <label><input type="checkbox" class="amenity-check" value="wifi"> <span data-icon="wifi" data-icon-size="14"></span> Wifi</label>
+            <label><input type="checkbox" class="amenity-check" value="estacionamiento"> <span data-icon="parking" data-icon-size="14"></span> Estacionamiento</label>
+            <label><input type="checkbox" class="amenity-check" value="piscina"> <span data-icon="waves" data-icon-size="14"></span> Piscina</label>
+            <label><input type="checkbox" class="amenity-check" value="desayuno"> <span data-icon="egg" data-icon-size="14"></span> Desayuno</label>
+            <label><input type="checkbox" class="amenity-check" value="gym"> <span data-icon="dumbbell" data-icon-size="14"></span> Gimnasio</label>
+            <label><input type="checkbox" class="amenity-check" value="aire_acondicionado"> <span data-icon="snowflake" data-icon-size="14"></span> Aire acondicionado</label>
+            <label><input type="checkbox" class="amenity-check" value="parrilla"> <span data-icon="flame" data-icon-size="14"></span> Parrilla</label>
+            <label><input type="checkbox" class="amenity-check" value="spa"> <span data-icon="sparkle" data-icon-size="14"></span> Spa</label>
+            <label><input type="checkbox" class="amenity-check" value="petfriendly"> <span data-icon="paw-print" data-icon-size="14"></span> Pet friendly</label>
           </div>
         </div>
 
         <div id="gastroTagsWrap" class="hidden">
           <label style="margin-top:20px;">Etiquetas</label>
           <div class="amenities-check-grid">
-            <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> 🏔️ Menú Serrano</label>
+            <label><input type="checkbox" class="gastro-tag-check" value="menu_serrano"> <span data-icon="mountain" data-icon-size="14"></span> Menú Serrano</label>
           </div>
         </div>
 
         <div id="benefitsWrap" class="hidden">
           <label style="margin-top:20px;">Beneficios</label>
           <div class="amenities-check-grid">
-            <label><input type="checkbox" class="benefit-check" value="bna"> 🏷️ Promo BNA</label>
+            <label><input type="checkbox" class="benefit-check" value="bna"> <span data-icon="tag" data-icon-size="14"></span> Promo BNA</label>
           </div>
         </div>
 
@@ -620,8 +620,8 @@
       <button class="btn btn-primary btn-small" id="newOfficialEventBtn" style="margin-bottom:14px;">+ Crear evento oficial</button>
 
       <div class="view-toggle">
-        <button type="button" id="evViewListBtn" class="active">📋 Lista</button>
-        <button type="button" id="evViewCardsBtn">🗂️ Tarjetas</button>
+        <button type="button" id="evViewListBtn" class="active"><span data-icon="list" data-icon-size="13"></span> Lista</button>
+        <button type="button" id="evViewCardsBtn"><span data-icon="grid" data-icon-size="13"></span> Tarjetas</button>
       </div>
 
       <div id="evAdminList" class="list-mode">
@@ -643,7 +643,7 @@
           <div id="evadOwnerInfo" class="evad-owner-info hidden"></div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="evadBasicToggle"><span class="arrow">▸</span> <span class="n">📋</span> Información básica</div>
+            <div class="form-toggle-row" id="evadBasicToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="clipboard" data-icon-size="14"></span> Información básica</div>
             <div id="evadBasicWrap" class="hidden">
               <label style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" id="evad_is_official" style="width:auto;">
@@ -681,7 +681,7 @@
           <input type="file" id="evadPhotoInput" accept="image/*" class="hidden">
 
           <div class="form-section">
-            <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow">▸</span> <span class="n">🖼️</span> Galería adicional (opcional)</div>
+            <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="image" data-icon-size="14"></span> Galería adicional (opcional)</div>
             <div id="evadGalleryWrap" class="hidden">
               <label for="evad_gallery">URLs separadas por coma</label>
               <input type="text" id="evad_gallery">
@@ -689,7 +689,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="evadWhenToggle"><span class="arrow">▸</span> <span class="n">📅</span> Fecha y horario</div>
+            <div class="form-toggle-row" id="evadWhenToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="calendar" data-icon-size="14"></span> Fecha y horario</div>
             <div id="evadWhenWrap" class="hidden">
               <div class="row-2">
                 <div>
@@ -702,7 +702,7 @@
                 </div>
               </div>
 
-              <div class="form-toggle-row" id="evadDateToggle"><span class="arrow">▸</span> Personalizar fecha de fin, horario de fin y repetición</div>
+              <div class="form-toggle-row" id="evadDateToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> Personalizar fecha de fin, horario de fin y repetición</div>
               <div id="evadDateAdvancedWrap" class="hidden">
                 <div class="row-2">
                   <div>
@@ -740,7 +740,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="evadLocationToggle"><span class="arrow">▸</span> <span class="n">📍</span> Ubicación y contacto</div>
+            <div class="form-toggle-row" id="evadLocationToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="map-pin" data-icon-size="14"></span> Ubicación y contacto</div>
             <div id="evadLocationWrap" class="hidden">
               <label for="evad_address">Dirección o link de Google Maps</label>
               <input type="text" id="evad_address" placeholder="Av. Costanera 123, o pegá un link de Google Maps">
@@ -771,7 +771,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="evadPriceToggle"><span class="arrow">▸</span> <span class="n">💰</span> Precio e inscripción</div>
+            <div class="form-toggle-row" id="evadPriceToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="dollar-sign" data-icon-size="14"></span> Precio e inscripción</div>
             <div id="evadPriceWrap" class="hidden">
               <label style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" id="evad_is_free" style="width:auto;">
@@ -794,7 +794,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="evadStatusToggle"><span class="arrow">▸</span> <span class="n">⚙️</span> Estado y visibilidad</div>
+            <div class="form-toggle-row" id="evadStatusToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="settings" data-icon-size="14"></span> Estado y visibilidad</div>
             <div id="evadStatusWrap" class="hidden">
               <label for="evad_status">Estado</label>
               <select id="evad_status">
@@ -853,16 +853,16 @@
         <input type="text" id="actAdminOrgSearch" placeholder="Buscar por organizador o título...">
         <div class="tabs" id="actAdminTagFilterGroup" style="margin-bottom:0;">
           <button type="button" class="tab active" data-tag="">Todas las etiquetas</button>
-          <button type="button" class="tab" data-tag="deportiva">🏅 Deportiva</button>
-          <button type="button" class="tab" data-tag="cultural">🎭 Cultural</button>
+          <button type="button" class="tab" data-tag="deportiva"><span data-icon="trophy" data-icon-size="13"></span> Deportiva</button>
+          <button type="button" class="tab" data-tag="cultural"><span data-icon="music" data-icon-size="13"></span> Cultural</button>
         </div>
       </div>
 
       <button class="btn btn-primary btn-small" id="newActivityBtn" style="margin-bottom:14px;">+ Crear actividad</button>
 
       <div class="view-toggle">
-        <button type="button" id="actViewListBtn" class="active">📋 Lista</button>
-        <button type="button" id="actViewCardsBtn">🗂️ Tarjetas</button>
+        <button type="button" id="actViewListBtn" class="active"><span data-icon="list" data-icon-size="13"></span> Lista</button>
+        <button type="button" id="actViewCardsBtn"><span data-icon="grid" data-icon-size="13"></span> Tarjetas</button>
       </div>
 
       <div id="actAdminList" class="list-mode">
@@ -884,7 +884,7 @@
           <div id="actadOwnerInfo" class="evad-owner-info hidden"></div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadBasicToggle"><span class="arrow">▸</span> <span class="n">📋</span> Información básica</div>
+            <div class="form-toggle-row" id="actadBasicToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="clipboard" data-icon-size="14"></span> Información básica</div>
             <div id="actadBasicWrap" class="hidden">
               <label for="actad_business_search">Ficha organizadora (opcional)</label>
               <div class="autocomplete-wrap">
@@ -919,7 +919,7 @@
           <input type="file" id="actadPhotoInput" accept="image/*" class="hidden">
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadGalleryToggle"><span class="arrow">▸</span> <span class="n">🖼️</span> Galería adicional (opcional)</div>
+            <div class="form-toggle-row" id="actadGalleryToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="image" data-icon-size="14"></span> Galería adicional (opcional)</div>
             <div id="actadGalleryWrap" class="hidden">
               <label for="actad_gallery">URLs separadas por coma</label>
               <input type="text" id="actad_gallery">
@@ -927,7 +927,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadWhenToggle"><span class="arrow">▸</span> <span class="n">📅</span> Días y horario</div>
+            <div class="form-toggle-row" id="actadWhenToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="calendar" data-icon-size="14"></span> Días y horario</div>
             <div id="actadWhenWrap" class="hidden">
               <p class="field-hint">Las actividades se hacen todo el año: elegí en qué días de la semana ocurren.</p>
               <div id="actad_days_wrap" class="day-checks">
@@ -954,7 +954,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadLocationToggle"><span class="arrow">▸</span> <span class="n">📍</span> Ubicación y contacto</div>
+            <div class="form-toggle-row" id="actadLocationToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="map-pin" data-icon-size="14"></span> Ubicación y contacto</div>
             <div id="actadLocationWrap" class="hidden">
               <label for="actad_address">Dirección o link de Google Maps</label>
               <input type="text" id="actad_address" placeholder="Av. Costanera 123, o pegá un link de Google Maps">
@@ -985,7 +985,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadPriceToggle"><span class="arrow">▸</span> <span class="n">💰</span> Precio e inscripción</div>
+            <div class="form-toggle-row" id="actadPriceToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="dollar-sign" data-icon-size="14"></span> Precio e inscripción</div>
             <div id="actadPriceWrap" class="hidden">
               <label style="display:flex; align-items:center; gap:8px;">
                 <input type="checkbox" id="actad_is_free" style="width:auto;">
@@ -1008,7 +1008,7 @@
           </div>
 
           <div class="form-section">
-            <div class="form-toggle-row" id="actadStatusToggle"><span class="arrow">▸</span> <span class="n">⚙️</span> Estado y visibilidad</div>
+            <div class="form-toggle-row" id="actadStatusToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="settings" data-icon-size="14"></span> Estado y visibilidad</div>
             <div id="actadStatusWrap" class="hidden">
               <label for="actad_status">Estado</label>
               <select id="actad_status">
@@ -1246,8 +1246,8 @@
             <span class="badge badge-draft" id="userViewRoleBadge" style="margin-left:6px;"></span>
           </div>
           <div style="display:flex; gap:8px;">
-            <button type="button" class="btn btn-primary btn-small" id="userViewEditBtn">✏️ Editar</button>
-            <button type="button" class="btn btn-secondary btn-small" id="userViewBackBtn">← Volver</button>
+            <button type="button" class="btn btn-primary btn-small" id="userViewEditBtn"><span data-icon="edit" data-icon-size="14"></span> Editar</button>
+            <button type="button" class="btn btn-secondary btn-small" id="userViewBackBtn"><span data-icon="arrow-left" data-icon-size="14"></span> Volver</button>
           </div>
         </div>
 
@@ -1426,6 +1426,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="js/supabaseClient.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-dashboard.js"></script>
 <script src="js/admin-events.js"></script>

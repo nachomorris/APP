@@ -78,7 +78,7 @@ function renderFeaturedCard(f, i) {
     <div class="top">
       <div style="display:flex; gap:12px; align-items:center;">
         <div style="width:64px; height:44px; border-radius:8px; overflow:hidden; background:var(--ink); flex:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px;">
-          ${f.image_url ? `<img src="${escapeHtml(f.image_url)}" style="width:100%; height:100%; object-fit:cover;">` : '⭐'}
+          ${f.image_url ? `<img src="${escapeHtml(f.image_url)}" style="width:100%; height:100%; object-fit:cover;">` : ICON('star-filled', { size: 18, color: '#fff' })}
         </div>
         <div>
           <div class="name">${escapeHtml(f.title)}</div>
@@ -98,15 +98,15 @@ function renderFeaturedCard(f, i) {
   const btn = (label, cls, fn) => {
     const b = document.createElement('button');
     b.className = 'btn ' + cls + ' btn-small';
-    b.textContent = label;
+    b.innerHTML = label;
     b.addEventListener('click', fn);
     actions.appendChild(b);
   };
 
   btn('Editar', 'btn-secondary', () => openFeatEditForm(f));
   btn(f.is_active ? 'Desactivar' : 'Activar', 'btn-secondary', () => toggleFeaturedActive(f));
-  if (i > 0) btn('▲ Subir', 'btn-secondary', () => reorderFeaturedCard(f, -1));
-  if (i < featCards.length - 1) btn('▼ Bajar', 'btn-secondary', () => reorderFeaturedCard(f, 1));
+  if (i > 0) btn(ICON('chevron-up', { size: 13 }) + ' Subir', 'btn-secondary', () => reorderFeaturedCard(f, -1));
+  if (i < featCards.length - 1) btn(ICON('chevron-down', { size: 13 }) + ' Bajar', 'btn-secondary', () => reorderFeaturedCard(f, 1));
   btn('Eliminar', 'btn-danger', () => deleteFeaturedCard(f.id));
 
   featuredList.appendChild(card);

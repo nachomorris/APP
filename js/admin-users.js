@@ -328,8 +328,8 @@ async function openUserEditForm(u, returnTarget) {
     const lastLogin = fmtUserDateTime(loginInfo.last_sign_in_at);
     const createdAt = fmtUserDateTime(loginInfo.auth_created_at || u.created_at);
     loginInfoBox.innerHTML = `
-      <span>🕐 Último inicio de sesión: <strong>${lastLogin || 'Nunca inició sesión'}</strong></span>
-      ${createdAt ? `<span>📅 Cuenta creada el: <strong>${createdAt}</strong></span>` : ''}
+      <span>${ICON('clock', { size: 13 })} Último inicio de sesión: <strong>${lastLogin || 'Nunca inició sesión'}</strong></span>
+      ${createdAt ? `<span>${ICON('calendar', { size: 13 })} Cuenta creada el: <strong>${createdAt}</strong></span>` : ''}
     `;
   } else {
     loginInfoBox.innerHTML = '';

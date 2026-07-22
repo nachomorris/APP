@@ -267,19 +267,19 @@ function renderActAdminCard(a) {
     <div class="evad-thumb">
       ${a.cover_image
         ? `<img src="${a.cover_image}" alt="${escapeHtml(a.title)}" loading="lazy">`
-        : `<div class="evad-thumb-ph">${tag.icon || '🏅'}</div>`}
+        : `<div class="evad-thumb-ph">${catIcon(tag.icon || '🏅', { size: 32, color: '#fff' })}</div>`}
     </div>
     <div class="evad-card-body">
       <div class="evad-card-info">
         <div class="evad-card-badges">
           <span class="badge ${st.cls}">${st.text}</span>
-          <span class="evad-cat-chip" style="background:${tag.color || 'var(--primary-dark)'};">${tag.icon || ''} ${escapeHtml(tag.label)}</span>
+          <span class="evad-cat-chip" style="background:${tag.color || 'var(--primary-dark)'};">${catIcon(tag.icon || '', { size: 12 })} ${escapeHtml(tag.label)}</span>
           <span class="evad-days-chip">${actDaysBadgeHtml(a.days_of_week)}</span>
         </div>
         <div class="evad-card-title">${escapeHtml(a.title)}</div>
         <div class="evad-card-meta">
-          <span class="row">🗓️ ${escapeHtml(daysLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
-          <span class="row">👁 ${a.views_count || 0} vistas${a.is_featured ? ' · ★ Destacada (orden ' + a.featured_order + ')' : ''}</span>
+          <span class="row">${ICON('calendar', { size: 13 })} ${escapeHtml(daysLabel)}${timeLabel ? ' · ' + escapeHtml(timeLabel) : ''}</span>
+          <span class="row">${ICON('eye', { size: 13 })} ${a.views_count || 0} vistas${a.is_featured ? ' · ' + ICON('star-filled', { size: 12 }) + ' Destacada (orden ' + a.featured_order + ')' : ''}</span>
         </div>
         <div class="evad-card-extra">
           <strong>Organiza:</strong> ${escapeHtml(org)} ${a.business_id ? `<a href="admin.html" onclick="event.preventDefault(); document.getElementById('mainTabBusinesses').click();" style="color:var(--primary-dark); font-weight:700;">(ver ficha)</a>` : ''}<br>
@@ -295,7 +295,7 @@ function renderActAdminCard(a) {
   const btn = (label, cls, fn) => {
     const b = document.createElement('button');
     b.className = 'btn ' + cls + ' btn-small';
-    b.textContent = label;
+    b.innerHTML = label;
     b.addEventListener('click', fn);
     actions.appendChild(b);
   };
@@ -307,8 +307,8 @@ function renderActAdminCard(a) {
   else btn('Volver a publicar', 'btn-secondary', () => setActStatus(a.id, 'published'));
   btn(a.is_featured ? 'Quitar destacado' : 'Destacar', 'btn-secondary', () => toggleActFeatured(a));
   if (a.is_featured) {
-    btn('▲ Subir', 'btn-secondary', () => reorderActFeatured(a, -1));
-    btn('▼ Bajar', 'btn-secondary', () => reorderActFeatured(a, 1));
+    btn(ICON('chevron-up', { size: 13 }) + ' Subir', 'btn-secondary', () => reorderActFeatured(a, -1));
+    btn(ICON('chevron-down', { size: 13 }) + ' Bajar', 'btn-secondary', () => reorderActFeatured(a, 1));
   }
   btn('Editar', 'btn-secondary', () => openActAdminForm(a));
   btn('Eliminar', 'btn-danger', () => deleteActAdmin(a.id));
@@ -490,14 +490,14 @@ function renderActAdPreview() {
         ${cover
           ? `<img src="${escapeHtml(cover)}" alt="" style="object-position:${focalX}% ${focalY}%">`
           : `<img src="images/logo-markk.png" alt="" class="evad-hero-placeholder">`}
-        <span class="edit-hint">${actadPhotoUploading ? '⏳ Subiendo...' : (cover ? '📷 Cambiar · arrastrar para encuadrar' : '📷 Elegir foto')}</span>
+        <span class="edit-hint">${actadPhotoUploading ? ICON('loader', { size: 13 }) + ' Subiendo...' : (cover ? ICON('camera', { size: 13 }) + ' Cambiar · arrastrar para encuadrar' : ICON('camera', { size: 13 }) + ' Elegir foto')}</span>
       </div>
 
       <div class="detail-title evad-editable" contenteditable="true" data-act-field="title" data-placeholder="Título de la actividad">${escapeHtml(rawTitle)}</div>
 
-      <div class="detail-cat clickable" data-act-toggle="tag">${tag.icon} ${escapeHtml(tag.label)}</div>
+      <div class="detail-cat clickable" data-act-toggle="tag">${catIcon(tag.icon, { size: 14 })} ${escapeHtml(tag.label)}</div>
 
-      <p class="evad-editable evad-short-desc" contenteditable="true" data-act-field="short_description" data-placeholder="✏️ Descripción corta">${escapeHtml(rawShortDesc)}</p>
+      <p class="evad-editable evad-short-desc" contenteditable="true" data-act-field="short_description" data-placeholder="Descripción corta">${escapeHtml(rawShortDesc)}</p>
     </div>
 
     <div class="detail-block">
@@ -522,11 +522,11 @@ function renderActAdPreview() {
 
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
-      <div class="detail-row"><span class="ic">📍</span><span class="evad-editable" contenteditable="true" data-act-field="address" data-placeholder="Dirección o link de Maps">${escapeHtml(rawAddress)}</span></div>
-      ${org ? `<div class="detail-row"><span class="ic">🏪</span>${escapeHtml(org)}</div>` : ''}
-      <div class="detail-row"><span class="ic">📞</span><span class="evad-editable" contenteditable="true" data-act-field="phone" data-placeholder="Teléfono">${escapeHtml(rawPhone)}</span></div>
-      <div class="detail-row"><span class="ic">🌐</span><span class="evad-editable" contenteditable="true" data-act-field="website" data-placeholder="Sitio web">${escapeHtml(rawWebsite)}</span></div>
-      <div class="detail-row"><span class="ic">📷</span><span class="evad-editable" contenteditable="true" data-act-field="instagram" data-placeholder="Instagram">${escapeHtml(rawInstagram)}</span></div>
+      <div class="detail-row"><span class="ic">${ICON('map-pin', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-act-field="address" data-placeholder="Dirección o link de Maps">${escapeHtml(rawAddress)}</span></div>
+      ${org ? `<div class="detail-row"><span class="ic">${ICON('store', { size: 14 })}</span>${escapeHtml(org)}</div>` : ''}
+      <div class="detail-row"><span class="ic">${ICON('phone', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-act-field="phone" data-placeholder="Teléfono">${escapeHtml(rawPhone)}</span></div>
+      <div class="detail-row"><span class="ic">${ICON('globe', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-act-field="website" data-placeholder="Sitio web">${escapeHtml(rawWebsite)}</span></div>
+      <div class="detail-row"><span class="ic">${ICON('instagram', { size: 14 })}</span><span class="evad-editable" contenteditable="true" data-act-field="instagram" data-placeholder="Instagram">${escapeHtml(rawInstagram)}</span></div>
     </div>
   `;
 }
