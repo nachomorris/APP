@@ -555,8 +555,12 @@ eventForm.addEventListener('submit', async (e) => {
     if (id) {
       // Edición: siempre una sola fila (cada ocurrencia se edita por separado).
       const payload = { ...basePayload, start_date: startDate, end_date: endDate };
-      const { error } = await supabaseClient.from('events').update(payload).eq('id', id);
+      // .select('id'): si la RLS bloquea la fila, Postgres no tira error,
+      // solo no actualiza nada — sin esto mostraríamos "guardado" aunque
+      // no se haya guardado nada.
+      const { data, error } = await supabaseClient.from('events').update(payload).eq('id', id).select('id');
       if (error) throw error;
+      if (!data || !data.length) throw new Error('No se pudo guardar: este evento ya no está a tu nombre.');
 
       await supabaseClient.from('event_schedule_items').delete().eq('event_id', id);
       const scheduleItems = recurrenceType === 'none' ? collectScheduleRows() : [];

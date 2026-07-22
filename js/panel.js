@@ -426,8 +426,13 @@ businessForm.addEventListener('submit', async (e) => {
 
   let error;
   let newId = null;
+  let updateData = null;
   if (id) {
-    ({ error } = await supabaseClient.from('businesses').update(payload).eq('id', id));
+    // .select('id'): si la RLS bloquea la fila (ej. la ficha ya no es
+    // tuya porque un admin te la reasignó), Postgres no tira error,
+    // solo no actualiza nada — sin esto mostraríamos "guardado" aunque
+    // no se haya guardado nada.
+    ({ data: updateData, error } = await supabaseClient.from('businesses').update(payload).eq('id', id).select('id'));
   } else {
     payload.owner_id = currentUser.id;
     const insertResult = await supabaseClient.from('businesses').insert(payload).select('id').single();
@@ -440,6 +445,10 @@ businessForm.addEventListener('submit', async (e) => {
 
   if (error) {
     showAlert('No se pudo guardar: ' + error.message, 'error');
+    return;
+  }
+  if (id && (!updateData || !updateData.length)) {
+    showAlert('No se pudo guardar: esta ficha ya no está a tu nombre.', 'error');
     return;
   }
 

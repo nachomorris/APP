@@ -320,8 +320,9 @@ async function setActStatus(id, status, review_note) {
   const payload = { status };
   if (review_note !== undefined) payload.review_note = review_note;
   if (status === 'published' || status === 'approved') payload.review_note = null;
-  const { error } = await supabaseClient.from('activities').update(payload).eq('id', id);
+  const { data, error } = await supabaseClient.from('activities').update(payload).eq('id', id).select('id');
   if (error) { showAlert('No se pudo actualizar: ' + error.message, 'error'); return; }
+  if (!data || !data.length) { showAlert('No se pudo actualizar: no tenés permiso para editar esta actividad.', 'error'); return; }
   showAlert('Actividad actualizada.', 'success');
   loadActAdminActivities();
 }
@@ -336,13 +337,15 @@ function rejectAct(id) {
   setActStatus(id, 'rejected', note.trim());
 }
 async function toggleActFeatured(a) {
-  const { error } = await supabaseClient.from('activities').update({ is_featured: !a.is_featured }).eq('id', a.id);
+  const { data, error } = await supabaseClient.from('activities').update({ is_featured: !a.is_featured }).eq('id', a.id).select('id');
   if (error) { showAlert('No se pudo actualizar: ' + error.message, 'error'); return; }
+  if (!data || !data.length) { showAlert('No se pudo actualizar: no tenés permiso para editar esta actividad.', 'error'); return; }
   loadActAdminActivities();
 }
 async function reorderActFeatured(a, delta) {
-  const { error } = await supabaseClient.from('activities').update({ featured_order: (a.featured_order || 0) + delta }).eq('id', a.id);
+  const { data, error } = await supabaseClient.from('activities').update({ featured_order: (a.featured_order || 0) + delta }).eq('id', a.id).select('id');
   if (error) { showAlert('No se pudo reordenar: ' + error.message, 'error'); return; }
+  if (!data || !data.length) { showAlert('No se pudo reordenar: no tenés permiso para editar esta actividad.', 'error'); return; }
   loadActAdminActivities();
 }
 async function deleteActAdmin(id) {

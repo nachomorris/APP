@@ -307,8 +307,12 @@ async function setEvStatus(id, status, review_note) {
   const payload = { status };
   if (review_note !== undefined) payload.review_note = review_note;
   if (status === 'published' || status === 'approved') payload.review_note = null;
-  const { error } = await supabaseClient.from('events').update(payload).eq('id', id);
+  // .select('id'): si la RLS bloquea la fila, Postgres no tira error,
+  // solo no actualiza nada — sin esto mostraríamos "actualizado" aunque
+  // no se haya guardado nada.
+  const { data, error } = await supabaseClient.from('events').update(payload).eq('id', id).select('id');
   if (error) { showAlert('No se pudo actualizar: ' + error.message, 'error'); return; }
+  if (!data || !data.length) { showAlert('No se pudo actualizar: no tenés permiso para editar este evento.', 'error'); return; }
   showAlert('Evento actualizado.', 'success');
   loadEvAdminEvents();
 }
@@ -323,13 +327,15 @@ function rejectEv(id) {
   setEvStatus(id, 'rejected', note.trim());
 }
 async function toggleEvFeatured(e) {
-  const { error } = await supabaseClient.from('events').update({ is_featured: !e.is_featured }).eq('id', e.id);
+  const { data, error } = await supabaseClient.from('events').update({ is_featured: !e.is_featured }).eq('id', e.id).select('id');
   if (error) { showAlert('No se pudo actualizar: ' + error.message, 'error'); return; }
+  if (!data || !data.length) { showAlert('No se pudo actualizar: no tenés permiso para editar este evento.', 'error'); return; }
   loadEvAdminEvents();
 }
 async function reorderFeatured(e, delta) {
-  const { error } = await supabaseClient.from('events').update({ featured_order: (e.featured_order || 0) + delta }).eq('id', e.id);
+  const { data, error } = await supabaseClient.from('events').update({ featured_order: (e.featured_order || 0) + delta }).eq('id', e.id).select('id');
   if (error) { showAlert('No se pudo reordenar: ' + error.message, 'error'); return; }
+  if (!data || !data.length) { showAlert('No se pudo reordenar: no tenés permiso para editar este evento.', 'error'); return; }
   loadEvAdminEvents();
 }
 async function deleteEvAdmin(id) {
@@ -997,8 +1003,9 @@ evAdminForm.addEventListener('submit', async (e) => {
   try {
     if (id) {
       const payload = { ...basePayload, start_date: startDate, end_date: endDate };
-      const { error } = await supabaseClient.from('events').update(payload).eq('id', id);
+      const { data, error } = await supabaseClient.from('events').update(payload).eq('id', id).select('id');
       if (error) throw error;
+      if (!data || !data.length) throw new Error('No se pudo guardar: no tenés permiso para editar este evento.');
     } else {
       const untilStr = document.getElementById('evad_recurrence_until').value;
       const customRaw = document.getElementById('evad_recurrence_dates').value;

@@ -652,8 +652,12 @@ businessForm.addEventListener('submit', async (e) => {
 
   let error;
   let newId = null;
+  let updateData = null;
   if (id) {
-    ({ error } = await supabaseClient.from('businesses').update(payload).eq('id', id));
+    // .select('id'): si la RLS bloquea la fila, Postgres no tira error,
+    // solo no actualiza nada — sin esto mostraríamos "guardado" aunque
+    // no se haya guardado nada.
+    ({ data: updateData, error } = await supabaseClient.from('businesses').update(payload).eq('id', id).select('id'));
   } else {
     // El admin la carga directo: no necesita pasar por revisión de nadie.
     payload.status = 'published';
@@ -666,6 +670,13 @@ businessForm.addEventListener('submit', async (e) => {
     saveBtn.disabled = false;
     saveBtn.textContent = id ? 'Guardar cambios' : 'Crear ficha';
     showAlert('No se pudo guardar: ' + error.message, 'error');
+    return;
+  }
+
+  if (id && (!updateData || !updateData.length)) {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Guardar cambios';
+    showAlert('No se pudo guardar: no tenés permiso para editar esta ficha.', 'error');
     return;
   }
 
@@ -706,10 +717,14 @@ async function setStatus(id, status, rejection_note) {
   const payload = { status };
   payload.rejection_note = status === 'rejected' ? (rejection_note || null) : null;
 
-  const { error } = await supabaseClient.from('businesses').update(payload).eq('id', id);
+  const { data, error } = await supabaseClient.from('businesses').update(payload).eq('id', id).select('id');
 
   if (error) {
     showAlert('No se pudo actualizar: ' + error.message, 'error');
+    return;
+  }
+  if (!data || !data.length) {
+    showAlert('No se pudo actualizar: no tenés permiso para editar esta ficha.', 'error');
     return;
   }
 
