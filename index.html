@@ -2042,8 +2042,8 @@ function renderActividades(){
   const featured = activeUpcomingActivities().filter(a=>a.isFeatured).sort((a,b)=>a.featuredOrder-b.featuredOrder);
 
   view.innerHTML = `
-    <div class="home-panel">
-      <div class="panel-topbar" style="justify-content:center;">
+    <div class="home-panel" style="padding-bottom:10px;">
+      <div class="panel-topbar" style="justify-content:center;margin-bottom:0;">
         <div class="brand dual big"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"><span class="divider"></span><img class="logo-img" src="images/educ.png" alt="Año de la Educación"></div>
       </div>
     </div>
