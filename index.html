@@ -101,6 +101,9 @@
   .panel-topbar .brand .logo-img{
     height:69px;width:auto;display:block;
   }
+  .panel-topbar .brand.dual{gap:12px;padding:4px 16px;}
+  .panel-topbar .brand.dual .logo-img{height:52px;}
+  .panel-topbar .brand.dual .divider{width:1px;align-self:stretch;background:var(--border);}
   .panel-topbar .searchbar{
     flex:1;max-width:90%;margin-bottom:0;padding:8px 12px;border-radius:12px;gap:6px;
     box-shadow:
@@ -589,7 +592,7 @@ let BUSINESSES = [];
    los comercios PUBLICADOS de esa cámara (y esa categoría si se pidió)
    y la home muestra solo ese listado, en vez de la home genérica. */
 const CHAMBER_INFO = {
-  UDAER: { label: 'Comercios UDAER' },
+  UDAER: { label: 'Alojamientos UDAER', logo: 'udaer/udaer.jpg' },
   CCTA:  { label: 'Comercios CCTA' },
   AEHGA: { label: 'Comercios AEHGA' }
 };
@@ -1204,7 +1207,7 @@ function renderChamberHome(){
   view.innerHTML = `
     <div class="home-panel">
       <div class="panel-topbar">
-        <div class="brand"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"></div>
+        <div class="brand${info.logo ? ' dual' : ''}">${info.logo ? `<img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"><span class="divider"></span><img class="logo-img" src="${info.logo}" alt="${info.label}">` : `<img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta">`}</div>
         <div class="searchbar" style="cursor:pointer;" onclick="navigate('/buscar')">
           <span>${ICON('search',{size:14})}</span><span style="color:var(--muted);font-size:12px;">Buscá tu comercio</span>
         </div>
