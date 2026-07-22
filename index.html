@@ -2041,12 +2041,8 @@ function renderActividades(){
 
   view.innerHTML = `
     <div class="home-panel">
-      <div class="panel-topbar">
-        <div class="brand dual"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"><span class="divider"></span><img class="logo-img" src="images/educ.png" alt="Año de la Educación"></div>
-        <div class="searchbar">
-          <span>${ICON('search',{size:14})}</span>
-          <input id="activitiesSearch" placeholder="Buscar actividad..." value="${activitiesState.q}">
-        </div>
+      <div class="panel-topbar" style="justify-content:center;">
+        <div class="brand dual" style="transform:scale(1.15);"><img class="logo-img" src="images/logo-mark.png" alt="Potrero encanta"><span class="divider"></span><img class="logo-img" src="images/educ.png" alt="Año de la Educación"></div>
       </div>
     </div>
 
@@ -2066,11 +2062,6 @@ function renderActividades(){
   document.getElementById('activitiesTagRow').innerHTML = [
     {k:'deportiva', ic:'trophy', l:'Deportivas'}, {k:'cultural', ic:'music', l:'Culturales'}
   ].map(f=>`<button class="seg-btn ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${ICON(f.ic,{size:13})} ${f.l}</button>`).join('');
-
-  document.getElementById('activitiesSearch').addEventListener('input', e=>{
-    activitiesState.q = e.target.value;
-    renderActividadesList();
-  });
 
   setupHomePanelFade();
   renderActividadesList();
