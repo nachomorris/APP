@@ -2062,7 +2062,7 @@ function renderActividades(){
   `;
 
   document.getElementById('activitiesTagRow').innerHTML = [
-    {k:'deportiva', ic:'trophy', l:'Deportivas'}, {k:'cultural', ic:'music', l:'Culturales'}
+    {k:'deportiva', ic:'runner', l:'Deportivas'}, {k:'cultural', ic:'music', l:'Culturales'}
   ].map(f=>`<button class="seg-btn ${activitiesState.tag===f.k?'active':''}" onclick="setActividadesTag('${f.k}')">${ICON(f.ic,{size:13})} ${f.l}</button>`).join('');
 
   setupHomePanelFade();
