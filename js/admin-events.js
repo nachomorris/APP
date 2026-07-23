@@ -165,9 +165,16 @@ function updateEvAdminStatusCounts() {
     finished: 0, hidden: 0, rejected: 0, all: evAdminEvents.length,
   };
   evAdminEvents.forEach((e) => {
-    if (e.status in counts) counts[e.status]++;
+    const finished = evAdminIsFinished(e);
+    if (e.status in counts) {
+      if (e.status === 'published' && finished) {
+        // ya pasó: no cuenta como "Publicado", pasa a "Finalizados" más abajo
+      } else {
+        counts[e.status]++;
+      }
+    }
     if (e.is_featured) counts.featured++;
-    if (evAdminIsFinished(e)) counts.finished++;
+    if (finished) counts.finished++;
   });
   document.querySelectorAll('#evAdminStatusTabs .tab-count').forEach((el) => {
     const key = el.getAttribute('data-count-for');
@@ -213,6 +220,10 @@ function renderEvAdminList() {
     items = items.filter((e) => e.is_featured);
   } else if (evAdminStatusFilter === 'finished') {
     items = items.filter((e) => evAdminIsFinished(e));
+  } else if (evAdminStatusFilter === 'published') {
+    // Un evento que ya pasó no se muestra más acá (pasa a "Finalizados"),
+    // aunque su status en la base siga siendo "published".
+    items = items.filter((e) => e.status === 'published' && !evAdminIsFinished(e));
   } else if (evAdminStatusFilter !== 'all') {
     items = items.filter((e) => e.status === evAdminStatusFilter);
   }
