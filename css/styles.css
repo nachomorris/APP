@@ -444,6 +444,7 @@ textarea { resize: vertical; min-height: 90px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
@@ -451,7 +452,7 @@ textarea { resize: vertical; min-height: 90px; }
 
 .business-item:last-child { border-bottom: none; }
 
-.business-item .info { flex: 1; min-width: 0; }
+.business-item .info { flex: 1; min-width: 180px; }
 
 .business-item .name {
   font-weight: 700;
@@ -463,6 +464,34 @@ textarea { resize: vertical; min-height: 90px; }
 .business-item .meta {
   font-size: 13px;
   color: var(--muted);
+}
+
+/* Miniatura de la ficha (panel de presidente, "Mis socios"). */
+.socio-thumb {
+  width: 77px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--primary-light);
+}
+
+/* Botones de acción de cada fila de socio: en desktop van al lado del
+   texto; en celular, si no entran, pasan a su propia línea en vez de
+   achicarse o desbordar la pantalla. */
+.socio-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1 1 100%;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .socio-thumb { width: 56px; height: 42px; }
+  .socio-actions { justify-content: flex-start; }
+  .socio-actions .btn { flex: 1 1 auto; }
+  .socio-account-form input { width: 100%; }
 }
 
 .empty-state {

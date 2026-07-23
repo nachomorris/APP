@@ -78,14 +78,14 @@ function renderSociosList() {
     const ownerLabel = needsAccount ? 'Sin propietario propio todavía (a cargo del municipio)' : (b.owner_full_name || b.owner_email || 'Socio');
     return `
       <div class="business-item">
-        <img src="${escapeHtml(thumbUrl)}" alt="" style="width:77px; height:58px; object-fit:cover; border-radius:8px; flex-shrink:0; background:var(--primary-light);">
+        <img src="${escapeHtml(thumbUrl)}" alt="" class="socio-thumb">
         <div class="info">
           <div class="name" style="cursor:pointer;" onclick="openSocioEditForm('${b.id}')">${escapeHtml(b.name)}</div>
           <div class="meta">${escapeHtml(b.category_label || '')}${escapeHtml(subLabel)} · <span class="badge ${st.cls}">${st.text}</span></div>
           <div class="meta">${escapeHtml(b.address) || 'Sin dirección cargada'}${b.phone ? ' · ' + escapeHtml(b.phone) : ''}</div>
           <div class="meta">Propietario: ${escapeHtml(ownerLabel)}</div>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <div class="socio-actions">
           <button type="button" class="btn btn-secondary btn-small" onclick="openSocioEditForm('${b.id}')">Editar</button>
           ${needsAccount
             ? `<button type="button" class="btn btn-secondary btn-small" onclick="toggleSocioAccountForm('${b.id}')">Crear cuenta y generar link</button>`
