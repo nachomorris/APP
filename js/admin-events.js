@@ -446,6 +446,16 @@ function refreshEvadPhotoUploadState(currentPhotoUrl) {
   evadCoverImageInput.value = currentPhotoUrl || '';
 }
 
+// Botón explícito además del click directo sobre la foto en la previsualización
+// (esa interacción no era lo bastante evidente: sin un botón visible, no
+// quedaba claro que se podía cambiar la foto de portada de un evento).
+const evadChoosePhotoBtn = document.getElementById('evadChoosePhotoBtn');
+evadChoosePhotoBtn.addEventListener('click', () => {
+  if (evadPhotoUploading) return;
+  evadPhotoInput.value = '';
+  evadPhotoInput.click();
+});
+
 // ---------- Punto de encuadre de la portada ----------
 // La foto se guarda siempre completa (sin recorte destructivo); este punto
 // solo controla qué parte queda visible en el recorte de la tarjeta
