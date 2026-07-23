@@ -1,6 +1,9 @@
 let currentUser = null;
 let allSubcategories = [];
 let allCategories = [];
+// Ficha nueva sin guardar todavía: se genera el id en el navegador para
+// poder subir la foto de entrada, sin tener que guardar la ficha primero.
+let draftNewBusinessId = null;
 
 const alertBox = document.getElementById('alert');
 const listView = document.getElementById('listView');
@@ -11,6 +14,8 @@ const categorySelect = document.getElementById('category_id');
 const subcategorySelect = document.getElementById('subcategory_id');
 const formTitle = document.getElementById('formTitle');
 const saveBtn = document.getElementById('saveBtn');
+const nameInput = document.getElementById('name');
+const nameDupWarning = document.getElementById('nameDupWarning');
 
 function showAlert(message, type) {
   alertBox.textContent = message;
@@ -336,8 +341,35 @@ function showFormView() {
   formView.classList.remove('hidden');
 }
 
+// Muchos comercios ya están precargados por el municipio (con el admin
+// como dueño provisorio) antes de que su verdadero dueño se registre.
+// Si alguien nuevo escribe un nombre parecido al de una ficha ya
+// publicada, avisamos para que pida que se la asignen en vez de crear
+// un duplicado.
+async function checkDuplicateName() {
+  const q = nameInput.value.trim();
+  if (q.length < 3) { nameDupWarning.classList.add('hidden'); return; }
+
+  const currentId = document.getElementById('business_id').value;
+  const { data, error } = await supabaseClient
+    .from('businesses')
+    .select('id, name')
+    .ilike('name', `%${q}%`)
+    .limit(5);
+
+  if (error || !data) return;
+  const matches = data.filter((b) => b.id !== currentId);
+  if (!matches.length) { nameDupWarning.classList.add('hidden'); return; }
+
+  const names = matches.map((b) => escapeHtml(b.name)).join(', ');
+  nameDupWarning.innerHTML = `Ya existe${matches.length > 1 ? 'n' : ''} en el sistema: <strong>${names}</strong>. Si tu comercio ya está cargado, no crees una ficha nueva — pedile al administrador que te la asigne a tu cuenta, así evitamos duplicados.`;
+  nameDupWarning.classList.remove('hidden');
+}
+nameInput.addEventListener('blur', checkDuplicateName);
+
 async function openForm(businessId) {
   businessForm.reset();
+  nameDupWarning.classList.add('hidden');
   document.getElementById('business_id').value = '';
   subcategorySelect.innerHTML = '<option value="">(opcional)</option>';
   document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
@@ -347,12 +379,14 @@ async function openForm(businessId) {
 
   if (!businessId) {
     formTitle.textContent = 'Nueva ficha';
-    if (typeof refreshPhotoUploadState === 'function') refreshPhotoUploadState(null, null);
+    draftNewBusinessId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+    if (typeof refreshPhotoUploadState === 'function') refreshPhotoUploadState(draftNewBusinessId, null);
     showFormView();
     updatePreview();
     return;
   }
 
+  draftNewBusinessId = null;
   formTitle.textContent = 'Editar ficha';
 
   const { data, error } = await supabaseClient
@@ -435,6 +469,7 @@ businessForm.addEventListener('submit', async (e) => {
     ({ data: updateData, error } = await supabaseClient.from('businesses').update(payload).eq('id', id).select('id'));
   } else {
     payload.owner_id = currentUser.id;
+    if (draftNewBusinessId) payload.id = draftNewBusinessId;
     const insertResult = await supabaseClient.from('businesses').insert(payload).select('id').single();
     error = insertResult.error;
     newId = insertResult.data ? insertResult.data.id : null;

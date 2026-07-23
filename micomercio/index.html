@@ -46,6 +46,7 @@
       <input type="password" id="login_password" required autocomplete="current-password">
 
       <button type="submit" class="btn btn-primary" id="loginSubmitBtn">Ingresar</button>
+      <p class="form-footer"><a href="#" id="forgotPasswordLink">¿Olvidaste tu contraseña o es tu primera vez? Elegí una acá</a></p>
     </form>
 
     <form id="registerForm" class="hidden">
@@ -177,6 +178,34 @@ loginForm.addEventListener('submit', async (e) => {
   }
 
   window.location.href = defaultDestFor(profile);
+});
+
+// ---------- Olvidé mi contraseña / primera vez ----------
+document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  clearAlert();
+
+  const email = document.getElementById('login_email').value.trim();
+  if (!email) {
+    showAlert('Escribí primero tu email ahí arriba, y volvé a tocar este link.', 'error');
+    return;
+  }
+
+  const link = e.target;
+  link.textContent = 'Enviando...';
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://visitpotrero.com/nueva-contrasena.html',
+  });
+
+  link.textContent = '¿Olvidaste tu contraseña o es tu primera vez? Elegí una acá';
+
+  if (error) {
+    showAlert(error.message, 'error');
+    return;
+  }
+
+  showAlert('Te enviamos un mail a ' + email + ' con un link para elegir tu contraseña.', 'success');
 });
 
 // ---------- Crear cuenta ----------

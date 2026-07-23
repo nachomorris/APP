@@ -467,16 +467,11 @@ newUserForm.addEventListener('submit', async (e) => {
   clearAlert();
 
   const email = newUserEmailInput.value.trim();
-  const password = newUserPasswordInput.value;
   const role = newUserRoleSelect.value;
   const chamber = newUserChamberSelect.value;
 
   if (!email) {
     showAlert('El email es obligatorio.', 'error');
-    return;
-  }
-  if (!password || password.length < 6) {
-    showAlert('La contraseña tiene que tener al menos 6 caracteres.', 'error');
     return;
   }
   if (role === 'presidente' && !chamber) {
@@ -487,14 +482,25 @@ newUserForm.addEventListener('submit', async (e) => {
   createUserBtn.disabled = true;
   createUserBtn.textContent = 'Creando...';
 
+  // La contraseña se genera al azar y nunca se usa: apenas se crea la
+  // cuenta, se le manda un mail de "elegí tu contraseña" (mismo mecanismo
+  // que "olvidé mi contraseña"), así el usuario elige la suya propia.
+  const randomPassword = (crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now();
+
   const { error } = await supabaseClient.rpc('admin_create_user', {
     new_email: email,
-    new_password: password,
+    new_password: randomPassword,
     new_full_name: newUserFullNameInput.value.trim() || null,
     new_phone: newUserPhoneInput.value.trim() || null,
     new_role: role,
     new_chamber: role === 'presidente' ? chamber : null,
   });
+
+  if (!error) {
+    await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://visitpotrero.com/nueva-contrasena.html',
+    });
+  }
 
   createUserBtn.disabled = false;
   createUserBtn.textContent = 'Crear usuario';
@@ -505,7 +511,7 @@ newUserForm.addEventListener('submit', async (e) => {
   }
 
   showUsersListView();
-  showAlert('Usuario creado correctamente.', 'success');
+  showAlert(`Usuario creado. Le mandamos un mail a ${email} para que elija su contraseña.`, 'success');
   loadUsersAdmin();
 });
 

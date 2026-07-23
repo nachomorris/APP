@@ -32,6 +32,7 @@
       <input type="password" id="password" required autocomplete="current-password">
 
       <button type="submit" class="btn btn-primary" id="submitBtn">Ingresar</button>
+      <p class="form-footer"><a href="#" id="forgotPasswordLink">¿Olvidaste tu contraseña?</a></p>
     </form>
 
     <div class="form-footer">
@@ -81,6 +82,34 @@ function defaultDestFor(profile) {
 
   window.location.href = explicitRedirect || defaultDestFor(profile);
 })();
+
+document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  alertBox.className = 'alert';
+
+  const email = document.getElementById('email').value.trim();
+  if (!email) {
+    showAlert('Escribí primero tu email ahí arriba, y volvé a tocar este link.', 'error');
+    return;
+  }
+
+  const link = e.target;
+  const originalText = link.textContent;
+  link.textContent = 'Enviando...';
+
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://visitpotrero.com/nueva-contrasena.html',
+  });
+
+  link.textContent = originalText;
+
+  if (error) {
+    showAlert(error.message, 'error');
+    return;
+  }
+
+  showAlert('Te enviamos un mail a ' + email + ' con un link para elegir tu contraseña.', 'success');
+});
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();

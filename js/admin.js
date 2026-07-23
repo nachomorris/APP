@@ -18,6 +18,8 @@ const categorySelect = document.getElementById('category_id');
 const subcategorySelect = document.getElementById('subcategory_id');
 const saveBtn = document.getElementById('saveBtn');
 const ownerSearch = document.getElementById('owner_search');
+const nameInput = document.getElementById('name');
+const nameDupWarning = document.getElementById('nameDupWarning');
 const ownerIdInput = document.getElementById('owner_id');
 const ownerResults = document.getElementById('owner_results');
 const searchBusinessesAdmin = document.getElementById('searchBusinessesAdmin');
@@ -546,8 +548,33 @@ function showFormView() {
 document.getElementById('cancelBtn').addEventListener('click', showListView);
 document.getElementById('newBusinessAdminBtn').addEventListener('click', openNewBusinessForm);
 
+// Muchos comercios se precargan con el admin como dueño provisorio
+// antes de que el dueño real se registre. Si el nombre se parece a
+// una ficha ya existente, avisa para evitar cargarla dos veces.
+async function checkDuplicateName() {
+  const q = nameInput.value.trim();
+  if (q.length < 3) { nameDupWarning.classList.add('hidden'); return; }
+
+  const currentId = document.getElementById('business_id').value;
+  const { data, error } = await supabaseClient
+    .from('businesses')
+    .select('id, name')
+    .ilike('name', `%${q}%`)
+    .limit(5);
+
+  if (error || !data) return;
+  const matches = data.filter((b) => b.id !== currentId);
+  if (!matches.length) { nameDupWarning.classList.add('hidden'); return; }
+
+  const names = matches.map((b) => escapeHtml(b.name)).join(', ');
+  nameDupWarning.innerHTML = `Ya existe${matches.length > 1 ? 'n' : ''} en el sistema: <strong>${names}</strong>. Fijate si no es la misma ficha antes de crear una nueva.`;
+  nameDupWarning.classList.remove('hidden');
+}
+nameInput.addEventListener('blur', checkDuplicateName);
+
 function openNewBusinessForm() {
   businessForm.reset();
+  nameDupWarning.classList.add('hidden');
   document.getElementById('business_id').value = '';
   setOwnerSelection('', '');
   document.getElementById('featured').checked = false;
@@ -582,6 +609,7 @@ async function openEditFormById(id) {
 function openEditForm(b) {
   draftNewBusinessId = null;
   businessForm.reset();
+  nameDupWarning.classList.add('hidden');
   document.getElementById('bizFormTitle').textContent = 'Editar ficha';
   document.getElementById('bizOwnerHint').textContent = 'Cambialo solo si la ficha pasó a otra persona o estaba asociada a una cuenta provisoria.';
   saveBtn.textContent = 'Guardar cambios';

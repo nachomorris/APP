@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elegí tu contraseña — Visit Potrero</title>
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png?v=2">
+<link rel="shortcut icon" href="favicon.ico?v=2">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=4">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span></div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h1>Elegí tu contraseña</h1>
+    <p class="subtitle" id="subtitleText">Para terminar de activar tu cuenta, elegí la contraseña con la que vas a ingresar de acá en adelante.</p>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="passwordForm">
+      <label for="password">Nueva contraseña</label>
+      <input type="password" id="password" required minlength="6" autocomplete="new-password">
+
+      <label for="password2">Repetir contraseña</label>
+      <input type="password" id="password2" required minlength="6" autocomplete="new-password">
+      <p class="field-hint">Mínimo 6 caracteres.</p>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">Guardar contraseña</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+const alertBox = document.getElementById('alert');
+const form = document.getElementById('passwordForm');
+const submitBtn = document.getElementById('submitBtn');
+
+function showAlert(message, type) {
+  alertBox.textContent = message;
+  alertBox.className = 'alert show alert-' + type;
+}
+
+function defaultDestFor(profile) {
+  if (profile && (profile.is_admin || profile.role === 'master_eventos')) return 'admin.html';
+  return 'panel.html';
+}
+
+// El link del mail (invitación o "olvidé mi contraseña") trae un token
+// especial en la URL; supabase-js lo detecta solo y arma una sesión de
+// "recovery" apenas carga la página. Si no hay sesión, el link ya no
+// sirve (viejo, usado, o alguien entró acá directo sin pasar por el mail).
+let hasRecoverySession = false;
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+    hasRecoverySession = true;
+  }
+});
+
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (data.session) hasRecoverySession = true;
+
+  // Le damos un instante a supabase-js para procesar el token del link
+  // antes de decidir si mostrar el aviso de "link vencido".
+  setTimeout(() => {
+    if (!hasRecoverySession) {
+      form.classList.add('hidden');
+      showAlert('Este link no es válido o ya venció. Pedí uno nuevo desde "¿Olvidaste tu contraseña?" en el login.', 'error');
+    }
+  }, 1200);
+})();
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showAlert('', '');
+  alertBox.className = 'alert';
+
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+
+  if (password !== password2) {
+    showAlert('Las contraseñas no coinciden.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Guardando...';
+
+  const { error } = await supabaseClient.auth.updateUser({ password });
+
+  if (error) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Guardar contraseña';
+    showAlert(error.message, 'error');
+    return;
+  }
+
+  const { data: userData } = await supabaseClient.auth.getUser();
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_blocked, is_admin, role')
+    .eq('id', userData.user.id)
+    .single();
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    showAlert('Tu cuenta está bloqueada. Contactate con el municipio para más información.', 'error');
+    return;
+  }
+
+  showAlert('Contraseña guardada. Entrando...', 'success');
+  window.location.href = defaultDestFor(profile);
+});
+</script>
+
+</body>
+</html>
