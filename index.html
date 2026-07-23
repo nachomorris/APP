@@ -324,6 +324,10 @@
      sin los 16px de padding lateral del <main>. */
   .detail-hero.full-bleed{height:220px;margin:-16px -16px 16px;border-radius:0;}
 
+  /* Galería adicional (evento/actividad): fotos extra aparte del flyer */
+  .event-gallery{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .event-gallery img{width:96px;height:96px;object-fit:cover;border-radius:12px;flex-shrink:0;cursor:zoom-in;}
+
   /* Lightbox: ver el flyer del evento en grande */
   .img-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
   .img-lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);object-fit:contain;}
@@ -1929,6 +1933,13 @@ function renderEventoDetail(id){
       <p>${e.desc || e.shortDesc}</p>
     </div>` : ''}
 
+    ${(e.gallery && e.gallery.length) ? `<div class="detail-block">
+      <h3>Más fotos</h3>
+      <div class="event-gallery">
+        ${e.gallery.map((url) => `<img src="${url}" alt="${e.title}" onclick="openImageLightbox('${url.replace(/'/g,"\\'")}', '${(e.title||'').replace(/'/g,"\\'")}')">`).join('')}
+      </div>
+    </div>` : ''}
+
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
       ${e.address ? `<div class="detail-row"><span class="ic">${ICON('map-pin',{size:15})}</span>${isAddressUrl(e.address) ? `<a href="${e.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : e.address}</div>` : ''}
@@ -1949,9 +1960,9 @@ function renderEventoDetail(id){
     </div>
     ${e.requiresRegistration && e.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--primary-dark); color:#fff;" href="${e.registrationUrl}" target="_blank" rel="noopener">${ICON('ticket',{size:15})} Inscribirme / Comprar entrada</a></div>` : ''}
 
-    ${e.cover ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
+    ${(e.cover || (e.gallery && e.gallery.length)) ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
       <span class="img-lightbox-close" onclick="closeImageLightbox()">${ICON('x',{size:20,color:'#fff'})}</span>
-      <img id="imgLightboxImg" src="${e.cover}" alt="${e.title}" onclick="event.stopPropagation()">
+      <img id="imgLightboxImg" src="${e.cover || e.gallery[0]}" alt="${e.title}" onclick="event.stopPropagation()">
     </div>` : ''}
   `;
 }
