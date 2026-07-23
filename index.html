@@ -332,6 +332,10 @@
   .img-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
   .img-lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.5);object-fit:contain;}
   .img-lightbox-close{position:absolute;top:18px;right:18px;color:#fff;font-size:22px;font-weight:700;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .img-lightbox-arrow{position:absolute;top:50%;transform:translateY(-50%);color:#fff;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .img-lightbox-arrow.prev{left:12px;}
+  .img-lightbox-arrow.next{right:12px;}
+  .img-lightbox-counter{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#fff;font-size:12px;font-weight:700;background:rgba(255,255,255,.15);padding:5px 12px;border-radius:20px;}
   .detail-title{font-size:21px;font-weight:800;margin:0 0 4px;}
   .detail-cat{font-size:13px;color:var(--primary-dark);font-weight:700;margin-bottom:10px;}
   .detail-badges{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
@@ -497,7 +501,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
-<script src="js/icons.js?v=2"></script>
+<script src="js/icons.js?v=3"></script>
 <script>
 /* ============ DATOS ============
    CATEGORIES, SUBCATEGORIES y BUSINESSES ahora se cargan en vivo desde
@@ -1571,6 +1575,7 @@ function renderLugar(id){
   if(!p){ setTopbar({title:'No encontrado', back:true}); setBottomnav(''); document.getElementById('view').innerHTML = `<div class="empty-state">Lugar no encontrado.</div>`; return; }
   setTopbar({title:p.name, sub:p.type, back:true});
   setBottomnav('');
+  currentLightboxGallery = p.image ? [p.image] : [];
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${p.image ? ' zoomable' : ''}"${p.image ? ` onclick="openImageLightbox('${p.image.replace(/'/g,"\\'")}', '${(p.name||'').replace(/'/g,"\\'")}')"` : ''}>
       ${p.image ? `<img src="${p.image}" alt="${p.name}">` : catIcon(p.emoji,{size:44,color:'#fff'})}
@@ -1905,6 +1910,9 @@ function renderEventoDetail(id){
   const webUrl = websiteUrl(e.website);
   const orgBiz = e.business;
   const orgLink = orgBiz ? `navigate('/comercio/${orgBiz.legacy_id || orgBiz.id}')` : '';
+  // Portada + galería, todas juntas: así al abrir cualquiera de las fotos se
+  // puede pasar a la siguiente/anterior sin cerrar y volver a abrir.
+  currentLightboxGallery = [e.cover, ...(e.gallery||[])].filter(Boolean);
 
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${e.cover ? ' zoomable' : ''}" style="background:${c.color||'#111'}"${e.cover ? ` onclick="openImageLightbox('${e.cover.replace(/'/g,"\\'")}', '${(e.title||'').replace(/'/g,"\\'")}')"` : ''}>
@@ -1962,23 +1970,75 @@ function renderEventoDetail(id){
 
     ${(e.cover || (e.gallery && e.gallery.length)) ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
       <span class="img-lightbox-close" onclick="closeImageLightbox()">${ICON('x',{size:20,color:'#fff'})}</span>
+      <span class="img-lightbox-arrow prev hidden" id="imgLightboxPrev" onclick="lightboxPrev(event)">${ICON('chevron-left',{size:22,color:'#fff'})}</span>
+      <span class="img-lightbox-arrow next hidden" id="imgLightboxNext" onclick="lightboxNext(event)">${ICON('chevron-right',{size:22,color:'#fff'})}</span>
+      <span class="img-lightbox-counter hidden" id="imgLightboxCounter"></span>
       <img id="imgLightboxImg" src="${e.cover || e.gallery[0]}" alt="${e.title}" onclick="event.stopPropagation()">
     </div>` : ''}
   `;
 }
 
+let currentLightboxGallery = [];
+let lightboxIndex = 0;
+
 function openImageLightbox(src, alt){
   const lb = document.getElementById('imgLightbox');
   const img = document.getElementById('imgLightboxImg');
   if(!lb || !img) return;
-  img.src = src;
+  const idx = currentLightboxGallery.indexOf(src);
+  lightboxIndex = idx >= 0 ? idx : 0;
+  if(idx < 0) currentLightboxGallery = [src]; // por si se abre una imagen suelta que no está en la galería armada
   img.alt = alt || '';
+  renderLightboxImage();
   lb.classList.remove('hidden');
+}
+function renderLightboxImage(){
+  const img = document.getElementById('imgLightboxImg');
+  const counter = document.getElementById('imgLightboxCounter');
+  const prevBtn = document.getElementById('imgLightboxPrev');
+  const nextBtn = document.getElementById('imgLightboxNext');
+  if(!img) return;
+  img.src = currentLightboxGallery[lightboxIndex];
+  const multi = currentLightboxGallery.length > 1;
+  if(prevBtn) prevBtn.classList.toggle('hidden', !multi);
+  if(nextBtn) nextBtn.classList.toggle('hidden', !multi);
+  if(counter){
+    counter.classList.toggle('hidden', !multi);
+    counter.textContent = `${lightboxIndex+1} / ${currentLightboxGallery.length}`;
+  }
+}
+function lightboxNext(evt){
+  if(evt) evt.stopPropagation();
+  if(currentLightboxGallery.length < 2) return;
+  lightboxIndex = (lightboxIndex + 1) % currentLightboxGallery.length;
+  renderLightboxImage();
+}
+function lightboxPrev(evt){
+  if(evt) evt.stopPropagation();
+  if(currentLightboxGallery.length < 2) return;
+  lightboxIndex = (lightboxIndex - 1 + currentLightboxGallery.length) % currentLightboxGallery.length;
+  renderLightboxImage();
 }
 function closeImageLightbox(){
   const lb = document.getElementById('imgLightbox');
   if(lb) lb.classList.add('hidden');
 }
+
+// Deslizar con el dedo para pasar de foto en el lightbox (además de las flechas).
+(function setupLightboxSwipe(){
+  let touchStartX = null;
+  document.addEventListener('touchstart', (e) => {
+    if(!e.target.closest('#imgLightbox')) return;
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if(touchStartX == null || !e.target.closest('#imgLightbox')) { touchStartX = null; return; }
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    touchStartX = null;
+    if(Math.abs(dx) < 40) return;
+    if(dx < 0) lightboxNext(); else lightboxPrev();
+  }, { passive: true });
+})();
 
 /* ============ ACTIVIDADES (deportivas / culturales) ============
    Misma pinta que la Agenda (reutiliza las clases .agenda-card,
@@ -2165,6 +2225,7 @@ function renderActividadDetail(id){
   const webUrl = websiteUrl(a.website);
   const orgBiz = a.business;
   const orgLink = orgBiz ? `navigate('/comercio/${orgBiz.legacy_id || orgBiz.id}')` : '';
+  currentLightboxGallery = [a.cover, ...(a.gallery||[])].filter(Boolean);
 
   document.getElementById('view').innerHTML = `
     <div class="detail-hero${a.cover ? ' zoomable' : ''}" style="background:${t.color||'#111'}"${a.cover ? ` onclick="openImageLightbox('${a.cover.replace(/'/g,"\\'")}', '${(a.title||'').replace(/'/g,"\\'")}')"` : ''}>
