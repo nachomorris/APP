@@ -3,6 +3,10 @@ let allCategories = [];
 let allSubcategories = [];
 let currentBusinessesList = [];
 let businessViewMode = 'table';
+// Ficha nueva sin guardar todavía: se genera el id en el navegador para
+// poder subir la foto de entrada, sin tener que guardar la ficha primero.
+// Al guardar, se inserta la fila usando este mismo id.
+let draftNewBusinessId = null;
 
 const alertBox = document.getElementById('alert');
 const listEl = document.getElementById('list');
@@ -554,7 +558,8 @@ function openNewBusinessForm() {
   document.querySelectorAll('.amenity-check').forEach((cb) => { cb.checked = false; });
   document.querySelectorAll('.gastro-tag-check').forEach((cb) => { cb.checked = false; });
   document.querySelectorAll('.benefit-check').forEach((cb) => { cb.checked = false; });
-  if (typeof refreshPhotoUploadState === 'function') refreshPhotoUploadState(null, null);
+  draftNewBusinessId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : null;
+  if (typeof refreshPhotoUploadState === 'function') refreshPhotoUploadState(draftNewBusinessId, null);
   document.getElementById('bizFormTitle').textContent = 'Nueva ficha';
   document.getElementById('bizOwnerHint').textContent = 'Elegí el usuario dueño de este comercio (tiene que estar registrado en la app).';
   saveBtn.textContent = 'Crear ficha';
@@ -575,6 +580,7 @@ async function openEditFormById(id) {
 }
 
 function openEditForm(b) {
+  draftNewBusinessId = null;
   businessForm.reset();
   document.getElementById('bizFormTitle').textContent = 'Editar ficha';
   document.getElementById('bizOwnerHint').textContent = 'Cambialo solo si la ficha pasó a otra persona o estaba asociada a una cuenta provisoria.';
@@ -661,6 +667,9 @@ businessForm.addEventListener('submit', async (e) => {
   } else {
     // El admin la carga directo: no necesita pasar por revisión de nadie.
     payload.status = 'published';
+    // Usa el id generado al abrir "Nueva ficha" (así, si ya se subió una
+    // foto antes de guardar, la fila creada coincide con esa carpeta).
+    if (draftNewBusinessId) payload.id = draftNewBusinessId;
     const insertResult = await supabaseClient.from('businesses').insert(payload).select('id').single();
     error = insertResult.error;
     newId = insertResult.data ? insertResult.data.id : null;
