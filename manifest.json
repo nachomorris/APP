@@ -1,7 +1,7 @@
 {
-  "name": "Visit Potrero — Guía de Potrero de los Funes",
+  "name": "Visit Potrero — Guía Oficial de Potrero de los Funes",
   "short_name": "Visit Potrero",
-  "description": "Guía de experiencias, alojamientos, restaurantes y comercios de Potrero de los Funes, San Luis, Argentina.",
+  "description": "Guía Oficial de Potrero de los Funes, San Luis, Argentina: experiencias, alojamientos, restaurantes y comercios.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
