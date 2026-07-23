@@ -208,8 +208,9 @@ function renderUsersTable(list) {
       <td><div class="row-actions"></div></td>
     `;
     const actions = tr.querySelector('.row-actions');
+    actions.appendChild(buildInviteLinkBtnEl(u));
     actions.appendChild(buildUserActionEl(u));
-    // Bloquear/desbloquear no debe disparar la apertura de la ficha.
+    // Ninguna acción de la fila debe disparar la apertura de la ficha.
     actions.addEventListener('click', (e) => e.stopPropagation());
 
     tr.addEventListener('click', () => openUserViewForm(u));
@@ -219,6 +220,16 @@ function renderUsersTable(list) {
 
   wrap.appendChild(table);
   usersAdminList.appendChild(wrap);
+}
+
+function buildInviteLinkBtnEl(u) {
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary btn-small';
+  btn.innerHTML = ICON('share', { size: 13 });
+  btn.title = 'Generar link de ingreso';
+  btn.setAttribute('aria-label', 'Generar link de ingreso');
+  btn.addEventListener('click', () => generateInviteLink(u, btn));
+  return btn;
 }
 
 function buildUserActionEl(u) {
@@ -305,20 +316,25 @@ document.getElementById('userViewDeleteBtn').addEventListener('click', () => {
   if (currentViewedUser) deleteUser(currentViewedUser);
 });
 document.getElementById('userViewInviteLinkBtn').addEventListener('click', () => {
-  if (currentViewedUser) generateInviteLink(currentViewedUser);
+  if (currentViewedUser) generateInviteLink(currentViewedUser, document.getElementById('userViewInviteLinkBtn'));
 });
 
 // ---------- Link de ingreso (activar cuenta sin depender del mail) ----------
-async function generateInviteLink(u) {
-  const btn = document.getElementById('userViewInviteLinkBtn');
-  btn.disabled = true;
-  const originalText = btn.innerHTML;
-  btn.textContent = 'Generando...';
+// btn: el elemento clickeado (puede ser el de la fila en el listado o el
+// de la ficha del usuario) para poder mostrar "Generando..." ahí mismo.
+async function generateInviteLink(u, btn) {
+  const originalHtml = btn ? btn.innerHTML : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Generando...';
+  }
 
   const { data: token, error } = await supabaseClient.rpc('admin_create_invite_link', { target_user_id: u.id });
 
-  btn.disabled = false;
-  btn.innerHTML = originalText;
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
 
   if (error) {
     showAlert('No se pudo generar el link: ' + error.message, 'error');
