@@ -310,50 +310,55 @@ textarea { resize: vertical; min-height: 90px; }
 .photo-preview img.photo-preview-placeholder { object-fit: contain; padding: 18px; box-sizing: border-box; opacity: .38; }
 
 /* Editor de foto a pantalla completa (no un modal chico): mucho más
-   cómodo para mover/hacer zoom, sobre todo en el celular. */
-.cropper-modal {
+   cómodo para mover/hacer zoom, sobre todo en el celular.
+   OJO: estas clases NO pueden llamarse "cropper-*" a secas — Cropper.js
+   (la librería) ya usa internamente "cropper-modal" para su propia
+   máscara oscura (con opacity:.5), y si coincide el nombre esa regla
+   se cuela en nuestro contenedor y queda todo semitransparente. Por
+   eso el prefijo "photo-editor". */
+.photo-editor {
   position: fixed; inset: 0; background: #111; z-index: 200;
 }
-.cropper-modal.hidden { display: none; }
-.cropper-modal-inner {
+.photo-editor.hidden { display: none; }
+.photo-editor-inner {
   display: flex; flex-direction: column;
   width: 100%; height: 100%; height: 100dvh;
   background: #111; box-sizing: border-box;
 }
-.cropper-modal-header {
+.photo-editor-header {
   flex: none; display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: max(16px, env(safe-area-inset-top)) 18px 14px;
 }
-.cropper-modal-header h3 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; }
-.cropper-close-btn {
+.photo-editor-header h3 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; }
+.photo-editor-close-btn {
   flex: none; width: 36px; height: 36px; border-radius: 50%; border: none;
   background: rgba(255,255,255,.12); color: #fff; display: flex;
   align-items: center; justify-content: center; cursor: pointer;
   transition: background .15s ease;
 }
-.cropper-close-btn:hover { background: rgba(255,255,255,.22); }
-.cropper-modal-hint {
+.photo-editor-close-btn:hover { background: rgba(255,255,255,.22); }
+.photo-editor-hint {
   flex: none; margin: 0; padding: 0 18px 14px;
   color: rgba(255,255,255,.62); font-size: 13px;
 }
-.cropper-container-box {
+.photo-editor-canvas {
   position: relative; flex: 1 1 auto; min-height: 0;
   width: 100%; background: #000; overflow: hidden;
 }
-.cropper-container-box img { max-width: 100%; display: block; }
-.cropper-zoom-controls { position: absolute; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
-.cropper-zoom-btn {
+.photo-editor-canvas img { max-width: 100%; display: block; }
+.photo-editor-zoom-controls { position: absolute; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+.photo-editor-zoom-btn {
   width: 44px; height: 44px; border-radius: 50%; border: none;
   background: rgba(17,17,17,.6); color: #fff; display: flex;
   align-items: center; justify-content: center; cursor: pointer;
   transition: background .15s ease, transform .08s ease;
 }
-.cropper-zoom-btn:hover { background: rgba(17,17,17,.8); transform: translateY(-1px); }
-.cropper-zoom-btn:active { transform: translateY(0) scale(.94); }
-.cropper-actions {
+.photo-editor-zoom-btn:hover { background: rgba(17,17,17,.8); transform: translateY(-1px); }
+.photo-editor-zoom-btn:active { transform: translateY(0) scale(.94); }
+.photo-editor-actions {
   flex: none; padding: 16px 18px max(16px, env(safe-area-inset-bottom));
 }
-.cropper-actions .btn { margin-top: 0; width: 100%; }
+.photo-editor-actions .btn { margin-top: 0; width: 100%; }
 
 /* --- Toggle vista tarjetas / tabla (admin comercios) --- */
 .view-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
