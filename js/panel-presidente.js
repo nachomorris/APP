@@ -74,16 +74,13 @@ function renderSociosList() {
     const st = statusLabel(b.status);
     const subLabel = b.subcategory_label ? ' · ' + b.subcategory_label : '';
     const needsAccount = !b.owner_role || b.owner_role === 'admin';
-    const thumbUrl = (Array.isArray(b.images) && b.images[0]) ? b.images[0] : null;
+    const thumbUrl = (Array.isArray(b.images) && b.images[0]) ? b.images[0] : 'images/logo-markk.png';
     const ownerLabel = needsAccount ? 'Sin propietario propio todavía (a cargo del municipio)' : (b.owner_full_name || b.owner_email || 'Socio');
     return `
       <div class="business-item">
-        ${thumbUrl
-          ? `<img src="${escapeHtml(thumbUrl)}" alt="" style="width:64px; height:48px; object-fit:cover; border-radius:8px; flex-shrink:0;">`
-          : `<div style="width:64px; height:48px; border-radius:8px; background:var(--primary-light); flex-shrink:0;"></div>`
-        }
+        <img src="${escapeHtml(thumbUrl)}" alt="" style="width:64px; height:48px; object-fit:cover; border-radius:8px; flex-shrink:0; background:var(--primary-light);">
         <div class="info">
-          <div class="name">${escapeHtml(b.name)}</div>
+          <div class="name" style="cursor:pointer;" onclick="openSocioEditForm('${b.id}')">${escapeHtml(b.name)}</div>
           <div class="meta">${escapeHtml(b.category_label || '')}${escapeHtml(subLabel)} · <span class="badge ${st.cls}">${st.text}</span></div>
           <div class="meta">${escapeHtml(b.address) || 'Sin dirección cargada'}${b.phone ? ' · ' + escapeHtml(b.phone) : ''}</div>
           <div class="meta">Propietario: ${escapeHtml(ownerLabel)}</div>
