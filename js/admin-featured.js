@@ -264,6 +264,8 @@ const featCropperModal = document.getElementById('featCropperModal');
 const featCropperImage = document.getElementById('featCropperImage');
 const featCropperCancelBtn = document.getElementById('featCropperCancelBtn');
 const featCropperConfirmBtn = document.getElementById('featCropperConfirmBtn');
+const featCropperZoomInBtn = document.getElementById('featCropperZoomInBtn');
+const featCropperZoomOutBtn = document.getElementById('featCropperZoomOutBtn');
 
 function refreshFeatPhotoUploadState(cardId, currentPhotoUrl) {
   currentFeatCardId = cardId;
@@ -294,6 +296,7 @@ featPhotoInput.addEventListener('change', () => {
   reader.onload = () => {
     featCropperImage.src = reader.result;
     featCropperModal.classList.remove('hidden');
+    lockBodyScroll();
 
     if (featCropperInstance) featCropperInstance.destroy();
     featCropperInstance = new Cropper(featCropperImage, {
@@ -318,9 +321,12 @@ function closeFeatCropperModal() {
   }
   featCropperModal.classList.add('hidden');
   featPhotoInput.value = '';
+  unlockBodyScroll();
 }
 
 featCropperCancelBtn.addEventListener('click', closeFeatCropperModal);
+if (featCropperZoomInBtn) featCropperZoomInBtn.addEventListener('click', () => featCropperInstance && featCropperInstance.zoom(0.1));
+if (featCropperZoomOutBtn) featCropperZoomOutBtn.addEventListener('click', () => featCropperInstance && featCropperInstance.zoom(-0.1));
 
 featCropperConfirmBtn.addEventListener('click', () => {
   if (!featCropperInstance || !currentFeatCardId) return;

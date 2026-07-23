@@ -319,8 +319,17 @@ textarea { resize: vertical; min-height: 90px; }
   max-width: 480px; width: 100%; box-shadow: var(--shadow);
 }
 .cropper-modal-inner h3 { margin-top: 0; }
-.cropper-container-box { width: 100%; height: 320px; background: #000; border-radius: 12px; overflow: hidden; }
+.cropper-container-box { position: relative; width: 100%; height: 320px; background: #000; border-radius: 12px; overflow: hidden; }
 .cropper-container-box img { max-width: 100%; display: block; }
+.cropper-zoom-controls { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; z-index: 5; }
+.cropper-zoom-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: rgba(17,17,17,.55); color: #fff; display: flex;
+  align-items: center; justify-content: center; cursor: pointer;
+  transition: background .15s ease, transform .08s ease;
+}
+.cropper-zoom-btn:hover { background: rgba(17,17,17,.78); transform: translateY(-1px); }
+.cropper-zoom-btn:active { transform: translateY(0) scale(.94); }
 .cropper-actions { display: flex; gap: 10px; margin-top: 16px; }
 .cropper-actions .btn { margin-top: 0; }
 

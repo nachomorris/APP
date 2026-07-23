@@ -208,6 +208,8 @@ const placeCropperModal = document.getElementById('placeCropperModal');
 const placeCropperImage = document.getElementById('placeCropperImage');
 const placeCropperCancelBtn = document.getElementById('placeCropperCancelBtn');
 const placeCropperConfirmBtn = document.getElementById('placeCropperConfirmBtn');
+const placeCropperZoomInBtn = document.getElementById('placeCropperZoomInBtn');
+const placeCropperZoomOutBtn = document.getElementById('placeCropperZoomOutBtn');
 
 function refreshPlacePhotoUploadState(placeId, currentPhotoUrl) {
   currentPlaceId = placeId;
@@ -238,6 +240,7 @@ placePhotoInput.addEventListener('change', () => {
   reader.onload = () => {
     placeCropperImage.src = reader.result;
     placeCropperModal.classList.remove('hidden');
+    lockBodyScroll();
 
     if (placeCropperInstance) placeCropperInstance.destroy();
     placeCropperInstance = new Cropper(placeCropperImage, {
@@ -262,9 +265,12 @@ function closePlaceCropperModal() {
   }
   placeCropperModal.classList.add('hidden');
   placePhotoInput.value = '';
+  unlockBodyScroll();
 }
 
 placeCropperCancelBtn.addEventListener('click', closePlaceCropperModal);
+if (placeCropperZoomInBtn) placeCropperZoomInBtn.addEventListener('click', () => placeCropperInstance && placeCropperInstance.zoom(0.1));
+if (placeCropperZoomOutBtn) placeCropperZoomOutBtn.addEventListener('click', () => placeCropperInstance && placeCropperInstance.zoom(-0.1));
 
 placeCropperConfirmBtn.addEventListener('click', () => {
   if (!placeCropperInstance || !currentPlaceId) return;

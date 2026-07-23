@@ -17,6 +17,30 @@ const cropperModal = document.getElementById('cropperModal');
 const cropperImage = document.getElementById('cropperImage');
 const cropperCancelBtn = document.getElementById('cropperCancelBtn');
 const cropperConfirmBtn = document.getElementById('cropperConfirmBtn');
+const cropperZoomInBtn = document.getElementById('cropperZoomInBtn');
+const cropperZoomOutBtn = document.getElementById('cropperZoomOutBtn');
+
+// Fix para un glitch de iOS Safari: si el body sigue siendo scrolleable
+// atrás de un modal fixed, un scroll/pellizco sobre el fondo hace que el
+// modal se renderice traslúcido (se ve el contenido de atrás). Bloqueamos
+// el scroll del body mientras el modal de recorte está abierto.
+function lockBodyScroll() {
+  const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.dataset.scrollY = String(scrollY);
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+}
+function unlockBodyScroll() {
+  const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  delete document.body.dataset.scrollY;
+  window.scrollTo(0, scrollY);
+}
 
 function refreshPhotoUploadState(businessId, currentPhotoUrl) {
   currentPhotoBusinessId = businessId;
@@ -58,6 +82,7 @@ photoInput.addEventListener('change', () => {
   reader.onload = () => {
     cropperImage.src = reader.result;
     cropperModal.classList.remove('hidden');
+    lockBodyScroll();
 
     if (cropperInstance) cropperInstance.destroy();
     cropperInstance = new Cropper(cropperImage, {
@@ -82,9 +107,12 @@ function closeCropperModal() {
   }
   cropperModal.classList.add('hidden');
   photoInput.value = '';
+  unlockBodyScroll();
 }
 
 cropperCancelBtn.addEventListener('click', closeCropperModal);
+if (cropperZoomInBtn) cropperZoomInBtn.addEventListener('click', () => cropperInstance && cropperInstance.zoom(0.1));
+if (cropperZoomOutBtn) cropperZoomOutBtn.addEventListener('click', () => cropperInstance && cropperInstance.zoom(-0.1));
 
 cropperConfirmBtn.addEventListener('click', () => {
   if (!cropperInstance || !currentPhotoBusinessId) return;
