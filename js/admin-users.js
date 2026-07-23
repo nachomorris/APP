@@ -304,6 +304,36 @@ document.getElementById('userViewEditBtn').addEventListener('click', () => {
 document.getElementById('userViewDeleteBtn').addEventListener('click', () => {
   if (currentViewedUser) deleteUser(currentViewedUser);
 });
+document.getElementById('userViewInviteLinkBtn').addEventListener('click', () => {
+  if (currentViewedUser) generateInviteLink(currentViewedUser);
+});
+
+// ---------- Link de ingreso (activar cuenta sin depender del mail) ----------
+async function generateInviteLink(u) {
+  const btn = document.getElementById('userViewInviteLinkBtn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.textContent = 'Generando...';
+
+  const { data: token, error } = await supabaseClient.rpc('admin_create_invite_link', { target_user_id: u.id });
+
+  btn.disabled = false;
+  btn.innerHTML = originalText;
+
+  if (error) {
+    showAlert('No se pudo generar el link: ' + error.message, 'error');
+    return;
+  }
+
+  const url = `https://visitpotrero.com/activar.html?token=${token}`;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    showAlert('Link copiado al portapapeles. Vale por 7 días y una sola vez: ' + url, 'success');
+  } catch (e) {
+    window.prompt('Copiá este link y mandaselo (vale por 7 días y una sola vez):', url);
+  }
+}
 
 // ---------- Eliminar cuenta ----------
 async function deleteUser(u) {

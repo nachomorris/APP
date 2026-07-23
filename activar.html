@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activar cuenta — Visit Potrero</title>
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png?v=2">
+<link rel="shortcut icon" href="favicon.ico?v=2">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=4">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span></div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h1>Activá tu cuenta</h1>
+    <p class="subtitle">Elegí la contraseña con la que vas a ingresar de acá en adelante.</p>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="activateForm">
+      <label for="password">Nueva contraseña</label>
+      <input type="password" id="password" required minlength="6" autocomplete="new-password">
+
+      <label for="password2">Repetir contraseña</label>
+      <input type="password" id="password2" required minlength="6" autocomplete="new-password">
+      <p class="field-hint">Mínimo 6 caracteres.</p>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">Activar cuenta</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+const alertBox = document.getElementById('alert');
+const form = document.getElementById('activateForm');
+const submitBtn = document.getElementById('submitBtn');
+const token = new URLSearchParams(window.location.search).get('token');
+
+function showAlert(message, type) {
+  alertBox.textContent = message;
+  alertBox.className = 'alert show alert-' + type;
+}
+
+function defaultDestFor(profile) {
+  if (profile && (profile.is_admin || profile.role === 'master_eventos')) return 'admin.html';
+  return 'panel.html';
+}
+
+if (!token) {
+  form.classList.add('hidden');
+  showAlert('Este link no es válido. Pedile al administrador que te mande uno nuevo.', 'error');
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  alertBox.className = 'alert';
+
+  const password = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+
+  if (password !== password2) {
+    showAlert('Las contraseñas no coinciden.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Activando...';
+
+  const { data: email, error } = await supabaseClient.rpc('redeem_invite_token', {
+    p_token: token,
+    new_password: password,
+  });
+
+  if (error) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Activar cuenta';
+    showAlert(error.message, 'error');
+    return;
+  }
+
+  // El token no crea sesión por sí solo: iniciamos sesión de verdad con
+  // el email + la contraseña recién elegida.
+  const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (signInError) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Activar cuenta';
+    showAlert('Contraseña guardada, pero no se pudo iniciar sesión sola. Andá a login.html e ingresá con tu email y esta contraseña.', 'error');
+    return;
+  }
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_blocked, is_admin, role')
+    .eq('id', signInData.user.id)
+    .single();
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    showAlert('Tu cuenta está bloqueada. Contactate con el municipio para más información.', 'error');
+    return;
+  }
+
+  showAlert('Cuenta activada. Entrando...', 'success');
+  window.location.href = defaultDestFor(profile);
+});
+</script>
+
+</body>
+</html>
