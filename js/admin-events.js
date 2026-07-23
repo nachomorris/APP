@@ -456,6 +456,73 @@ evadChoosePhotoBtn.addEventListener('click', () => {
   evadPhotoInput.click();
 });
 
+// ---------- Galería adicional: subir varias fotos (no solo pegar URLs) ----------
+// El valor real que se guarda sigue siendo el input oculto evad_gallery (URLs
+// separadas por coma, tal como ya lo espera el submit handler); acá solo se
+// arma una UI de miniaturas arriba para no tener que pegar links a mano.
+let evadGalleryUrls = [];
+let evadGalleryUploading = false;
+const evadGalleryThumbs = document.getElementById('evadGalleryThumbs');
+const evadGalleryAddBtn = document.getElementById('evadGalleryAddBtn');
+const evadGalleryInput = document.getElementById('evadGalleryInput');
+const evadGalleryHidden = document.getElementById('evad_gallery');
+
+function evadRenderGalleryThumbs() {
+  evadGalleryHidden.value = evadGalleryUrls.join(',');
+  let html = evadGalleryUrls.map((url, idx) => `
+    <div class="evad-gallery-thumb">
+      <img src="${url}" alt="">
+      <button type="button" class="rm" data-gidx="${idx}" title="Quitar">${ICON('x', { size: 12 })}</button>
+    </div>
+  `).join('');
+  if (evadGalleryUploading) {
+    html += `<div class="evad-gallery-thumb uploading">${ICON('loader', { size: 16 })}<br>Subiendo...</div>`;
+  }
+  evadGalleryThumbs.innerHTML = html;
+  evadGalleryThumbs.querySelectorAll('[data-gidx]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      evadGalleryUrls.splice(parseInt(btn.getAttribute('data-gidx'), 10), 1);
+      evadRenderGalleryThumbs();
+    });
+  });
+}
+
+evadGalleryAddBtn.addEventListener('click', () => {
+  if (evadGalleryUploading) return;
+  evadGalleryInput.value = '';
+  evadGalleryInput.click();
+});
+
+evadGalleryInput.addEventListener('change', async () => {
+  const files = Array.from(evadGalleryInput.files || []);
+  if (!files.length) return;
+
+  evadGalleryUploading = true;
+  evadRenderGalleryThumbs();
+
+  try {
+    if (!evadPhotoFolderId) evadPhotoFolderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+
+    for (let i = 0; i < files.length; i++) {
+      const blob = await evadResizeImageToBlob(files[i], 1800);
+      const path = `${evadPhotoFolderId}/gallery-${Date.now()}-${i}.jpg`;
+      const { error: uploadError } = await supabaseClient.storage
+        .from('event-images')
+        .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: pub } = supabaseClient.storage.from('event-images').getPublicUrl(path);
+      evadGalleryUrls.push(pub.publicUrl);
+    }
+    showAlert('Fotos agregadas a la galería.', 'success');
+  } catch (err) {
+    showAlert('No se pudieron subir todas las fotos: ' + err.message, 'error');
+  } finally {
+    evadGalleryUploading = false;
+    evadGalleryInput.value = '';
+    evadRenderGalleryThumbs();
+  }
+});
+
 // ---------- Punto de encuadre de la portada ----------
 // La foto se guarda siempre completa (sin recorte destructivo); este punto
 // solo controla qué parte queda visible en el recorte de la tarjeta
@@ -852,6 +919,8 @@ function evAdResetForm() {
   evadPhotoFolderId = null;
   refreshEvadPhotoUploadState('');
   evadApplyFocalPoint(50, 50);
+  evadGalleryUrls = [];
+  evadRenderGalleryThumbs();
 }
 
 document.getElementById('newOfficialEventBtn').addEventListener('click', () => {
@@ -879,8 +948,9 @@ function openEvAdminForm(e) {
   evadCategorySelect.value = e.category_id || '';
   refreshEvadPhotoUploadState(e.cover_image || '');
   evadApplyFocalPoint(e.cover_focal_x != null ? e.cover_focal_x : 50, e.cover_focal_y != null ? e.cover_focal_y : 50);
-  document.getElementById('evad_gallery').value = (e.gallery || []).join(', ');
-  if ((e.gallery || []).length) { evadGalleryWrap.classList.remove('hidden'); evadGalleryToggle.classList.add('open'); }
+  evadGalleryUrls = (e.gallery || []).slice();
+  evadRenderGalleryThumbs();
+  if (evadGalleryUrls.length) { evadGalleryWrap.classList.remove('hidden'); evadGalleryToggle.classList.add('open'); }
   document.getElementById('evad_start_date').value = e.start_date || '';
   document.getElementById('evad_end_date').value = e.end_date || '';
   document.getElementById('evad_start_time').value = e.start_time ? e.start_time.slice(0, 5) : '';

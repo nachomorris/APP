@@ -192,6 +192,12 @@
   .evad-preview .evad-editable:hover { background: rgba(0,0,0,.045); }
   .evad-preview .evad-editable:focus { background: var(--primary-light); box-shadow: 0 0 0 2px var(--primary-light); }
   .evad-preview .evad-editable:empty::before { content: attr(data-placeholder); color: var(--muted); opacity: .75; }
+  .evad-gallery-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .evad-gallery-thumb { position: relative; width: 76px; height: 76px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #f3f4f6; }
+  .evad-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .evad-gallery-thumb .rm { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(17,17,17,.75); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .evad-gallery-thumb .rm:hover { background: var(--ink); }
+  .evad-gallery-thumb.uploading { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 10.5px; text-align: center; }
   .evad-quick-datetime { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
   /* En vez de un ícono superpuesto (se veía mal en varios celulares), una
      etiqueta de texto al costado del cuadro que indica qué es cada campo. */
@@ -688,8 +694,11 @@
           <div class="form-section">
             <div class="form-toggle-row" id="evadGalleryToggle"><span class="arrow" data-icon="chevron-right" data-icon-size="13"></span> <span class="n" data-icon="image" data-icon-size="14"></span> Galería adicional (opcional)</div>
             <div id="evadGalleryWrap" class="hidden">
-              <label for="evad_gallery">URLs separadas por coma</label>
-              <input type="text" id="evad_gallery">
+              <div id="evadGalleryThumbs" class="evad-gallery-thumbs"></div>
+              <button type="button" class="btn btn-secondary btn-small" id="evadGalleryAddBtn">Agregar fotos</button>
+              <input type="file" id="evadGalleryInput" accept="image/*" multiple class="hidden">
+              <input type="hidden" id="evad_gallery">
+              <p class="field-hint">Podés elegir varias a la vez. Se suben tal cual, sin recorte.</p>
             </div>
           </div>
 
@@ -1451,7 +1460,7 @@
 <script src="js/icons.js?v=2"></script>
 <script src="js/admin.js?v=3"></script>
 <script src="js/admin-dashboard.js"></script>
-<script src="js/admin-events.js?v=3"></script>
+<script src="js/admin-events.js?v=4"></script>
 <script src="js/admin-activities.js"></script>
 <script src="js/admin-novedades.js"></script>
 <script src="js/admin-photo.js?v=3"></script>
