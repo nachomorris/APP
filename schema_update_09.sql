@@ -20,13 +20,19 @@ create policy "business_images_public_read"
 
 -- Solo el dueño de la ficha (o un admin) puede subir dentro de
 -- la carpeta {business_id}/... de su propia ficha.
+-- OJO: storage.objects.name va calificado explícitamente. Adentro
+-- del EXISTS, businesses también tiene una columna "name" (el
+-- nombre del comercio); un "name" sin calificar ahí adentro se
+-- resuelve contra esa, no contra el archivo que se sube, y la
+-- política nunca matchea con ningún business_id (bug real, ver
+-- fix_business_images_rls_v2.sql).
 create policy "business_images_owner_insert"
   on storage.objects for insert
   with check (
     bucket_id = 'business-images'
     and exists (
       select 1 from public.businesses b
-      where b.id::text = (storage.foldername(name))[1]
+      where b.id::text = (storage.foldername(storage.objects.name))[1]
         and (b.owner_id = auth.uid() or public.is_admin())
     )
   );
@@ -37,7 +43,7 @@ create policy "business_images_owner_update"
     bucket_id = 'business-images'
     and exists (
       select 1 from public.businesses b
-      where b.id::text = (storage.foldername(name))[1]
+      where b.id::text = (storage.foldername(storage.objects.name))[1]
         and (b.owner_id = auth.uid() or public.is_admin())
     )
   );
@@ -48,7 +54,7 @@ create policy "business_images_owner_delete"
     bucket_id = 'business-images'
     and exists (
       select 1 from public.businesses b
-      where b.id::text = (storage.foldername(name))[1]
+      where b.id::text = (storage.foldername(storage.objects.name))[1]
         and (b.owner_id = auth.uid() or public.is_admin())
     )
   );

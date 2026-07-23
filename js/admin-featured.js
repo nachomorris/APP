@@ -302,6 +302,10 @@ featPhotoInput.addEventListener('change', () => {
       autoCropArea: 1,
       background: false,
       responsive: true,
+      dragMode: 'move',
+      cropBoxMovable: false,
+      cropBoxResizable: false,
+      toggleDragModeOnDblclick: false,
     });
   };
   reader.readAsDataURL(file);
