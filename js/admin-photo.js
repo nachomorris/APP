@@ -1,8 +1,11 @@
 // ============================================================
 // Admin — foto de portada de cualquier ficha.
 // Se carga después de js/admin.js (reutiliza showAlert, clearAlert)
-// y de Cropper.js (CDN). El admin siempre edita una ficha ya
-// existente, así que no hace falta un estado "deshabilitado".
+// y de Cropper.js (CDN). El admin puede editar una ficha existente
+// O crear una nueva desde cero ("Nueva ficha"): en ese segundo caso
+// todavía no hay business_id hasta que se guarda, así que el botón
+// de elegir foto se deshabilita con un aviso, igual que en el panel
+// de comerciantes.
 // ============================================================
 
 let currentPhotoBusinessId = null;
@@ -10,6 +13,7 @@ let cropperInstance = null;
 
 const photoInput = document.getElementById('photoInput');
 const choosePhotoBtn = document.getElementById('choosePhotoBtn');
+const photoHint = document.getElementById('photoHint');
 const photoPreviewImg = document.getElementById('photoPreviewImg');
 const photoPreviewEmpty = document.getElementById('photoPreviewEmpty');
 
@@ -57,6 +61,14 @@ function refreshPhotoUploadState(businessId, currentPhotoUrl) {
     photoPreviewImg.classList.add('photo-preview-placeholder');
     photoPreviewImg.style.display = 'block';
     photoPreviewEmpty.style.display = 'none';
+  }
+
+  if (businessId) {
+    choosePhotoBtn.disabled = false;
+    if (photoHint) photoHint.textContent = 'Formato horizontal (4:3). Después de elegirla vas a poder ajustar el recorte.';
+  } else {
+    choosePhotoBtn.disabled = true;
+    if (photoHint) photoHint.textContent = 'Guardá la ficha primero; después vas a poder subirle una foto.';
   }
 }
 
