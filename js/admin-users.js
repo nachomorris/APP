@@ -289,6 +289,9 @@ async function openUserViewForm(u) {
   document.getElementById('userViewCreated').textContent = fmtUserDateTime((loginInfo && loginInfo.auth_created_at) || u.created_at) || '—';
   document.getElementById('userViewLastLogin').textContent = (loginInfo && fmtUserDateTime(loginInfo.last_sign_in_at)) || 'Nunca inició sesión';
 
+  const isSelf = currentAdminUser && u.id === currentAdminUser.id;
+  document.getElementById('userViewDeleteBtn').classList.toggle('hidden', u.role === 'admin' || isSelf);
+
   showUsersViewView();
 
   await loadOwnerBusinessesInto(document.getElementById('userViewBusinessesList'), u.id);
@@ -298,6 +301,26 @@ document.getElementById('userViewBackBtn').addEventListener('click', showUsersLi
 document.getElementById('userViewEditBtn').addEventListener('click', () => {
   if (currentViewedUser) openUserEditForm(currentViewedUser, 'view');
 });
+document.getElementById('userViewDeleteBtn').addEventListener('click', () => {
+  if (currentViewedUser) deleteUser(currentViewedUser);
+});
+
+// ---------- Eliminar cuenta ----------
+async function deleteUser(u) {
+  const confirmMsg = `¿Eliminar para siempre la cuenta de ${u.full_name || u.email}? Esta acción no se puede deshacer. Si todavía tiene fichas, eventos o actividades a su nombre, primero reasignalos a otro usuario — si no, la eliminación va a fallar (a propósito, para no perder esas fichas sin querer).`;
+  if (!window.confirm(confirmMsg)) return;
+
+  const { error } = await supabaseClient.rpc('admin_delete_user', { target_user_id: u.id });
+
+  if (error) {
+    showAlert('No se pudo eliminar: ' + error.message, 'error');
+    return;
+  }
+
+  showAlert('Usuario eliminado.', 'success');
+  showUsersListView();
+  loadUsersAdmin();
+}
 
 // ---------- Formulario de edición ----------
 function updateChamberVisibility() {
