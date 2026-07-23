@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Comercio — Visit Potrero</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png?v=2">
+<link rel="shortcut icon" href="../favicon.ico?v=2">
+<link rel="apple-touch-icon" href="../images/apple-touch-icon.png?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css?v=4">
+<style>
+  .auth-tabs { display:flex; gap:8px; margin-bottom:18px; }
+  .auth-tabs button {
+    flex:1; padding:10px; border-radius:12px; border:1px solid var(--border);
+    background:var(--card); color:var(--muted); font-weight:700; font-size:14px; cursor:pointer;
+    transition:background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .auth-tabs button.active { background:var(--primary); color:var(--ink); border-color:var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Visit<span>Potrero</span></div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <h1>Mi Comercio</h1>
+    <p class="subtitle">Ingresá o creá tu cuenta para administrar tu ficha en Visit Potrero.</p>
+
+    <div class="auth-tabs">
+      <button type="button" id="tabLogin" class="active">Ya tengo cuenta</button>
+      <button type="button" id="tabRegister">Soy nuevo</button>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="loginForm">
+      <label for="login_email">Email</label>
+      <input type="email" id="login_email" required autocomplete="email">
+
+      <label for="login_password">Contraseña</label>
+      <input type="password" id="login_password" required autocomplete="current-password">
+
+      <button type="submit" class="btn btn-primary" id="loginSubmitBtn">Ingresar</button>
+    </form>
+
+    <form id="registerForm" class="hidden">
+      <label for="reg_full_name">Nombre y apellido</label>
+      <input type="text" id="reg_full_name" required autocomplete="name">
+
+      <label for="reg_phone">Teléfono (WhatsApp)</label>
+      <input type="tel" id="reg_phone" placeholder="266 4123456" required autocomplete="tel">
+
+      <label for="reg_email">Email</label>
+      <input type="email" id="reg_email" required autocomplete="email">
+
+      <div class="row-2">
+        <div>
+          <label for="reg_password">Contraseña</label>
+          <input type="password" id="reg_password" required minlength="6" autocomplete="new-password">
+        </div>
+        <div>
+          <label for="reg_password2">Repetir contraseña</label>
+          <input type="password" id="reg_password2" required minlength="6" autocomplete="new-password">
+        </div>
+      </div>
+      <p class="field-hint">Mínimo 6 caracteres.</p>
+
+      <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Crear cuenta</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supabaseClient.js"></script>
+<script>
+const alertBox = document.getElementById('alert');
+const tabLogin = document.getElementById('tabLogin');
+const tabRegister = document.getElementById('tabRegister');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+
+function showAlert(message, type) {
+  alertBox.textContent = message;
+  alertBox.className = 'alert show alert-' + type;
+}
+function clearAlert() {
+  alertBox.className = 'alert';
+}
+
+function showLoginTab() {
+  clearAlert();
+  tabLogin.classList.add('active');
+  tabRegister.classList.remove('active');
+  loginForm.classList.remove('hidden');
+  registerForm.classList.add('hidden');
+}
+function showRegisterTab() {
+  clearAlert();
+  tabRegister.classList.add('active');
+  tabLogin.classList.remove('active');
+  registerForm.classList.remove('hidden');
+  loginForm.classList.add('hidden');
+}
+tabLogin.addEventListener('click', showLoginTab);
+tabRegister.addEventListener('click', showRegisterTab);
+
+// Entra directo al panel/admin dependiendo del rol; el resto va a panel.html.
+function defaultDestFor(profile) {
+  if (profile && (profile.is_admin || profile.role === 'master_eventos')) return '../admin.html';
+  return '../panel.html';
+}
+
+// Si ya hay sesión activa, mandar directo (salvo cuenta bloqueada).
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data.session) return;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_blocked, is_admin, role')
+    .eq('id', data.session.user.id)
+    .single();
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    return;
+  }
+
+  window.location.href = defaultDestFor(profile);
+})();
+
+// ---------- Ingresar ----------
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert();
+
+  const email = document.getElementById('login_email').value.trim();
+  const password = document.getElementById('login_password').value;
+  const btn = document.getElementById('loginSubmitBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Ingresando...';
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    if (error.message.includes('Email not confirmed')) {
+      showAlert('Todavía no confirmaste tu email. Revisá tu bandeja de entrada.', 'error');
+    } else if (error.message.includes('Invalid login credentials')) {
+      showAlert('Email o contraseña incorrectos.', 'error');
+    } else {
+      showAlert(error.message, 'error');
+    }
+    return;
+  }
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('is_blocked, is_admin, role')
+    .eq('id', data.user.id)
+    .single();
+
+  btn.disabled = false;
+  btn.textContent = 'Ingresar';
+
+  if (profile && profile.is_blocked) {
+    await supabaseClient.auth.signOut();
+    showAlert('Tu cuenta está bloqueada. Contactate con el municipio para más información.', 'error');
+    return;
+  }
+
+  window.location.href = defaultDestFor(profile);
+});
+
+// ---------- Crear cuenta ----------
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearAlert();
+
+  const full_name = document.getElementById('reg_full_name').value.trim();
+  const phone = document.getElementById('reg_phone').value.trim();
+  const email = document.getElementById('reg_email').value.trim();
+  const password = document.getElementById('reg_password').value;
+  const password2 = document.getElementById('reg_password2').value;
+  const btn = document.getElementById('registerSubmitBtn');
+
+  if (password !== password2) {
+    showAlert('Las contraseñas no coinciden.', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Creando cuenta...';
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name, phone } }
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Crear cuenta';
+
+  if (error) {
+    showAlert(error.message, 'error');
+    return;
+  }
+
+  if (data.session) {
+    // Confirmación de email desactivada: ya queda logueado.
+    window.location.href = '../panel.html';
+  } else {
+    // Confirmación de email activada: falta que confirme por correo.
+    showAlert('¡Listo! Te enviamos un email para confirmar tu cuenta. Una vez confirmado, iniciá sesión acá mismo.', 'success');
+    registerForm.reset();
+  }
+});
+</script>
+
+</body>
+</html>
