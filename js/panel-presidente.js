@@ -75,7 +75,7 @@ function renderSociosList() {
     const subLabel = b.subcategory_label ? ' · ' + b.subcategory_label : '';
     const needsAccount = !b.owner_role || b.owner_role === 'admin';
     const thumbUrl = (Array.isArray(b.images) && b.images[0]) ? b.images[0] : null;
-    const ownerLabel = needsAccount ? 'Sin dueño propio todavía (a cargo del municipio)' : (b.owner_full_name || b.owner_email || 'Socio');
+    const ownerLabel = needsAccount ? 'Sin propietario propio todavía (a cargo del municipio)' : (b.owner_full_name || b.owner_email || 'Socio');
     return `
       <div class="business-item">
         ${thumbUrl
@@ -86,7 +86,7 @@ function renderSociosList() {
           <div class="name">${escapeHtml(b.name)}</div>
           <div class="meta">${escapeHtml(b.category_label || '')}${escapeHtml(subLabel)} · <span class="badge ${st.cls}">${st.text}</span></div>
           <div class="meta">${escapeHtml(b.address) || 'Sin dirección cargada'}${b.phone ? ' · ' + escapeHtml(b.phone) : ''}</div>
-          <div class="meta">Dueño: ${escapeHtml(ownerLabel)}</div>
+          <div class="meta">Propietario: ${escapeHtml(ownerLabel)}</div>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button type="button" class="btn btn-secondary btn-small" onclick="openSocioEditForm('${b.id}')">Editar</button>
@@ -97,7 +97,7 @@ function renderSociosList() {
         </div>
         ${needsAccount ? `
         <div class="socio-account-form hidden" id="socio-account-form-${b.id}" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border);">
-          <p class="field-hint" style="margin-top:0;">Este comercio todavía no tiene dueño propio. Cargá el email del socio para crearle la cuenta y generar su link de ingreso.</p>
+          <p class="field-hint" style="margin-top:0;">Este comercio todavía no tiene propietario propio. Cargá el email del socio para crearle la cuenta y generar su link de ingreso.</p>
           <label for="socio-email-${b.id}">Email del socio *</label>
           <input type="email" id="socio-email-${b.id}">
           <label for="socio-name-${b.id}">Nombre y apellido (opcional)</label>
