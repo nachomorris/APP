@@ -6,6 +6,8 @@
 -- Correr en el SQL Editor después de schema.sql + updates 01-34.
 -- ============================================================
 
+drop function if exists public.presidente_get_socios();
+
 create or replace function public.presidente_get_socios()
 returns table (
   id uuid,
