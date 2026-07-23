@@ -329,7 +329,7 @@ async function generateInviteLink(u, btn) {
     btn.textContent = 'Generando...';
   }
 
-  const { data: token, error } = await supabaseClient.rpc('admin_create_invite_link', { target_user_id: u.id });
+  const { data: token, error } = await supabaseClient.rpc('create_invite_link', { target_user_id: u.id });
 
   if (btn) {
     btn.disabled = false;
