@@ -284,6 +284,21 @@
   .biz-card .addr{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-flex;align-items:center;gap:4px;max-width:100%;}
   .biz-card .more-link{display:inline-flex;align-items:center;gap:2px;font-size:11.5px;font-weight:700;color:var(--primary-dark);margin-top:auto;align-self:flex-end;padding-top:6px;}
 
+  /* Favoritos: corazón sobre la miniatura/portada de cada tarjeta (comercios,
+     eventos, actividades) y también en el detalle. Guardado en el navegador
+     de cada visitante (localStorage), sin necesidad de cuenta todavía. */
+  .fav-btn{
+    position:absolute;top:8px;right:8px;z-index:2;width:30px;height:30px;border-radius:50%;border:none;
+    background:rgba(17,17,17,.55);color:#fff;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;padding:0;transition:transform .12s ease,background .15s ease;
+  }
+  .fav-btn:active{transform:scale(.86);}
+  .fav-btn.active{color:#ff4d6d;background:rgba(17,17,17,.7);}
+  .detail-hero .fav-btn{top:14px;right:14px;width:38px;height:38px;}
+  /* En la tarjeta de evento el top-right ya lo usa "Gratis" y el top-left
+     la fecha: el corazón va abajo a la derecha de la portada. */
+  .agenda-card .cover .fav-btn{top:auto;bottom:8px;right:8px;}
+
   /* Search bar */
   .searchbar{
     display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
@@ -501,7 +516,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabaseClient.js"></script>
-<script src="js/icons.js?v=3"></script>
+<script src="js/icons.js?v=4"></script>
 <script>
 /* ============ DATOS ============
    CATEGORIES, SUBCATEGORIES y BUSINESSES ahora se cargan en vivo desde
@@ -952,6 +967,7 @@ function bizThumb(b){
   const isLogo = isLogoPlaceholder(photo);
   return `<div class="thumb${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
     ${photo ? `<img src="${photo}" alt="${b.name}" loading="lazy"${isLogo ? ' class="logo-fit"' : ''}>` : catIcon(c.emoji,{size:34,color:isLogo?'var(--ink)':'#fff'})}
+    ${favBtn('business', b.id)}
   </div>`;
 }
 
@@ -962,10 +978,66 @@ function badgesFor(b){
   return h;
 }
 
+/* ---- FAVORITOS (guardado en el navegador de cada visitante, sin
+   cuenta todavía) ----
+   Estructura en localStorage: { business:[ids], evento:[ids],
+   actividad:[ids] }. Si más adelante hay perfiles de usuario reales,
+   se puede migrar/sincronizar sin tocar cómo el resto del sitio la usa:
+   isFavorited()/toggleFavorite() quedarían iguales, solo cambiaría qué
+   hay atrás de esas dos funciones. */
+const FAVORITES_KEY = 'vp_favorites_v1';
+function loadFavorites(){
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return { business: parsed.business || [], evento: parsed.evento || [], actividad: parsed.actividad || [] };
+  } catch(e){ return { business: [], evento: [], actividad: [] }; }
+}
+function saveFavorites(favs){
+  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs)); } catch(e){ /* sin localStorage no se puede guardar, pero no debe romper la navegación */ }
+}
+function isFavorited(type, id){
+  return loadFavorites()[type].includes(id);
+}
+function toggleFavorite(type, id){
+  const favs = loadFavorites();
+  const idx = favs[type].indexOf(id);
+  if(idx >= 0) favs[type].splice(idx, 1); else favs[type].push(id);
+  saveFavorites(favs);
+  return favs[type].includes(id);
+}
+function favoritesCount(){
+  const favs = loadFavorites();
+  return favs.business.length + favs.evento.length + favs.actividad.length;
+}
+function favBtn(type, id, size){
+  size = size || 16;
+  const active = isFavorited(type, id);
+  return `<button type="button" class="fav-btn${active ? ' active' : ''}" data-fav-type="${type}" data-fav-id="${id}" title="${active ? 'Quitar de favoritos' : 'Guardar en favoritos'}" onclick="onFavBtnClick(event, this, ${size})">${ICON(active ? 'heart-filled' : 'heart', {size})}</button>`;
+}
+// Se llama desde el onclick del botón (no delegado): así se puede cortar la
+// burbuja antes de que la tarjeta entera navegue al detalle.
+function onFavBtnClick(evt, btn, size){
+  evt.stopPropagation();
+  evt.preventDefault();
+  const type = btn.getAttribute('data-fav-type');
+  const id = btn.getAttribute('data-fav-id');
+  const nowActive = toggleFavorite(type, id);
+  btn.classList.toggle('active', nowActive);
+  btn.title = nowActive ? 'Quitar de favoritos' : 'Guardar en favoritos';
+  btn.innerHTML = ICON(nowActive ? 'heart-filled' : 'heart', { size });
+  // Parado en la página de Favoritos y se saca uno: lo quita de la vista al toque.
+  if(location.hash.replace(/^#/,'') === 'favoritos' && !nowActive){
+    const card = btn.closest('[data-fav-card]');
+    if(card) card.remove();
+    if(!document.querySelector('[data-fav-card]')) render();
+  }
+}
+
 function bizCard(b, i){
   const cardAmenityIds = (b.amenities || []).filter(a => !BENEFITS.some(x => x.id === a));
   const showAmenities = (b.category === 'alojamiento' || b.category === 'gastronomia') && cardAmenityIds.length;
-  return `<div class="biz-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/comercio/${b.id}')">
+  return `<div class="biz-card reveal" data-fav-card style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/comercio/${b.id}')">
     <div class="info">
       <div class="badges">${badgesFor(b)}</div>
       <div class="name">${b.name}</div>
@@ -1117,6 +1189,7 @@ function setBottomnav(active){
     {key:'actividades', path:'/actividades', ic:'runner', label:'Actividades'},
     // Se apaga por completo si el admin deshabilitó el panel (ver loadAppSettings).
     ...(NOVEDADES_ENABLED ? [{key:'novedades', path:'/novedades', ic:'newspaper', label:'Novedades'}] : []),
+    {key:'favoritos', path:'/favoritos', ic:'heart', label:'Favoritos'},
     // No es una página interna: abre WhatsApp directo, con mensaje precargado.
     {key:'consultas', external:true, ic:'message-circle', label:'Consultas'},
   ];
@@ -1152,7 +1225,50 @@ function render(){
   if(parts[0]==='destacado') return renderDestacado();
   if(parts[0]==='comercio') return renderComercio(parts[1]);
   if(parts[0]==='lugares') return renderLugar(parts[1]);
+  if(parts[0]==='favoritos') return renderFavoritos();
   return renderHome();
+}
+
+/* ---- FAVORITOS ---- */
+function renderFavoritos(){
+  setTopbar({title:'Favoritos', sub:'Guardado en este dispositivo', back:true});
+  setBottomnav('favoritos');
+
+  const favs = loadFavorites();
+  const favBusinesses = BUSINESSES.filter(b => favs.business.includes(b.id));
+  const favEvents = EVENTS.filter(e => favs.evento.includes(e.id)).sort((a,b)=>a.startDate.localeCompare(b.startDate));
+  const favActivities = ACTIVITIES.filter(a => favs.actividad.includes(a.id));
+  const total = favBusinesses.length + favEvents.length + favActivities.length;
+
+  const view = document.getElementById('view');
+
+  if(total === 0){
+    view.innerHTML = `
+      <div class="empty-state" style="padding:60px 24px; text-align:center;">
+        ${ICON('heart',{size:38,color:'var(--muted)'})}
+        <p style="margin-top:14px; line-height:1.5;">Todavía no guardaste nada acá.<br>Tocá el corazón en cualquier comercio, evento o actividad para guardarlo.</p>
+      </div>
+    `;
+    return;
+  }
+
+  view.innerHTML = `
+    ${favBusinesses.length ? `<div class="section" style="margin-top:0;">
+      <div class="section-head"><h2>Comercios</h2></div>
+      <div class="biz-list">${favBusinesses.map((b,i)=>bizCard(b,i)).join('')}</div>
+    </div>` : ''}
+
+    ${favEvents.length ? `<div class="section">
+      <div class="section-head"><h2>Eventos</h2></div>
+      <div>${favEvents.map((e,i)=>agendaCard(e,i)).join('')}</div>
+    </div>` : ''}
+
+    ${favActivities.length ? `<div class="section">
+      <div class="section-head"><h2>Actividades</h2></div>
+      <div class="biz-list">${favActivities.map((a,i)=>activityCard(a,i)).join('')}</div>
+    </div>` : ''}
+  `;
+  initScrollReveal();
 }
 
 /* ---- HOME ---- */
@@ -1496,6 +1612,7 @@ function renderComercio(id){
   document.getElementById('view').innerHTML = `
     <div class="detail-hero full-bleed${isLogo ? ' thumb-logo' : ''}" style="background:${isLogo ? '#fff' : c.color}">
       ${photo ? `<img src="${photo}" alt="${b.name}"${isLogo ? ' class="logo-fit"' : ''}>` : catIcon(c.emoji,{size:44,color:isLogo?'var(--ink)':'#fff'})}
+      ${favBtn('business', b.id, 18)}
     </div>
     <div class="detail-title">${b.name}</div>
     <div class="detail-cat">${catIcon(c.emoji,{size:14})} ${c.label}${subcatsOf(b).length ? ' · '+subcatsOf(b).join(', ') : ''}</div>
@@ -1686,11 +1803,12 @@ function agendaCard(e, i){
   const c = eventCat(e.category);
   const org = organizerName(e);
   const d = parseYMD(e.startDate);
-  return `<div class="agenda-card reveal" style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/evento/${e.id}')">
+  return `<div class="agenda-card reveal" data-fav-card style="transition-delay:${((i||0)%6)*60}ms" onclick="navigate('/evento/${e.id}')">
     <div class="cover" style="background:${c.color || '#111'}">
       ${e.cover ? `<img src="${e.cover}" alt="${e.title}" loading="lazy" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : catIcon(c.icon||'🎉',{size:34,color:'#fff'})}
       <div class="date-badge"><span class="day">${d.getDate()}</span><span class="mon">${MESES_ES[d.getMonth()].slice(0,3)}</span></div>
       ${e.isFree ? `<span class="free-tag">Gratis</span>` : ''}
+      ${favBtn('evento', e.id)}
     </div>
     <div class="body">
       <div class="when">${ICON('calendar',{size:13})} ${fmtDateRange(e)}${fmtTimeRange(e) ? ' · ' + fmtTimeRange(e) : ''}</div>
@@ -1918,6 +2036,7 @@ function renderEventoDetail(id){
     <div class="detail-hero${e.cover ? ' zoomable' : ''}" style="background:${c.color||'#111'}"${e.cover ? ` onclick="openImageLightbox('${e.cover.replace(/'/g,"\\'")}', '${(e.title||'').replace(/'/g,"\\'")}')"` : ''}>
       ${e.cover ? `<img src="${e.cover}" alt="${e.title}" style="object-position:${e.coverFocalX||50}% ${e.coverFocalY||50}%">` : catIcon(c.icon||'🎉',{size:44,color:'#fff'})}
       ${e.cover ? `<span class="zoom-hint">${ICON('search',{size:13})} Ver flyer</span>` : ''}
+      ${favBtn('evento', e.id, 18)}
     </div>
     <div class="detail-title">${e.title}</div>
     <div class="detail-cat">${catIcon(c.icon||'',{size:14})} ${c.label}</div>
@@ -2061,7 +2180,7 @@ function activityCard(a, i){
   // (reutiliza .biz-card/.thumb/.info), en vez de las tarjetas
   // grandes de la Agenda de eventos.
   const t = activityTag(a.tag);
-  return `<div class="biz-card reveal" style="transition-delay:${((i||0)%6)*60}ms; margin-bottom:10px;" onclick="navigate('/actividad/${a.id}')">
+  return `<div class="biz-card reveal" data-fav-card style="transition-delay:${((i||0)%6)*60}ms; margin-bottom:10px;" onclick="navigate('/actividad/${a.id}')">
     <div class="info">
       <div class="badges">${a.isFree ? `<span class="badge featured">Gratis</span>` : ''}</div>
       <div class="name">${a.title}</div>
@@ -2071,6 +2190,7 @@ function activityCard(a, i){
     </div>
     <div class="thumb" style="background:${t.color || '#111'}">
       ${a.cover ? `<img src="${a.cover}" alt="${a.title}" loading="lazy" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : catIcon(t.icon||'🏅',{size:34,color:'#fff'})}
+      ${favBtn('actividad', a.id)}
     </div>
   </div>`;
 }
@@ -2231,6 +2351,7 @@ function renderActividadDetail(id){
     <div class="detail-hero${a.cover ? ' zoomable' : ''}" style="background:${t.color||'#111'}"${a.cover ? ` onclick="openImageLightbox('${a.cover.replace(/'/g,"\\'")}', '${(a.title||'').replace(/'/g,"\\'")}')"` : ''}>
       ${a.cover ? `<img src="${a.cover}" alt="${a.title}" style="object-position:${a.coverFocalX||50}% ${a.coverFocalY||50}%">` : catIcon(t.icon||'🏅',{size:44,color:'#fff'})}
       ${a.cover ? `<span class="zoom-hint">${ICON('search',{size:13})} Ver flyer</span>` : ''}
+      ${favBtn('actividad', a.id, 18)}
     </div>
     <div class="detail-title">${a.title}</div>
     <div class="detail-cat">${catIcon(t.icon||'',{size:14})} ${t.label}</div>

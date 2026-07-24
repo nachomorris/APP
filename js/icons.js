@@ -18,6 +18,8 @@ const ICON_PATHS = {
   home: '<path d="M3 12 L12 3 L21 12 M5 10 V21 H19 V10"/>',
   star: '<path d="M12 2 L14.9 8.6 L22 9.3 L16.8 14.1 L18.2 21 L12 17.4 L5.8 21 L7.2 14.1 L2 9.3 L9.1 8.6 Z"/>',
   'star-filled': '<path d="M12 2 L14.9 8.6 L22 9.3 L16.8 14.1 L18.2 21 L12 17.4 L5.8 21 L7.2 14.1 L2 9.3 L9.1 8.6 Z" fill="currentColor" stroke="none"/>',
+  heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  'heart-filled': '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor" stroke="none"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/>',
   activity: '<polyline points="2,12 6,12 9,20 14,4 17,12 22,12"/>',
   runner: '<circle cx="13" cy="4" r="2"/><path d="M12.5 6.5 10 12"/><path d="M10 12 14 13 13 18"/><path d="M10 12 7 15 4 15.5"/><path d="M12.5 6.5 16 7 18 5"/><path d="M12.5 6.5 9 8 7 6"/>',
