@@ -24,6 +24,91 @@ const evRequiresRegistration = document.getElementById('ev_requires_registration
 const eventFormTitle = document.getElementById('eventFormTitle');
 const eventReviewNote = document.getElementById('eventReviewNote');
 
+// ---------- Foto de portada (subir, sin recortar), bucket "event-images" ----------
+// Mismo mecanismo que admin-events.js: si el evento es nuevo se usa un id
+// temporal generado en el navegador como carpeta, para poder subir la foto
+// antes de guardar el formulario.
+let evPhotoFolderId = null;
+let evPhotoUploading = false;
+const evPhotoInput = document.getElementById('evPhotoInput');
+const evChoosePhotoBtn = document.getElementById('evChoosePhotoBtn');
+const evPhotoPreviewImg = document.getElementById('evPhotoPreviewImg');
+const evPhotoPreviewEmpty = document.getElementById('evPhotoPreviewEmpty');
+const evCoverImageInput = document.getElementById('ev_cover_image');
+
+function refreshEvPhotoPreview(url) {
+  evCoverImageInput.value = url || '';
+  if (url) {
+    evPhotoPreviewImg.src = url;
+    evPhotoPreviewImg.style.display = 'block';
+    evPhotoPreviewEmpty.style.display = 'none';
+  } else {
+    evPhotoPreviewImg.style.display = 'none';
+    evPhotoPreviewEmpty.style.display = 'block';
+  }
+}
+
+function evResizeImageToBlob(file, maxSide) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxSide || height > maxSide) {
+          if (width >= height) { height = Math.round(height * (maxSide / width)); width = maxSide; }
+          else { width = Math.round(width * (maxSide / height)); height = maxSide; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('No se pudo procesar la imagen.')), 'image/jpeg', 0.88);
+      };
+      img.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+evChoosePhotoBtn.addEventListener('click', () => {
+  if (evPhotoUploading) return;
+  evPhotoInput.value = '';
+  evPhotoInput.click();
+});
+
+evPhotoInput.addEventListener('change', async () => {
+  const file = evPhotoInput.files && evPhotoInput.files[0];
+  if (!file) return;
+
+  evPhotoUploading = true;
+  evChoosePhotoBtn.disabled = true;
+  evChoosePhotoBtn.textContent = 'Subiendo...';
+
+  try {
+    const blob = await evResizeImageToBlob(file, 1800);
+    if (!evPhotoFolderId) evPhotoFolderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+    const path = `${evPhotoFolderId}/cover-${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('event-images')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: pub } = supabaseClient.storage.from('event-images').getPublicUrl(path);
+    refreshEvPhotoPreview(pub.publicUrl);
+    showAlert('Foto lista. No te olvides de guardar el evento.', 'success');
+  } catch (err) {
+    showAlert('No se pudo subir la foto: ' + err.message, 'error');
+  } finally {
+    evPhotoUploading = false;
+    evChoosePhotoBtn.disabled = false;
+    evChoosePhotoBtn.textContent = 'Elegir foto';
+    evPhotoInput.value = '';
+  }
+});
+
 // ---------- Helpers de fecha (locales, sin corrimiento de huso) ----------
 function evParseDate(str) {
   if (!str) return null;
@@ -389,6 +474,8 @@ function resetEventForm() {
   if (myBusinessesForEvents.length === 1) {
     setBusinessSelection(myBusinessesForEvents[0].id);
   }
+  evPhotoFolderId = null;
+  refreshEvPhotoPreview('');
 }
 
 async function openEventForm(eventId) {
@@ -396,6 +483,7 @@ async function openEventForm(eventId) {
 
   if (!eventId) {
     eventFormTitle.textContent = 'Nuevo evento';
+    evPhotoFolderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
     showEventFormView();
     return;
   }
@@ -413,7 +501,8 @@ async function openEventForm(eventId) {
   document.getElementById('ev_short_description').value = e.short_description || '';
   document.getElementById('ev_description').value = e.description || '';
   evCategorySelect.value = e.category_id || '';
-  document.getElementById('ev_cover_image').value = e.cover_image || '';
+  evPhotoFolderId = e.id;
+  refreshEvPhotoPreview(e.cover_image || '');
   document.getElementById('ev_gallery').value = (e.gallery || []).join(', ');
   document.getElementById('ev_start_date').value = e.start_date || '';
   document.getElementById('ev_end_date').value = e.end_date || '';
@@ -500,6 +589,11 @@ document.getElementById('saveEventDraftBtn').addEventListener('click', () => {
 eventForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearAlert();
+
+  if (evPhotoUploading) {
+    showAlert('Esperá a que termine de subir la foto antes de guardar.', 'error');
+    return;
+  }
 
   const id = document.getElementById('event_id').value;
   const startDate = document.getElementById('ev_start_date').value;
@@ -611,7 +705,8 @@ async function duplicateEvent(id) {
   document.getElementById('ev_short_description').value = e.short_description || '';
   document.getElementById('ev_description').value = e.description || '';
   evCategorySelect.value = e.category_id || '';
-  document.getElementById('ev_cover_image').value = e.cover_image || '';
+  evPhotoFolderId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())); // copia: si sube una foto nueva, no pisa las del original
+  refreshEvPhotoPreview(e.cover_image || '');
   document.getElementById('ev_gallery').value = (e.gallery || []).join(', ');
   document.getElementById('ev_start_date').value = e.start_date || '';
   document.getElementById('ev_end_date').value = e.end_date || '';

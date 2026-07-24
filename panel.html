@@ -273,8 +273,19 @@
           <option value="">Seleccioná una categoría</option>
         </select>
 
-        <label for="ev_cover_image">Imagen de portada (URL)</label>
-        <input type="text" id="ev_cover_image" placeholder="https://...">
+        <label>Foto de portada</label>
+        <div class="photo-upload-wrap">
+          <div class="photo-preview" id="evPhotoPreview">
+            <img id="evPhotoPreviewImg" style="display:none;" alt="Foto de portada">
+            <span id="evPhotoPreviewEmpty">Sin foto todavía</span>
+          </div>
+          <div>
+            <input type="file" id="evPhotoInput" accept="image/*" class="hidden">
+            <button type="button" class="btn btn-secondary btn-small" id="evChoosePhotoBtn">Elegir foto</button>
+            <p class="field-hint">Formato horizontal. Se sube tal cual, sin recorte.</p>
+          </div>
+        </div>
+        <input type="hidden" id="ev_cover_image">
 
         <label for="ev_gallery">Galería de imágenes (opcional)</label>
         <input type="text" id="ev_gallery" placeholder="URLs separadas por coma">
@@ -479,7 +490,7 @@
 <script src="js/supabaseClient.js"></script>
 <script src="js/icons.js?v=3"></script>
 <script src="js/panel.js?v=3"></script>
-<script src="js/panel-events.js"></script>
+<script src="js/panel-events.js?v=2"></script>
 <script src="js/panel-account.js"></script>
 <script src="js/panel-photo.js?v=2"></script>
 <script src="js/panel-presidente.js?v=7"></script>

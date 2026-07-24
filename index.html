@@ -2254,6 +2254,13 @@ function renderActividadDetail(id){
       <p>${a.desc || a.shortDesc}</p>
     </div>` : ''}
 
+    ${(a.gallery && a.gallery.length) ? `<div class="detail-block">
+      <h3>Más fotos</h3>
+      <div class="event-gallery">
+        ${a.gallery.map((url) => `<img src="${url}" alt="${a.title}" onclick="openImageLightbox('${url.replace(/'/g,"\\'")}', '${(a.title||'').replace(/'/g,"\\'")}')">`).join('')}
+      </div>
+    </div>` : ''}
+
     <div class="detail-block">
       <h3>Lugar y contacto</h3>
       ${a.address ? `<div class="detail-row"><span class="ic">${ICON('map-pin',{size:15})}</span>${isAddressUrl(a.address) ? `<a href="${a.address}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>` : a.address}</div>` : ''}
@@ -2274,9 +2281,12 @@ function renderActividadDetail(id){
     </div>
     ${a.requiresRegistration && a.registrationUrl ? `<div class="cta-btns" style="margin-top:10px;"><a class="wsp" style="flex:1; background:var(--primary-dark); color:#fff;" href="${a.registrationUrl}" target="_blank" rel="noopener">${ICON('ticket',{size:15})} Inscribirme / Comprar entrada</a></div>` : ''}
 
-    ${a.cover ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
+    ${(a.cover || (a.gallery && a.gallery.length)) ? `<div class="img-lightbox hidden" id="imgLightbox" onclick="closeImageLightbox()">
       <span class="img-lightbox-close" onclick="closeImageLightbox()">${ICON('x',{size:20,color:'#fff'})}</span>
-      <img id="imgLightboxImg" src="${a.cover}" alt="${a.title}" onclick="event.stopPropagation()">
+      <span class="img-lightbox-arrow prev hidden" id="imgLightboxPrev" onclick="lightboxPrev(event)">${ICON('chevron-left',{size:22,color:'#fff'})}</span>
+      <span class="img-lightbox-arrow next hidden" id="imgLightboxNext" onclick="lightboxNext(event)">${ICON('chevron-right',{size:22,color:'#fff'})}</span>
+      <span class="img-lightbox-counter hidden" id="imgLightboxCounter"></span>
+      <img id="imgLightboxImg" src="${a.cover || a.gallery[0]}" alt="${a.title}" onclick="event.stopPropagation()">
     </div>` : ''}
   `;
 }
